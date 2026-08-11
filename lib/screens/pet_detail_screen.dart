@@ -1,0 +1,245 @@
+import 'package:flutter/material.dart';
+
+import '../models/pet.dart';
+
+import '../database/database_helper.dart';
+
+import 'pet_register_screen.dart';
+
+class PetDetailScreen extends StatefulWidget {
+  final Pet pet;
+
+  const PetDetailScreen({
+    super.key,
+    required this.pet,
+  });
+
+  /*
+    StatefulWidget 자체는 화면의 상태를 직접 저장하는 역할을 하지 않기 때문에 실제 상태를 관리할 state 객체를 만들어야 함.
+    @override
+    State<PetDetailScreen> createState() => _PetDetailScreenState();
+
+    이게 PetDetailScreen의 상태를 관리할 _PetDetailScreenState를 만들어서 연결해달라는 뜻
+    그리고 아래에 class _PetDetailScreenState extends State<PetDetailScreen> { ... } 이게 실제로 상태를 관리하는 부분이 됨
+  */
+  @override
+  State<PetDetailScreen> createState() => _PetDetailScreenState();
+}
+
+class _PetDetailScreenState extends State<PetDetailScreen> {
+  Pet? currentPet;
+
+  @override
+  void initState() {
+    super.initState();
+
+    currentPet = widget.pet;
+  }
+  
+  @override
+  Widget build(BuildContext context) { // build()는 _PetDetailScreenState 안에 존재. State에서 부모 StatefulWidget의 값을 가져오려면 ~ 으로r 써야함. 즉 pet -> pet 작성해야 됨
+    final pet = currentPet!;
+
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('${pet.name} 정보'),
+      ),
+
+      body: Padding(
+        padding: const EdgeInsets.all(20),
+
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // 반려동물 이름
+            Center(
+              child: Column(
+                children: [
+                  const CircleAvatar(
+                    radius: 45,
+                    child: Icon(
+                      Icons.pets,
+                      size: 45,
+                    ),
+                  ),
+
+                  const SizedBox(height: 15),
+
+                  Text(
+                    pet.name,
+                    style: const TextStyle(
+                      fontSize: 26,
+                      fontWeight: FontWeight.bold
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 30),
+
+            // 기본 정보
+            _InfoRow(
+              label: '생일', 
+              value: pet.birthDate != null ? '${pet.birthDate!.year}년 ${pet.birthDate!.month}월 ${pet.birthDate!.day}일' : '미입력'
+            ),
+            _InfoRow(
+              label: '성별',
+              value: pet.gender ?? '미입력',
+            ),
+            /*
+              ?. (Null-Aware Access): "값이 null이 아닐 때만 뒤의 함수(toIso8601String())를 실행하고, 만약 null이면 더 이상 진행하지 말고 그냥 null을 반환하라
+              ?? (Null-Coalescing): "그 결과가 결국 null이면 대신 '미입력'을 출력하라
+            */
+            _InfoRow(
+              label: '품종', 
+              value: pet.breed ?? '미입력',
+            ),
+            _InfoRow(
+              label: '몸무게', 
+              value: pet.weight != null ? '${pet.weight} kg' : '미입력'
+            ),
+
+            const SizedBox(height: 30),
+
+            SizedBox(
+              width: double.infinity, // 가로 너비를 부모 위젯이 허용하는 최대 너비로 꽉 채우겠다
+              height: 50,
+              child: ElevatedButton.icon(
+                onPressed: () async {
+                  final result = await Navigator.push(
+                    context, 
+                    MaterialPageRoute(
+                      builder: (context) => PetRegisterScreen(
+                        pet: pet,
+                      ),
+                    ),
+                  );
+
+                  // Navigator.pop(context, true) 이걸로 true를 넘겼기 때문에, 정상적으로 수정이 됐으면 진행됨
+                  if (result == true) {
+                    final updatedPet = await DatabaseHelper.instance.getPetById(pet.id!); // pet.id!의 !은 DB에서 생성된 반려동물 ID는 반드시 존재한다는 의미
+
+                    if(!context.mounted) {
+                      return;
+                    }
+
+                    if(updatedPet != null) {
+                      setState(() {
+                        currentPet = updatedPet;
+                      });
+                    }
+
+                    Navigator.pop(context, true);
+                  }
+                },
+                icon: const Icon(Icons.edit),
+                label: const Text(
+                  '수정하기',
+                  style: TextStyle(
+                    fontSize: 16
+                  ),
+                )
+              ),
+            ),
+
+            const SizedBox(height: 12),
+
+            SizedBox(
+              width: double.infinity,
+              height: 50,
+              child: ElevatedButton.icon( // OutlinedButton
+                onPressed: () async {
+                  // 삭제 확인창
+                  final bool? confirmed = await showDialog<bool>( // bool?을 사용한 이유는 null도 반환될 수 있기 때문
+                    context: context,
+                    builder: (context) {
+                      return AlertDialog(
+                        title: const Text('반려동물 삭제'),
+                        content: Text(
+                          '${pet.name}을(를) 정말 삭제하시겠습니까?',
+                        ),
+                        actions: [
+                          TextButton(
+                            onPressed: () {
+                              Navigator.pop(context, false);
+                            },
+                            child: const Text('취소'),
+                          ),
+                          TextButton(
+                            onPressed: () {
+                              Navigator.pop(context, true);
+                            },
+                            child: const Text('삭제'),
+                          ),
+                        ],
+                      );
+                    },
+                  );
+
+                  // 취소했거나 아무것도 선택하지 않은 경우
+                  if (confirmed != true) {
+                    return;
+                  }
+
+                  // SQLite에서 삭제
+                  await DatabaseHelper.instance.deletePet(pet.id!);
+
+                  if (!context.mounted) {
+                    return;
+                  }
+
+                  // 상세 화면 닫고 홈 화면으로 이동
+                  Navigator.pop(context, true);
+                },
+                icon: const Icon(Icons.delete),
+                label: const Text(
+                  '삭제하기',
+                  style: TextStyle(
+                    fontSize: 16,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// 상세 정보 한 줄을 만드는 위젯
+class _InfoRow extends StatelessWidget { // StatelessWidget: 화면에 그려질 수 있는 위젯의 자격을 부여하기 위해 상속받음
+  final String label;
+  final String value;
+
+  const _InfoRow({
+    required this.label,
+    required this.value,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 10), // symmetric(vertical: 10): 위쪽과 아래쪽에 각각 10px 여백
+
+      child: Row( // Row (가로 배치). 안에 들어가는 SizedBox, Expanded를 가로방향으로 일렬 배치함
+        children: [
+          SizedBox(
+            width: 70,
+            child: Text(
+              label,
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+
+          Expanded( // Expanded: 가로 공간 중에서 남은 나머지 가로 공간 전체를 꽉 채우도록 확장시켜줌. 만약에 값이 길 경우 자동으로 줄바꿈되도록 하기 위해 extended로 감싸줌
+            child: Text(value),
+          ),
+        ],
+      ),
+    );
+  }
+}
