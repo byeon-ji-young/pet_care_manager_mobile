@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 
 import '../models/pet.dart';
@@ -55,12 +57,17 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
             Center(
               child: Column(
                 children: [
-                  const CircleAvatar(
+                  CircleAvatar(
                     radius: 45,
-                    child: Icon(
-                      Icons.pets,
-                      size: 45,
-                    ),
+                    backgroundImage: pet.imagePath != null
+                      ? FileImage(File(pet.imagePath!))
+                      : null,
+                    child: pet.imagePath == null
+                      ? const Icon(
+                          Icons.pets,
+                          size: 45,
+                        )
+                      : null,
                   ),
 
                   const SizedBox(height: 15),

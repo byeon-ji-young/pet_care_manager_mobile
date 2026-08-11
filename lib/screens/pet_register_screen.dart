@@ -1,4 +1,8 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:path_provider/path_provider.dart';
 
 import '../models/pet.dart';
 
@@ -21,6 +25,11 @@ class _PetRegisterScreenState extends State<PetRegisterScreen> {
   final TextEditingController nameController = TextEditingController();
   final TextEditingController breedController = TextEditingController();
   final TextEditingController weightController = TextEditingController();
+  
+  final ImagePicker imagePicker = ImagePicker();
+  XFile? selectedImage;
+
+  bool removeImage = false; // false: 기존 사진 유지, true: 기존 사진 삭제
 
   // 성별
   String? selectedGender;
@@ -73,11 +82,47 @@ class _PetRegisterScreenState extends State<PetRegisterScreen> {
       lastDate: DateTime.now(),
     );
 
-    if (pickedDate != null) {
+    if(pickedDate != null) {
       setState(() {
         selectedBirthDate = pickedDate;
       });
     }
+  }
+
+  // 이미지 선택
+  Future<void> selectImage() async {
+    final XFile? image = await imagePicker.pickImage(
+      source: ImageSource.gallery
+    );
+
+    if(image == null) {
+      return;
+    }
+
+    if(!mounted) {
+      return;
+    }
+
+    setState(() {
+      selectedImage = image;
+    });
+  }
+
+  // 이미지 저장
+  Future<String?> saveImage() async {
+    if(selectedImage == null) {
+      return null;
+    }
+
+    final directory = await getApplicationDocumentsDirectory(); // getApplicationDocumentsDirectory: 앱 전용 문서 저장 공간의 경로를 가져오는 함수
+
+    final fileName = '${DateTime.now().millisecondsSinceEpoch}_${selectedImage!.name}';
+
+    final savedImage = await File(selectedImage!.path).copy(
+      '${directory.path}/$fileName'
+    );
+
+    return savedImage.path;
   }
 
   // UI 구성 및 레이아웃 포인트
@@ -111,21 +156,42 @@ class _PetRegisterScreenState extends State<PetRegisterScreen> {
                 children: [
                   CircleAvatar(
                     radius: 50,
-                    child: const Icon(
-                      Icons.pets,
-                      size: 50,
-                    ),
+                    backgroundImage: selectedImage != null 
+                      ? FileImage(File(selectedImage!.path)) 
+                      : (!removeImage && widget.pet?.imagePath != null
+                          ? FileImage(File(widget.pet!.imagePath!))
+                          : null),
+                    child: selectedImage == null && (removeImage || widget.pet?.imagePath == null)
+                      ? const Icon(
+                        Icons.pets,
+                        size: 50,
+                      )
+                      : null,
                   ),
 
                   const SizedBox(height: 10),
 
                   TextButton.icon(
-                    onPressed: () {
-                      // 나중에 사진 선택 기능 추가
-                    },
-                    icon: const Icon(Icons.camera_alt),
-                    label: const Text('사진 추가'),
+                    onPressed: selectImage,
+                    icon: Icon(
+                      widget.pet?.imagePath != null ? Icons.edit : Icons.camera_alt
+                    ),
+                    label: Text(
+                      widget.pet?.imagePath != null ? '사진 변경' : '사진 추가',
+                    ),
                   ),
+
+                  if(widget.pet?.imagePath != null)
+                    TextButton.icon(
+                      onPressed: () {
+                        setState(() {
+                          removeImage = true;
+                          selectedImage = null;
+                        });
+                      },
+                      icon: const Icon(Icons.delete),
+                      label: const Text('사진 삭제'),
+                    ),
                 ],
               ),
             ),
@@ -320,13 +386,20 @@ class _PetRegisterScreenState extends State<PetRegisterScreen> {
                     weightController.text.trim()
                   );
 
+                  final String? oldImagePath = widget.pet?.imagePath;
+                  String? savedImagePath = oldImagePath;
+                  if(selectedImage != null) {
+                    savedImagePath = await saveImage();
+                  }
+
                   final Pet pet = Pet(
                     id: widget.pet?.id,
                     name: name,
                     birthDate: selectedBirthDate,
                     gender: selectedGender,
                     breed: breedController.text.trim(),
-                    weight: weight
+                    weight: weight,
+                    imagePath: removeImage ? null : savedImagePath
                   );
 
                   if (widget.pet == null) {
@@ -335,6 +408,28 @@ class _PetRegisterScreenState extends State<PetRegisterScreen> {
                   }else {
                     // 기존 반려동물 수정
                     await DatabaseHelper.instance.updatePet(pet); // 수정된 개수 반환
+                  }
+
+                  // 기존 파일 삭제
+                  if (removeImage && oldImagePath != null) {
+                    final oldFile = File(oldImagePath);
+
+                    if (await oldFile.exists()) {
+                      await oldFile.delete();
+                    }
+                  }
+                  
+                  /*
+                  신규 등록 + 사진 선택 → 새 사진 경로
+                  수정 + 사진 안 바꿈 → 기존 사진 경로
+                  수정 + 새 사진 선택 → 새 사진 경로
+                  */
+                  if(selectedImage != null && oldImagePath != null && oldImagePath != savedImagePath) {
+                    final oldFile = File(oldImagePath);
+
+                    if(await oldFile.exists()) {
+                      await oldFile.delete();
+                    }
                   }
 
                   if (!context.mounted) { // mounted: 화면 살아있는지 체크

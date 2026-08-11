@@ -5,6 +5,7 @@ class Pet {
   final String? gender;
   final String? breed;
   final double? weight; // 몸무게는 소수점이 필요하니까 double
+  final String? imagePath;
 
   Pet({
     this.id,
@@ -13,5 +14,6 @@ class Pet {
     this.gender,
     this.breed,
     this.weight,
+    this.imagePath,
   });
 }

@@ -76,7 +76,7 @@ class DatabaseHelper {
     */
     return await openDatabase(
       path,
-      version: 1,
+      version: 2,
       onCreate: (db, version) async {
         await db.execute('''
           CREATE TABLE pets (
@@ -85,9 +85,18 @@ class DatabaseHelper {
             birth_date TEXT,
             gender TEXT,
             breed TEXT,
-            weight REAL
+            weight REAL,
+            image_path TEXT
           )
         ''');
+      },
+
+      onUpgrade: (db, oldVersion, newVersion) async {
+        if (oldVersion < 2) {
+          await db.execute(
+            'ALTER TABLE pets ADD COLUMN image_path TEXT',
+          );
+        }
       },
     );
   }
@@ -111,6 +120,7 @@ class DatabaseHelper {
         'gender': pet.gender,
         'breed': pet.breed,
         'weight': pet.weight,
+        'image_path': pet.imagePath,
       },
     );
   }
@@ -136,6 +146,7 @@ class DatabaseHelper {
         weight: map['weight'] != null
             ? (map['weight'] as num).toDouble()
             : null,
+        imagePath: map['image_path'] as String?
       );
     }).toList();
   }
@@ -151,7 +162,8 @@ class DatabaseHelper {
         'birth_date': pet.birthDate?.toIso8601String(),
         'gender': pet.gender,
         'breed': pet.breed,
-        'weight': pet.weight
+        'weight': pet.weight,
+        'image_path': pet.imagePath,
       },
       where: 'id = ?',
       whereArgs: [pet.id]
@@ -181,7 +193,8 @@ class DatabaseHelper {
       birthDate: map['birth_date'] != null ? DateTime.parse(map['birth_date'] as String) : null,
       gender: map['gender'] as String?,
       breed: map['breed'] as String?,
-      weight: map['weight'] != null ? (map['weight'] as num).toDouble() : null
+      weight: map['weight'] != null ? (map['weight'] as num).toDouble() : null,
+      imagePath: map['image_path'] as String?
     );
   }
 

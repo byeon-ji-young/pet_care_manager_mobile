@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart'; // 플루터 제공 디자인 라이브러리
 
 import 'pet_register_screen.dart';
@@ -110,8 +112,13 @@ class _HomeScreenState extends State<HomeScreen> {
 
                 return Card(
                   child: ListTile(
-                    leading: const CircleAvatar(
-                      child: Icon(Icons.pets),
+                    leading: CircleAvatar(
+                      backgroundImage: pet.imagePath != null
+                        ? FileImage(File(pet.imagePath!))
+                        : null,
+                      child: pet.imagePath == null
+                        ? Icon(Icons.pets)
+                        : null,
                     ),
 
                     title: Text(pet.name),
