@@ -3,6 +3,7 @@ import 'package:sqflite/sqflite.dart';
 
 import '../models/pet.dart';
 import '../models/health_record.dart';
+import '../models/vaccination.dart';
 
 class DatabaseHelper {
   /*
@@ -338,5 +339,51 @@ class DatabaseHelper {
       where: 'id = ?',
       whereArgs: [record.id]
     );
+  }
+
+  // ========================================================= vaccination =========================================================
+  // 예방접종 등록
+  Future<int> insertVaccination(Vaccination vaccination) async {
+    final db = await database;
+
+    return await db.insert(
+      'vaccinations', 
+      {
+        'pet_id': vaccination.petId,
+        'vaccine_name': vaccination.vaccineName,
+        'vaccination_date': vaccination.vaccinationDate.toIso8601String(),
+        'next_date': vaccination.nextDate?.toIso8601String(),
+        'hospital': vaccination.hospital,
+        'memo': vaccination.memo,
+      },
+    );
+  }
+
+  //반려동물별 예방접종 조회
+  Future<List<Vaccination>> getVaccinationsByPetId(int petId) async {
+    final db = await database;
+
+    final maps = await db.query( 
+      'vaccinations',
+      where: 'pet_id = ?',
+      whereArgs: [petId],
+      orderBy: 'vaccination_date DESC'
+    );
+
+    return maps.map((map) {
+      return Vaccination(
+        id: map['id'] as int?,
+        petId: map['pet_id'] as int,
+        vaccineName: map['vaccine_name'] as String,
+        vaccinationDate: DateTime.parse(
+          map['vaccination_date'] as String,
+        ),
+        nextDate: map['next_date'] != null
+            ? DateTime.parse(map['next_date'] as String)
+            : null,
+        hospital: map['hospital'] as String?,
+        memo: map['memo'] as String?,
+      );
+    }).toList();
   }
 }
