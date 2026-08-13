@@ -9,6 +9,8 @@ import '../models/weight_record.dart';
 
 import '../database/database_helper.dart';
 
+import '../widgets/weight_chart.dart';
+
 import 'pet_register_screen.dart';
 import 'health_record_register_screen.dart';
 import 'vaccination_register_screen.dart';
@@ -425,6 +427,46 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
               ),
 
               const SizedBox(height: 15),
+
+              /*
+              위젯 하나 넣기
+              children: [
+                Text('A'),
+              ]
+
+              위젯 여러 개 넣기
+              children: [
+                Text('A'),
+                Text('B'),
+                Text('C'),
+              ]
+
+              조건이 맞을 때 위젯 여러 개 넣기
+              children: [
+                if (조건) ...[
+                  Text('A'),
+                  Text('B'),
+                  Text('C'),
+                ],
+              ]
+              */
+              if(weightRecords.length >= 2) ...[ // ...은 Spread Operator(스프레드 연산자). 즉, 이 리스트 안에 들어있는 위젯들을 하나씩 꺼내서 children에 넣어달라는 말
+                const Text(
+                  '📈 체중 변화',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+
+                const SizedBox(height: 10),
+
+                WeightChart(
+                  records: weightRecords,
+                ),
+
+                const SizedBox(height: 20),
+              ],
 
               if(weightRecords.isEmpty)
                 const Text('등록된 체중 기록이 없습니다.')
