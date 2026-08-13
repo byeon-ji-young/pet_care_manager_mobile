@@ -1,9 +1,11 @@
 import 'package:path/path.dart';
+
 import 'package:sqflite/sqflite.dart';
 
 import '../models/pet.dart';
 import '../models/health_record.dart';
 import '../models/vaccination.dart';
+import '../models/weight_record.dart';
 
 class DatabaseHelper {
   /*
@@ -78,7 +80,7 @@ class DatabaseHelper {
     */
     return await openDatabase(
       path,
-      version: 4, // DB 구조가 바뀔 때만 올림
+      version: 5, // DB 구조가 바뀔 때만 올림
       onCreate: (db, version) async {
         await db.execute('''
           CREATE TABLE pets (
@@ -116,6 +118,16 @@ class DatabaseHelper {
             memo TEXT
           )
         ''');
+
+        await db.execute('''
+          CREATE TABLE weight_records (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            pet_id INTEGER NOT NULL,
+            date TEXT NOT NULL,
+            weight REAL NOT NULL,
+            memo TEXT
+          )
+        ''');
       },
 
       onUpgrade: (db, oldVersion, newVersion) async {
@@ -149,6 +161,18 @@ class DatabaseHelper {
               vaccination_date TEXT NOT NULL,
               next_date TEXT,
               hospital TEXT,
+              memo TEXT
+            )
+          ''');
+        }
+
+        if (oldVersion < 5) {
+          await db.execute('''
+            CREATE TABLE weight_records (
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
+              pet_id INTEGER NOT NULL,
+              date TEXT NOT NULL,
+              weight REAL NOT NULL,
               memo TEXT
             )
           ''');
@@ -348,14 +372,7 @@ class DatabaseHelper {
 
     return await db.insert(
       'vaccinations', 
-      {
-        'pet_id': vaccination.petId,
-        'vaccine_name': vaccination.vaccineName,
-        'vaccination_date': vaccination.vaccinationDate.toIso8601String(),
-        'next_date': vaccination.nextDate?.toIso8601String(),
-        'hospital': vaccination.hospital,
-        'memo': vaccination.memo,
-      },
+      vaccination.toMap()
     );
   }
 
@@ -370,21 +387,7 @@ class DatabaseHelper {
       orderBy: 'vaccination_date DESC'
     );
 
-    return maps.map((map) {
-      return Vaccination(
-        id: map['id'] as int?,
-        petId: map['pet_id'] as int,
-        vaccineName: map['vaccine_name'] as String,
-        vaccinationDate: DateTime.parse(
-          map['vaccination_date'] as String,
-        ),
-        nextDate: map['next_date'] != null
-            ? DateTime.parse(map['next_date'] as String)
-            : null,
-        hospital: map['hospital'] as String?,
-        memo: map['memo'] as String?,
-      );
-    }).toList();
+    return maps.map((map) => Vaccination.fromMap(map)).toList();
   }
 
   // 예방접종 수정
@@ -412,6 +415,59 @@ class DatabaseHelper {
 
     return db.delete(
       'vaccinations',
+      where: 'id = ?',
+      whereArgs: [id]
+    );
+  }
+
+  // ========================================================= weight_records =========================================================
+  // 체중 등록
+  Future<int> insertWeightRecord(WeightRecord record) async {
+    final db = await database;
+
+    return db.insert(
+      'weight_records', 
+      record.toMap()
+    );
+  }
+
+  // 반려동물별 체중 조회
+  Future<List<WeightRecord>> getWeightRecordsByPetId(int petId) async {
+    final db = await database;
+
+    final maps = await db.query(
+      'weight_records',
+      where: 'pet_id = ?',
+      whereArgs: [petId],
+      orderBy: 'date DESC',
+    );
+
+    return maps.map((map) => WeightRecord.fromMap(map)).toList();
+  }
+
+  // 체중 수정
+  Future<int> updateWeightRecord(WeightRecord record) async {
+    final db = await database;
+
+    return db.update(
+      'weight_records', 
+      {
+        'pet_id': record.petId,
+        'date': record.date.toIso8601String(),
+        'weight': record.weight,
+        'memo': record.memo
+      },
+      where: 'id = ?',
+      whereArgs: [record.id]
+    );
+  }
+
+  // 체중 삭제
+  Future<int> deleteWeightRecord(int id) async {
+    final db = await database;
+
+    return db.delete(
+      'weight_records',
       where: 'id = ?',
       whereArgs: [id]
     );

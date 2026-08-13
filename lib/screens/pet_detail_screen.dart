@@ -5,12 +5,14 @@ import 'package:flutter/material.dart';
 import '../models/pet.dart';
 import '../models/health_record.dart';
 import '../models/vaccination.dart';
+import '../models/weight_record.dart';
 
 import '../database/database_helper.dart';
 
 import 'pet_register_screen.dart';
 import 'health_record_register_screen.dart';
 import 'vaccination_register_screen.dart';
+import 'weight_record_register_screen.dart';
 
 class PetDetailScreen extends StatefulWidget {
   final Pet pet;
@@ -39,6 +41,8 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
 
   List<Vaccination> vaccinations = [];
 
+  List<WeightRecord> weightRecords = [];
+
   @override
   void initState() {
     super.initState();
@@ -48,6 +52,8 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
     loadHealthRecords();
 
     loadVaccinations();
+
+    loadWeightRecords();
   }
 
   Future<void> loadHealthRecords() async {
@@ -71,6 +77,18 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
 
     setState(() {
       vaccinations = vaccines;
+    });
+  }
+
+  Future<void> loadWeightRecords() async {
+    final records = await DatabaseHelper.instance.getWeightRecordsByPetId(widget.pet.id!);
+
+    if(!mounted) {
+      return;
+    }
+
+    setState(() {
+      weightRecords = records;
     });
   }
   
@@ -395,6 +413,133 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
                 ),
               ),
               
+              // 체중 기록
+              const SizedBox(height: 30),
+
+              const Text(
+                '⚖️ 체중 기록',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold
+                ),
+              ),
+
+              const SizedBox(height: 15),
+
+              if(weightRecords.isEmpty)
+                const Text('등록된 체중 기록이 없습니다.')
+              else
+                Column(
+                  children: weightRecords.map((record) {
+                    return Card(
+                      margin: const EdgeInsets.only(bottom: 10),
+                      child: ListTile(
+                        title: Text(
+                          '${record.weight} kg',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold
+                          ),
+                        ),
+                        subtitle: Text(
+                          '${record.date.year}.'
+                          '${record.date.month.toString().padLeft(2, '0')}.'
+                          '${record.date.day.toString().padLeft(2, '0')}'
+                          '${record.memo != null ? '\n${record.memo}' : ''}'
+                        ),
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            IconButton(
+                              icon: const Icon(Icons.edit),
+                              onPressed: () async {
+                                final result = await Navigator.push(
+                                  context, 
+                                  MaterialPageRoute(
+                                    builder: (context) => WeightRecordRegisterScreen(
+                                      petId: pet.id!,
+                                      record: record,
+                                    )
+                                  )
+                                );
+
+                                if(result == true) {
+                                  loadWeightRecords();
+                                }
+                              }
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.delete),
+                              onPressed: () async {
+                                final confirmed = await showDialog<bool>(
+                                  context: context,
+                                  builder: (context) {
+                                    return AlertDialog(
+                                      title: const Text('체중 기록 삭제'),
+                                      content: Text(
+                                        '${record.weight} kg 기록을 삭제하시겠습니까?'
+                                      ),
+                                      actions: [
+                                        TextButton(
+                                          onPressed: () async {
+                                            Navigator.pop(context, false);
+                                          }, 
+                                          child: const Text('취소')
+                                        ),
+                                        TextButton(
+                                          onPressed: () async {
+                                            Navigator.pop(context, true);
+                                          }, 
+                                          child: const Text('삭제')
+                                        )
+                                      ],
+                                    );
+                                  }
+                                );
+
+                                if(confirmed != true) {
+                                  return;
+                                }
+
+                                await DatabaseHelper.instance.deleteWeightRecord(record.id!);
+
+                                if(!mounted) {
+                                  return;
+                                }
+
+                                await loadWeightRecords();
+                              }
+                            ),
+                          ],
+                        )
+                      ),
+                    );
+                  }).toList(),
+                ),
+
+              const SizedBox(height: 10),
+
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: () async {
+                    final result = await Navigator.push(
+                      context, 
+                      MaterialPageRoute(
+                        builder: (context) => WeightRecordRegisterScreen(
+                          petId: pet.id!
+                        )
+                      )
+                    );
+
+                    if(result == true) {
+                      await loadWeightRecords();
+                    }
+                  }, 
+                  icon: const Icon(Icons.add),
+                  label: const Text('체중 기록 추가'),
+                ),
+              ),
+
               const SizedBox(height: 20),
 
               // 반려동물 수정하기 버튼

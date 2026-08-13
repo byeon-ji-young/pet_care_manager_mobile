@@ -17,7 +17,6 @@ class Vaccination {
     this.memo,
   });
   
-  /*
   // DB 데이터 → Vaccination 객체
   factory Vaccination.fromMap(Map<String, dynamic> map) {
     return Vaccination(
@@ -47,5 +46,4 @@ class Vaccination {
       'memo': memo,
     };
   }
-  */
 }
