@@ -163,6 +163,27 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
                           if (record.cost != null)
                             Text('${record.cost}원'),
 
+                          // 수정버튼
+                          IconButton(
+                            icon: const Icon(Icons.edit),
+                            onPressed: () async {
+                              final result = await Navigator.push(
+                                context, 
+                                MaterialPageRoute(
+                                  builder: (context) => HealthRecordRegisterScreen(
+                                    petId: pet.id!,
+                                    record: record
+                                  )
+                                )
+                              );
+                              
+                              if(result == true) {
+                                await loadHealthRecords();
+                              }
+                            }, 
+                          ),
+                          
+                          // 삭제버튼
                           IconButton(
                             icon: const Icon(Icons.delete),
                             onPressed: () async {

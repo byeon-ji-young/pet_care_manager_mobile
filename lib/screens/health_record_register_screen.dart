@@ -6,10 +6,12 @@ import '../models/health_records.dart';
 
 class HealthRecordRegisterScreen extends StatefulWidget {
   final int petId;
-  
+  final HealthRecord? record; // record == null → 신규 등록 / record != null → 수정
+
   const HealthRecordRegisterScreen({
     super.key,
-    required this.petId
+    required this.petId,
+    this.record
   });
 
   @override
@@ -23,6 +25,22 @@ class __HealthRecordRegisterScreenState extends State<HealthRecordRegisterScreen
   final TextEditingController costController = TextEditingController();
   
   DateTime selectedDate = DateTime.now();
+
+  @override
+  void initState() {
+    super.initState();
+
+    final record = widget.record;
+
+    if (record != null) {
+      hospitalController.text = record.hospital ?? ''; // ??는 null일 경우 다른 값을 사용하라
+      titleController.text = record.title;
+      descriptionController.text = record.description ?? '';
+      costController.text = record.cost?.toString() ?? '';
+
+      selectedDate = record.date;
+    }
+  }
 
   @override
   void dispose() {
@@ -144,6 +162,7 @@ class __HealthRecordRegisterScreenState extends State<HealthRecordRegisterScreen
               child: ElevatedButton(
                 onPressed: () async {
                   final record = HealthRecord(
+                    id: widget.record?.id,
                     petId: widget.petId,
                     date: selectedDate,
                     hospital: hospitalController.text.trim().isEmpty
@@ -156,7 +175,11 @@ class __HealthRecordRegisterScreenState extends State<HealthRecordRegisterScreen
                     cost: int.tryParse(costController.text.trim()) // tryParse: 비어있으면 null
                   );
 
-                  await DatabaseHelper.instance.insertHealthRecord(record);
+                  if(widget.record == null) {
+                    await DatabaseHelper.instance.insertHealthRecord(record);
+                  }else {    
+                    await DatabaseHelper.instance.updateHealthRecord(record);
+                  }
 
                   if(!context.mounted) {
                     return;

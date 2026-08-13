@@ -293,4 +293,23 @@ class DatabaseHelper {
       whereArgs: [id],
     );
   }
+
+  // 병원기록 수정
+  Future<int> updateHealthRecord(HealthRecord record) async {
+    final db = await database;
+    
+    return await db.update(
+      'health_records', 
+      {
+        'pet_id': record.petId,
+        'date': record.date.toIso8601String(),
+        'hospital': record.hospital,
+        'title': record.title,
+        'description': record.description,
+        'cost': record.cost,
+      },
+      where: 'id = ?',
+      whereArgs: [record.id]
+    );
+  }
 }
