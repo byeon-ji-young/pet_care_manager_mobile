@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../database/database_helper.dart';
 
-import '../models/health_records.dart';
+import '../models/health_record.dart';
 
 class HealthRecordRegisterScreen extends StatefulWidget {
   final int petId;

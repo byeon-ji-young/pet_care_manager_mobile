@@ -2,7 +2,7 @@ import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 
 import '../models/pet.dart';
-import '../models/health_records.dart';
+import '../models/health_record.dart';
 
 class DatabaseHelper {
   /*
@@ -77,7 +77,7 @@ class DatabaseHelper {
     */
     return await openDatabase(
       path,
-      version: 3, // DB 구조가 바뀔 때만 올림
+      version: 4, // DB 구조가 바뀔 때만 올림
       onCreate: (db, version) async {
         await db.execute('''
           CREATE TABLE pets (
@@ -103,6 +103,18 @@ class DatabaseHelper {
             FOREIGN KEY (pet_id) REFERENCES pets(id)
           )
         ''');
+
+        await db.execute('''
+          CREATE TABLE vaccinations (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            pet_id INTEGER NOT NULL,
+            vaccine_name TEXT NOT NULL,
+            vaccination_date TEXT NOT NULL,
+            next_date TEXT,
+            hospital TEXT,
+            memo TEXT
+          )
+        ''');
       },
 
       onUpgrade: (db, oldVersion, newVersion) async {
@@ -123,6 +135,20 @@ class DatabaseHelper {
               description TEXT,
               cost INTEGER,
               FOREIGN KEY (pet_id) REFERENCES pets(id)
+            )
+          ''');
+        }
+
+        if(oldVersion < 4) {
+          await db.execute('''
+            CREATE TABLE vaccinations (
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
+              pet_id INTEGER NOT NULL,
+              vaccine_name TEXT NOT NULL,
+              vaccination_date TEXT NOT NULL,
+              next_date TEXT,
+              hospital TEXT,
+              memo TEXT
             )
           ''');
         }
@@ -257,6 +283,7 @@ class DatabaseHelper {
     );
   }
 
+  // 반려동물별 동물기록 조회
   Future<List<HealthRecord>> getHealthRecordByPetId(int petId) async {
     final db = await database;
 
@@ -297,7 +324,7 @@ class DatabaseHelper {
   // 병원기록 수정
   Future<int> updateHealthRecord(HealthRecord record) async {
     final db = await database;
-    
+
     return await db.update(
       'health_records', 
       {
