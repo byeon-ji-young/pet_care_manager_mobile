@@ -56,7 +56,11 @@ class __HealthRecordRegisterScreenState extends State<HealthRecordRegisterScreen
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('병원 기록 등록'),
+        title: Text(
+          widget.record == null
+            ? '병원 기록 등록'
+            : '병원 기록 수정'
+        ),
       ),
 
       body: Padding(
