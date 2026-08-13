@@ -1,17 +1,131 @@
-# pet_care_manager_mobile
+# 🐾 Pet Care Manager Mobile
 
-A new Flutter project.
+반려동물의 기본 정보와 건강 기록을 관리할 수 있는 모바일 앱입니다.
 
-## Getting Started
+Flutter와 SQLite를 사용하여 반려동물 정보를 저장하고 관리하며,
+체중 변화와 예방접종 기록 등을 한눈에 확인할 수 있도록 개발하고 있습니다.
 
-This project is a starting point for a Flutter application.
+---
 
-A few resources to get you started if this is your first Flutter project:
+## 📱 주요 기능
 
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
+### 🐾 반려동물 관리
+- 반려동물 등록
+- 반려동물 정보 조회
+- 반려동물 정보 수정
+- 반려동물 삭제
+- 반려동물 사진 등록
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+### 🏥 건강 기록 관리
+- 건강 기록 등록
+- 건강 기록 조회
+- 건강 기록 수정
+- 건강 기록 삭제
+- 병원, 진료 내용, 비용 및 메모 관리
+
+### 💉 예방접종 관리
+- 예방접종 기록 등록
+- 예방접종 기록 조회
+- 예방접종 기록 수정
+- 예방접종 기록 삭제
+- 다음 예방접종 예정일 관리
+- 병원 및 메모 관리
+
+### ⚖️ 체중 기록 관리
+- 체중 기록 등록
+- 체중 기록 조회
+- 체중 기록 수정
+- 체중 기록 삭제
+- 체중 변화 그래프
+- 날짜별 체중 확인
+- 그래프 포인트 선택 시 날짜 및 체중 확인
+
+---
+
+## 🛠️ 기술 스택
+
+- **Flutter**
+- **Dart**
+- **SQLite**
+- **sqflite**
+- **fl_chart**
+
+---
+
+## 📂 프로젝트 구조
+
+```text
+lib/
+├── database/
+│   └── database_helper.dart
+│
+├── models/
+│   ├── pet.dart
+│   ├── health_record.dart
+│   ├── vaccination.dart
+│   └── weight_record.dart
+│
+├── screens/
+│   ├── pet_detail_screen.dart
+│   ├── pet_register_screen.dart
+│   ├── health_record_register_screen.dart
+│   ├── vaccination_register_screen.dart
+│   └── weight_record_register_screen.dart
+│
+└── widgets/
+    └── weight_chart.dart
+```
+
+---
+
+## 🗄️ 데이터베이스
+
+SQLite를 사용하여 반려동물과 관련된 데이터를 로컬에 저장합니다.
+
+현재 관리하고 있는 주요 데이터:
+
+- 반려동물 정보
+- 건강 기록
+- 예방접종 기록
+- 체중 기록
+
+데이터베이스 버전 변경에 따라 필요한 테이블을 마이그레이션하도록 구현하고 있습니다.
+
+---
+
+## 📈 체중 변화 그래프
+
+`fl_chart`를 사용하여 반려동물의 체중 변화를 그래프로 확인할 수 있습니다.
+
+- X축: 측정 날짜
+- Y축: 체중(kg)
+- 날짜순으로 체중 변화 표시
+- 그래프 포인트 선택 시 날짜 및 체중 표시
+
+---
+
+## 🚧 개발 진행 상황
+
+- [x] 반려동물 등록
+- [x] 반려동물 조회
+- [x] 반려동물 수정
+- [x] 반려동물 삭제
+- [x] 건강 기록 CRUD
+- [x] 예방접종 CRUD
+- [x] 체중 기록 CRUD
+- [x] 체중 변화 그래프
+- [ ] 예방접종 예정일 표시
+- [ ] 건강 기록 및 예방접종 요약
+- [ ] 홈 화면 대시보드
+- [ ] 알림 기능
+- [ ] UI/UX 개선
+
+---
+
+## 🎯 개발 목표
+
+반려동물의 기본 정보부터 건강 기록, 예방접종, 체중 변화까지
+한 곳에서 편리하게 관리할 수 있는 반려동물 건강 관리 앱을 만드는 것을 목표로 합니다.
+
+개발 과정에서 Flutter, Dart, SQLite 등의 기술을 학습하고
+실제 사용할 수 있는 모바일 애플리케이션으로 완성하는 것을 목표로 합니다.
