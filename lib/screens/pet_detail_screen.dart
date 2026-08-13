@@ -3,10 +3,12 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 
 import '../models/pet.dart';
+import '../models/health_records.dart';
 
 import '../database/database_helper.dart';
 
 import 'pet_register_screen.dart';
+import 'health_record_register_screen.dart';
 
 class PetDetailScreen extends StatefulWidget {
   final Pet pet;
@@ -31,11 +33,27 @@ class PetDetailScreen extends StatefulWidget {
 class _PetDetailScreenState extends State<PetDetailScreen> {
   Pet? currentPet;
 
+  List<HealthRecord> healthRecords = [];
+
   @override
   void initState() {
     super.initState();
 
     currentPet = widget.pet;
+
+    loadHealthRecords();
+  }
+
+  Future<void> loadHealthRecords() async {
+    final records = await DatabaseHelper.instance.getHealthRecordByPetId(widget.pet.id!);
+
+    if(!mounted) {
+      return;
+    }
+
+    setState(() {
+      healthRecords = records;
+    });
   }
   
   @override
@@ -108,6 +126,111 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
             ),
 
             const SizedBox(height: 30),
+
+            // 병원 기록
+            const Text(
+              '🏥 병원 기록',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold
+              ),
+            ),
+
+            const SizedBox(height: 10),
+
+            if(healthRecords.isEmpty) // Flutter의 children: [] 안에서 {}를 사용하면 안됨. {}를 Dart가 Set으로 해석하기 때문에 에러남
+              const Text(
+                '등록된 병원 기록이 없습니다.',
+                 style: TextStyle(
+                  color: Colors.grey
+                 ),
+              )
+            else
+              Column(
+                children: healthRecords.map((record) {
+                  return Card(
+                    margin: const EdgeInsets.only(bottom: 10),
+                    child: ListTile(
+                      title: Text(record.title),
+                      subtitle: Text(
+                        '${record.date.year}.${record.date.month.toString().padLeft(2, '0')}.${record.date.day.toString().padLeft(2, '0')}'
+                        '${record.hospital != null ? '\n${record.hospital}' : ''}'
+                      ),
+                      // trailing: record.cost != null ? Text('${record.cost}원') : null, // trailing: ListTile의 오른쪽에 표시할 내용을 지정
+                      trailing: Row( 
+                        mainAxisSize: MainAxisSize.min, // Row나 Column이 주축(main axis) 방향으로 얼마나 공간을 차지할지 정하는 옵션. 즉, mainAxis 방향으로 필요한 만큼만 공간을 차지하겠다는 뜻
+                        children: [
+                          if (record.cost != null)
+                            Text('${record.cost}원'),
+
+                          IconButton(
+                            icon: const Icon(Icons.delete),
+                            onPressed: () async {
+                              final confirmed = await showDialog<bool>(
+                                context: context,
+                                builder: (context) {
+                                  return AlertDialog(
+                                    title: const Text('병원 기록 삭제'),
+                                    content: Text(
+                                      '${record.title} 기록을 삭제하시겠습니까?',
+                                    ),
+                                    actions: [
+                                      TextButton(
+                                        onPressed: () {
+                                          Navigator.pop(context, false);
+                                        },
+                                        child: const Text('취소'),
+                                      ),
+                                      TextButton(
+                                        onPressed: () {
+                                          Navigator.pop(context, true);
+                                        },
+                                        child: const Text('삭제'),
+                                      ),
+                                    ],
+                                  );
+                                },
+                              );
+
+                              if (confirmed != true) {
+                                return;
+                              }
+
+                              await DatabaseHelper.instance.deleteHealthRecord(record.id!);
+
+                              await loadHealthRecords();
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ),
+
+            const SizedBox(height: 20),
+
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                onPressed: () async {
+                  final result = await Navigator.push( // Navigator는 Flutter에서 화면 이동을 관리하는 역할. push는 새로운 화면을 위에 추가
+                    context, // context는 Flutter의 현재 위젯이 어디에 위치하고 있는지 알려주는 정보
+                    MaterialPageRoute( // MaterialPageRoute: 어떤 방식으로 새로운 화면을 띄울지 정의하는 것
+                      builder: (context) => HealthRecordRegisterScreen( // builder는 실제로 이동할 화면을 만들어주는 부분
+                        petId: pet.id!
+                      )
+                    )
+                  );
+
+                  if(result == true) {
+                    await loadHealthRecords();
+                  }
+                },
+                icon: const Icon(Icons.add),
+                label: const Text('병원 기록 추가')
+              ),
+            ),
 
             SizedBox(
               width: double.infinity, // 가로 너비를 부모 위젯이 허용하는 최대 너비로 꽉 채우겠다

@@ -2,6 +2,7 @@ import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 
 import '../models/pet.dart';
+import '../models/health_records.dart';
 
 class DatabaseHelper {
   /*
@@ -76,7 +77,7 @@ class DatabaseHelper {
     */
     return await openDatabase(
       path,
-      version: 2,
+      version: 3, // DB 구조가 바뀔 때만 올림
       onCreate: (db, version) async {
         await db.execute('''
           CREATE TABLE pets (
@@ -89,13 +90,41 @@ class DatabaseHelper {
             image_path TEXT
           )
         ''');
+
+        await db.execute('''
+          CREATE TABLE health_records (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            pet_id INTEGER NOT NULL,
+            date TEXT NOT NULL,
+            hospital TEXT,
+            title TEXT NOT NULL,
+            description TEXT,
+            cost INTEGER,
+            FOREIGN KEY (pet_id) REFERENCES pets(id)
+          )
+        ''');
       },
 
       onUpgrade: (db, oldVersion, newVersion) async {
-        if (oldVersion < 2) {
+        if(oldVersion < 2) {
           await db.execute(
             'ALTER TABLE pets ADD COLUMN image_path TEXT',
           );
+        }
+
+        if(oldVersion < 3) {
+          await db.execute('''
+            CREATE TABLE health_records (
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
+              pet_id INTEGER NOT NULL,
+              date TEXT NOT NULL,
+              hospital TEXT,
+              title TEXT NOT NULL,
+              description TEXT,
+              cost INTEGER,
+              FOREIGN KEY (pet_id) REFERENCES pets(id)
+            )
+          ''');
         }
       },
     );
@@ -108,6 +137,7 @@ class DatabaseHelper {
       - update(): 수정된 행의 개수
       - delete(): 삭제된 행의 개수
   */
+  // ========================================================= pets =========================================================
   // 반려동물 추가
   Future<int> insertPet(Pet pet) async {
     final db = await database; // 준비된 DB 가져오기
@@ -206,6 +236,61 @@ class DatabaseHelper {
       'pets',
       where: 'id = ?',
       whereArgs: [id]
+    );
+  }
+
+  // ========================================================= health_records =========================================================
+  // 병원 기록 추가
+  Future<int> insertHealthRecord(HealthRecord record) async {
+   final db = await database;
+
+   return await db.insert(
+      'health_records', 
+      {
+        'pet_id': record.petId,
+        'date': record.date.toIso8601String(),
+        'hospital': record.hospital,
+        'title': record.title,
+        'description': record.description,
+        'cost': record.cost,
+      }
+    );
+  }
+
+  Future<List<HealthRecord>> getHealthRecordByPetId(int petId) async {
+    final db = await database;
+
+    final List<Map<String, dynamic>> maps = await db.query(
+      'health_records',
+      where: 'pet_id = ?',
+      whereArgs: [petId],
+      orderBy: 'date DESC'
+    );
+
+    return List.generate( // List.generate(개수, 함수): 정해진 개수만큼 리스트 만들어주는 함수
+      maps.length,
+      (i) {
+        return HealthRecord(
+          id: maps[i]['id'],
+          petId: maps[i]['pet_id'],
+          date: DateTime.parse(maps[i]['date']),
+          hospital: maps[i]['hospital'],
+          title: maps[i]['title'],
+          description: maps[i]['description'],
+          cost: maps[i]['cost'],
+        );
+      },
+    );
+  }
+
+  // 병원기록 삭제
+  Future<int> deleteHealthRecord(int id) async {
+    final db = await database;
+
+    return await db.delete(
+      'health_records',
+      where: 'id = ?',
+      whereArgs: [id],
     );
   }
 }
