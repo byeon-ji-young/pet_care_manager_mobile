@@ -405,4 +405,15 @@ class DatabaseHelper {
       whereArgs: [vaccination.id]
     );
   }
+
+  // 예방접종 삭제
+  Future<int> deleteVaccination(int id) async {
+    final db = await database;
+
+    return db.delete(
+      'vaccinations',
+      where: 'id = ?',
+      whereArgs: [id]
+    );
+  }
 }

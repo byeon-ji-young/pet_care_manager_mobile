@@ -300,23 +300,71 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
                               ? '\n다음 접종: ${vaccination.nextDate!.year}.${vaccination.nextDate!.month.toString().padLeft(2, '0')}.${vaccination.nextDate!.day.toString().padLeft(2, '0')}' : ''}'
                           '${vaccination.hospital != null ? '\n${vaccination.hospital}' : ''}'
                         ),
-                        trailing: IconButton(
-                          icon: const Icon(Icons.edit),
-                          onPressed: () async {
-                            final result = await Navigator.push(
-                              context, 
-                              MaterialPageRoute(
-                                builder: (context) => VaccinationRegisterScreen(
-                                  petId: pet.id!,
-                                  vaccination: vaccination,
-                                )
-                              )
-                            );
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min, // Row나 Column이 주축(main axis) 방향으로 필요한 만큼만 공간 차지
+                          children: [
+                            IconButton(
+                              icon: const Icon(Icons.edit),
+                              onPressed: () async {
+                                final result = await Navigator.push(
+                                  context, 
+                                  MaterialPageRoute(
+                                    builder: (context) => VaccinationRegisterScreen(
+                                      petId: pet.id!,
+                                      vaccination: vaccination,
+                                    )
+                                  )
+                                );
 
-                            if(result == true) {
-                              await loadVaccinations();
-                            }
-                          }
+                                if(result == true) {
+                                  await loadVaccinations();
+                                }
+                              }
+                            ),
+
+                            IconButton(
+                              icon: const Icon(Icons.delete),
+                              onPressed: () async {
+                                final confirmed = await showDialog<bool>(
+                                  context: context, 
+                                  builder: (context) {
+                                    return AlertDialog(
+                                      title: const Text('예방접종 삭제'),
+                                      content: Text(
+                                        '${vaccination.vaccineName} 기록을 삭제하시겠습니까?'
+                                      ),
+                                      actions: [
+                                        TextButton(
+                                          onPressed: () {
+                                            Navigator.pop(context, false);
+                                          }, 
+                                          child: const Text('취소')
+                                        ),
+                                        TextButton(
+                                          onPressed: () {
+                                            Navigator.pop(context, true);
+                                          }, 
+                                          child: const Text('삭제')
+                                        )
+                                      ],
+                                    );
+                                  },
+                                );
+
+                                if(confirmed != true) {
+                                  return;
+                                }
+
+                                await DatabaseHelper.instance.deleteVaccination(vaccination.id!);
+
+                                if(!mounted) {
+                                  return;
+                                }
+                                
+                                await loadVaccinations();
+                              }
+                            )
+                          ],
                         )
                       ),
                     );
