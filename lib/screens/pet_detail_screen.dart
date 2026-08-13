@@ -298,8 +298,26 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
                           '${vaccination.vaccinationDate.day.toString().padLeft(2, '0')}'
                           '${vaccination.nextDate != null 
                               ? '\n다음 접종: ${vaccination.nextDate!.year}.${vaccination.nextDate!.month.toString().padLeft(2, '0')}.${vaccination.nextDate!.day.toString().padLeft(2, '0')}' : ''}'
-                          '${vaccination.hospital != null ? '${vaccination.hospital}' : ''}'
+                          '${vaccination.hospital != null ? '\n${vaccination.hospital}' : ''}'
                         ),
+                        trailing: IconButton(
+                          icon: const Icon(Icons.edit),
+                          onPressed: () async {
+                            final result = await Navigator.push(
+                              context, 
+                              MaterialPageRoute(
+                                builder: (context) => VaccinationRegisterScreen(
+                                  petId: pet.id!,
+                                  vaccination: vaccination,
+                                )
+                              )
+                            );
+
+                            if(result == true) {
+                              await loadVaccinations();
+                            }
+                          }
+                        )
                       ),
                     );
                   }).toList(),
@@ -331,6 +349,7 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
               
               const SizedBox(height: 20),
 
+              // 반려동물 수정하기 버튼
               SizedBox(
                 width: double.infinity, // 가로 너비를 부모 위젯이 허용하는 최대 너비로 꽉 채우겠다
                 height: 50,
@@ -374,6 +393,7 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
 
               const SizedBox(height: 12),
 
+              // 반려동물 삭제 버튼
               SizedBox(
                 width: double.infinity,
                 height: 50,

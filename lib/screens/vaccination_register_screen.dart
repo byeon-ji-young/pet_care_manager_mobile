@@ -6,9 +6,12 @@ import '../models/vaccination.dart';
 class VaccinationRegisterScreen extends StatefulWidget {
   final int petId;
 
+  final Vaccination? vaccination;
+
   const VaccinationRegisterScreen({
     super.key,
-    required this.petId
+    required this.petId,
+    this.vaccination
   });
 
   @override
@@ -24,6 +27,22 @@ class _VaccinationRegisterScreen extends State<VaccinationRegisterScreen> {
   DateTime? nextDate;
 
   @override
+  void initState() {
+    super.initState();
+
+    final vaccination = widget.vaccination;
+
+    if(vaccination != null) {
+      vaccineNameController.text = vaccination.vaccineName;
+      hospitalController.text = vaccination.hospital ?? '';
+      memoController.text = vaccination.memo ?? '';
+
+      vaccinationDate = vaccination.vaccinationDate;
+      nextDate = vaccination.nextDate;
+    }
+  }
+
+  @override
   void dispose() {
     vaccineNameController.dispose();
     hospitalController.dispose();
@@ -36,7 +55,11 @@ class _VaccinationRegisterScreen extends State<VaccinationRegisterScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('예방접종 등록'),
+        title: Text(
+          widget.vaccination == null
+            ? '예방접종 등록'
+            : '예방접종 수정'
+        ),
       ),
 
       body: Padding(
@@ -171,6 +194,7 @@ class _VaccinationRegisterScreen extends State<VaccinationRegisterScreen> {
               child: ElevatedButton(
                 onPressed: () async {
                   final vaccination = Vaccination(
+                    id: widget.vaccination?.id,
                     petId: widget.petId, 
                     vaccineName: vaccineNameController.text.trim(), 
                     vaccinationDate: vaccinationDate,
@@ -183,8 +207,12 @@ class _VaccinationRegisterScreen extends State<VaccinationRegisterScreen> {
                       : memoController.text.trim()
                   );
 
-                  await DatabaseHelper.instance.insertVaccination(vaccination);
-
+                  if(widget.vaccination == null) {
+                    await DatabaseHelper.instance.insertVaccination(vaccination);
+                  }else {
+                    await DatabaseHelper.instance.updateVaccination(vaccination);
+                  }
+                  
                   if(!context.mounted) {
                     return;
                   }

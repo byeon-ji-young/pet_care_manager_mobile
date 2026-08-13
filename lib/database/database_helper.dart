@@ -386,4 +386,23 @@ class DatabaseHelper {
       );
     }).toList();
   }
+
+  // 예방접종 수정
+  Future<int> updateVaccination(Vaccination vaccination) async {
+    final db = await database;
+
+    return db.update(
+      'vaccinations', 
+      {
+        'pet_id': vaccination.petId,
+        'vaccine_name': vaccination.vaccineName,
+        'vaccination_date': vaccination.vaccinationDate.toIso8601String(),
+        'next_date': vaccination.nextDate?.toIso8601String(),
+        'hospital': vaccination.hospital,
+        'memo': vaccination.memo,
+      },
+      where: 'id = ?',
+      whereArgs: [vaccination.id]
+    );
+  }
 }
