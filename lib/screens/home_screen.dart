@@ -119,6 +119,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
                   /*
                     화면 이동 버튼 (ElevatedButton.icon & Navigator)
+                    - ElevatedButton은 Flutter에서 사용하는 기본 버튼 위젯
 
                     ElevatedButton.icon: 입체감이 있는 버튼에 아이콘(+)과 글자(반려동물 등록)를 같이 넣어 생성
                     onPressed: () { ... }: 버튼을 눌렀을 때 실행될 동작 정의
