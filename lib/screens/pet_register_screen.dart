@@ -74,6 +74,7 @@ class _PetRegisterScreenState extends State<PetRegisterScreen> {
     - async / await (비동기): 사용자가 달력 팝업에서 날짜를 선택할 때까지 기다렸다가(await), 선택이 끝나면 다음 코드 실향
     - setState(): 선택한 날짜(pickedDate)를 변수에 저장하고 화면을 다시 그려서(리렌더링) 선택한 날짜가 화면 텍스트에 즉시 갱신
   */
+  // Future<>는 비동기 함수
   Future<void> selectBirthDate() async {
     final DateTime? pickedDate = await showDatePicker(
       context: context,
@@ -125,14 +126,71 @@ class _PetRegisterScreenState extends State<PetRegisterScreen> {
     return savedImage.path;
   }
 
+  // 공통 InputDecoration
+  InputDecoration _buildInputDecoration({required String hintText, Widget? suffixIcon, String? suffixText}) { // 동기 함수라서 Future<> 안적음
+    return InputDecoration(
+      hintText: hintText,
+      hintStyle: TextStyle(
+        color: Colors.grey[400],
+        fontSize: 14
+      ),
+      suffixIcon: suffixIcon,
+      suffixText: suffixText,
+      suffixStyle: TextStyle(
+        color: Colors.grey[700],
+        fontWeight: FontWeight.w500
+      ),
+      filled: true, // TextField의 입력 영역에 배경색을 채울지 여부
+      fillColor: Colors.grey[50],
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(
+          color: Colors.grey[300]!,
+          width: 1
+        ),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(
+          color: Theme.of(context).primaryColor, 
+          width: 1.5
+        ),
+      ),
+    );
+  }
+
+  // 공통 라벨
+  Widget _buildSectionLabel(String label) {
+    return Padding(
+      padding: const EdgeInsetsGeometry.only(bottom: 8),
+      child: Text(
+        label,
+        style: TextStyle(
+          fontSize: 15,
+          fontWeight: FontWeight.bold,
+          // letterSpacing: -0.3 // 글자 사이 간격
+        ),
+      ),
+    );
+  }
+
   // UI 구성 및 레이아웃 포인트
   @override
   Widget build(BuildContext context) {
+    final hasImage = selectedImage != null || (!removeImage && widget.pet?.imagePath != null);
+    
     return Scaffold(
       appBar: AppBar(
         title: Text(
           widget.pet == null ? '반려동물 등록' : '반려동물 수정',
-        )
+          style: const TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 18
+          )
+        ),
+        centerTitle: true,
+        elevation: 0, // 위젯에 주는 그림자(입체감)를 없애는 설정
       ),
 
       /*
@@ -150,7 +208,7 @@ class _PetRegisterScreenState extends State<PetRegisterScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // 사진 영역
+            // 1. 프로필 사진 영역
             Center(
               child: Column(
                 children: [
@@ -161,73 +219,91 @@ class _PetRegisterScreenState extends State<PetRegisterScreen> {
                       : (!removeImage && widget.pet?.imagePath != null
                           ? FileImage(File(widget.pet!.imagePath!))
                           : null),
-                    child: selectedImage == null && (removeImage || widget.pet?.imagePath == null)
+                    child: !hasImage
                       ? const Icon(
-                        Icons.pets,
-                        size: 50,
-                      )
+                          Icons.pets,
+                          size: 50,
+                        )
                       : null,
                   ),
 
                   const SizedBox(height: 10),
 
-                  TextButton.icon(
-                    onPressed: selectImage,
-                    icon: Icon(
-                      widget.pet?.imagePath != null ? Icons.edit : Icons.camera_alt
-                    ),
-                    label: Text(
-                      widget.pet?.imagePath != null ? '사진 변경' : '사진 추가',
-                    ),
-                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      OutlinedButton.icon(
+                        onPressed: selectImage, 
+                        style: OutlinedButton.styleFrom(
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(20)
+                          ),
+                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8)
+                        ),
+                        icon: Icon(
+                          hasImage ? Icons.edit : Icons.camera_alt,
+                          size: 16,
+                        ),
+                        label: Text(
+                          hasImage ? '사진 변경' : '사진 추가',
+                          style: const TextStyle(
+                            fontSize: 13
+                          ),
+                        )
+                      ),
 
-                  if(widget.pet?.imagePath != null)
-                    TextButton.icon(
-                      onPressed: () {
-                        setState(() {
-                          removeImage = true;
-                          selectedImage = null;
-                        });
-                      },
-                      icon: const Icon(Icons.delete),
-                      label: const Text('사진 삭제'),
-                    ),
+                      if(hasImage) ... [
+                        const SizedBox(width: 8),
+
+                        OutlinedButton.icon(
+                          onPressed: () {
+                            setState(() {
+                              removeImage = true;
+                              selectedImage = null;
+                            });
+                          },
+                          style: OutlinedButton.styleFrom(
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(20)
+                            ),
+                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                            foregroundColor: Colors.red[400],
+                            side: BorderSide(
+                              color: Colors.red[200]!
+                            )
+                          ),
+                          icon: Icon(
+                            Icons.delete_outline,
+                            size: 16,
+                          ),
+                          label: const Text(
+                            '사진 삭제',
+                            style: TextStyle(
+                              fontSize: 13
+                            ),
+                          )
+                        )
+                      ]  
+                    ],
+                  ),
                 ],
               ),
             ),
 
             const SizedBox(height: 20),
 
-            // 이름
-            const Text(
-              '이름',
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-
-            const SizedBox(height: 8),
+            // 2. 이름
+            _buildSectionLabel('이름'),
 
             TextField(
               controller: nameController,
-              decoration: const InputDecoration(
-                hintText: '예: 몽이',
-                border: OutlineInputBorder(),
-              ),
+              decoration: _buildInputDecoration(hintText: '예: 몽이'),
             ),
 
             const SizedBox(height: 20),
 
-            // 생일
-            const Text(
-              '생일',
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-
-            const SizedBox(height: 8),
-
+            // 3. 생일
+            _buildSectionLabel('생일'),
             /*
               InkWell + InputDecorator (클릭 가능한 텍스트 상자)
               - InkWell: 터치(클릭) 이벤트를 감지하여 물결 애니메이션 효과 생성
@@ -240,29 +316,128 @@ class _PetRegisterScreenState extends State<PetRegisterScreen> {
             */
             InkWell(
               onTap: selectBirthDate,
-
+              borderRadius: BorderRadius.circular(12),
               child: InputDecorator(
-                decoration: const InputDecoration(
-                  border: OutlineInputBorder(),
-                  suffixIcon: Icon(Icons.calendar_today),
+                decoration: _buildInputDecoration(
+                  hintText: '',
+                  suffixIcon: Icon(Icons.calendar_today_rounded, color: Colors.grey[600], size: 20),
                 ),
-
                 child: Text(
                   selectedBirthDate == null
                       ? '생일을 선택해주세요'
                       : '${selectedBirthDate!.year}.${selectedBirthDate!.month.toString().padLeft(2, '0')}.${selectedBirthDate!.day.toString().padLeft(2, '0')}',
+                  style: TextStyle(
+                    fontSize: 15,
+                    color: selectedBirthDate == null ? Colors.grey[400] : Colors.black87
+                  ),
                 ),
               ),
             ),
 
             const SizedBox(height: 20),
 
-            // 성별
-            const Text(
-              '성별',
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-              ),
+            // 4. 성별
+            _buildSectionLabel('성별'),
+            Row(
+              children: [
+                Expanded(
+                  child: InkWell(
+                    onTap: () {
+                      setState(() {
+                        selectedGender = '남아';
+                      });
+                    },
+                    borderRadius: BorderRadius.circular(12),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      decoration: BoxDecoration(
+                        color: selectedGender == '남아'
+                          ? Theme.of(context).primaryColor.withValues(alpha: 0.1)
+                          : Colors.grey[50],
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: selectedGender == '남아'
+                            ? Theme.of(context).primaryColor
+                            : Colors.grey[300]!,
+                          width: selectedGender == '남아' ? 1.5 : 1.0
+                        )
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.male,
+                            color: selectedGender == '남아'
+                              ? Theme.of(context).primaryColor
+                              : Colors.grey[500],
+                            size: 20,
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            '남아',
+                            style: TextStyle(
+                              fontWeight: selectedGender == '남아' ? FontWeight.bold : FontWeight.normal,
+                              color: selectedGender == '남아'
+                                ? Theme.of(context).primaryColor
+                                : Colors.grey[700],
+                            ),
+                          ) 
+                        ],
+                      ),
+                    ),
+                  )
+                ),
+
+                const SizedBox(width: 12),
+                
+                Expanded(
+                  child: InkWell(
+                    onTap: () {
+                      setState(() {
+                        selectedGender = '여아';
+                      });
+                    },
+                    borderRadius: BorderRadius.circular(12),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      decoration: BoxDecoration(
+                        color: selectedGender == '여아'
+                            ? Theme.of(context).primaryColor.withValues(alpha: 0.1)
+                            : Colors.grey[50],
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: selectedGender == '여아'
+                              ? Theme.of(context).primaryColor
+                              : Colors.grey[300]!,
+                          width: selectedGender == '여아' ? 1.5 : 1.0,
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.female,
+                            color: selectedGender == '여아'
+                                ? Theme.of(context).primaryColor
+                                : Colors.grey[500],
+                            size: 20,
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            '여아',
+                            style: TextStyle(
+                              fontWeight: selectedGender == '여아' ? FontWeight.bold : FontWeight.normal,
+                              color: selectedGender == '여아'
+                                  ? Theme.of(context).primaryColor
+                                  : Colors.grey[700],
+                            )
+                          ),
+                        ],
+                      ),
+                    ),
+                  )
+                )
+              ],
             ),
 
             /*
@@ -277,65 +452,46 @@ class _PetRegisterScreenState extends State<PetRegisterScreen> {
                 ],
               )
             */
-            RadioGroup<String>(
-              groupValue: selectedGender,
-              onChanged: (String? value) {
-                setState(() {
-                  selectedGender = value;
-                });
-              },
-              child: Row(
-                children: const [
-                  Expanded(
-                    child: RadioListTile<String>(
-                      title: Text('남아'),
-                      value: '남아',
-                      // groupValue, onChanged 제거!
-                    ),
-                  ),
-                  Expanded(
-                    child: RadioListTile<String>(
-                      title: Text('여아'),
-                      value: '여아',
-                      // groupValue, onChanged 제거!
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 10),
-
-            // 품종
-            const Text(
-              '품종',
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-
-            const SizedBox(height: 8),
-
-            TextField(
-              controller: breedController,
-              decoration: const InputDecoration(
-                hintText: '예: 말티즈',
-                border: OutlineInputBorder(),
-              ),
-            ),
+            // RadioGroup<String>(
+            //   groupValue: selectedGender,
+            //   onChanged: (String? value) {
+            //     setState(() {
+            //       selectedGender = value;
+            //     });
+            //   },
+            //   child: Row(
+            //     children: const [
+            //       Expanded(
+            //         child: RadioListTile<String>(
+            //           title: Text('남아'),
+            //           value: '남아',
+            //           // groupValue, onChanged 제거!
+            //         ),
+            //       ),
+            //       Expanded(
+            //         child: RadioListTile<String>(
+            //           title: Text('여아'),
+            //           value: '여아',
+            //           // groupValue, onChanged 제거!
+            //         ),
+            //       ),
+            //     ],
+            //   ),
+            // ),
 
             const SizedBox(height: 20),
 
-            // 몸무게
-            const Text(
-              '몸무게 (kg)',
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-              ),
+            // 5. 품종
+            _buildSectionLabel('품종'),
+            TextField(
+              controller: breedController,
+              decoration: _buildInputDecoration(hintText: '예: 말티즈'),
             ),
+            
+            const SizedBox(height: 20),
 
-            const SizedBox(height: 8),
-
+            // 6. 몸무게
+            _buildSectionLabel('몸무게'),
             /*
               keyboardType (숫자 키보드)
               - 몸무게 입력 시 자판이 영문/한글 대신 숫자 키패드로 바로 뜨도록 함
@@ -351,21 +507,18 @@ class _PetRegisterScreenState extends State<PetRegisterScreen> {
               keyboardType: const TextInputType.numberWithOptions(
                 decimal: true
               ),
-
-              decoration: const InputDecoration(
+              decoration: _buildInputDecoration(
                 hintText: '예: 3.5',
-                border: OutlineInputBorder(),
                 suffixText: 'kg',
               ),
             ),
 
             const SizedBox(height: 30),
 
-            // 등록 버튼
+            // 7. 등록/수정 버튼
             SizedBox(
               width: double.infinity,
               height: 50,
-
               child: ElevatedButton.icon(
                 onPressed: () async {
                   final String name = nameController.text.trim();
@@ -457,13 +610,21 @@ class _PetRegisterScreenState extends State<PetRegisterScreen> {
                   */
                   Navigator.pop(context, true);
                 },
-
-                icon: const Icon(Icons.pets),
-
+                style: ElevatedButton.styleFrom(
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12)
+                  )
+                ),
+                icon: const Icon(
+                  Icons.pets,
+                  size: 20,
+                ),
                 label: Text(
                   widget.pet == null ? '등록하기' : '수정하기',
                   style: TextStyle(
                     fontSize: 16,
+                    fontWeight: FontWeight.bold
                   ),
                 ),
               ),
