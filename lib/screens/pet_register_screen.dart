@@ -343,11 +343,14 @@ class _PetRegisterScreenState extends State<PetRegisterScreen> {
               TextField(
                 controller: weightController,
                 keyboardType: TextInputType.number, // 숫자 키보드 호출
+                keyboardType: const TextInputType.numberWithOptions(decimal: true) // 소수점 입력까지 고려한 숫자 키보드
               )
             */
             TextField(
               controller: weightController,
-              keyboardType: TextInputType.number,
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true
+              ),
 
               decoration: const InputDecoration(
                 hintText: '예: 3.5',
