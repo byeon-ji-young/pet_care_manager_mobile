@@ -46,6 +46,7 @@ class _WeightRecordRegisterScreen extends State<WeightRecordRegisterScreen> {
     super.dispose();
   }
 
+  // 저장
   Future<void> saveWeightRecord() async {
     final weightText = weightController.text.trim();
 
@@ -55,7 +56,6 @@ class _WeightRecordRegisterScreen extends State<WeightRecordRegisterScreen> {
           content: Text('몸무게를 입력해주세요.')
         )
       );
-
       return;
     }
 
@@ -99,121 +99,166 @@ class _WeightRecordRegisterScreen extends State<WeightRecordRegisterScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(
-          isEdit ? '체중 기록 수정' : '체중 기록 등록'
-        ),
+        // title: Text(isEdit ? '체중 기록 수정' : '체중 기록 등록'),
+        title: null,
+        centerTitle: true,
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(20),
+      body: SafeArea(
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              '측정 날짜',
-              style: TextStyle(
-                fontWeight: FontWeight.bold
-              ),
-            ),
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      isEdit ? '체중 기록 수정' : '새 체중 기록',
+                      style: const TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
 
-            const SizedBox(height: 8),
+                    const SizedBox(height: 24),
 
-            /*
-            InkWell: 터치했을 때 물결처럼 퍼지는 클릭 효과를 만들어주는 위젯
+                    // 1. 측정 날짜 선택
+                    /*
+                    InkWell: 터치했을 때 물결처럼 퍼지는 클릭 효과를 만들어주는 위젯
 
-            onTap → 한 번 탭
-            onDoubleTap → 두 번 탭
-            onLongPress → 길게 누르기
-            onTapDown → 누르는 순간
-            onTapUp → 손가락을 뗀 순간
-            */
-            InkWell(
-              onTap: () async {
-                final pickedDate = await showDatePicker(
-                  context: context,
-                  initialDate: selectedDate,
-                  firstDate: DateTime(2000), 
-                  lastDate: DateTime.now()
-                );
+                    onTap → 한 번 탭
+                    onDoubleTap → 두 번 탭
+                    onLongPress → 길게 누르기
+                    onTapDown → 누르는 순간
+                    onTapUp → 손가락을 뗀 순간
+                    */
+                    InkWell(
+                      onTap: () async {
+                        final pickedDate = await showDatePicker(
+                          context: context,
+                          initialDate: selectedDate,
+                          firstDate: DateTime(2000), 
+                          lastDate: DateTime.now()
+                        );
 
-                if(pickedDate != null) {
-                  setState(() {
-                    selectedDate = pickedDate;
-                  });
-                }
-              },
-              child: InputDecorator(
-                decoration: const InputDecoration(
-                  border: OutlineInputBorder(),
-                  suffixIcon: Icon(Icons.calendar_today) // suffixIcon: TextField, TextFormField 안에서 오른쪽 끝에 아이콘을 넣는 속성
+                        if(pickedDate != null) {
+                          setState(() {
+                            selectedDate = pickedDate;
+                          });
+                        }
+                      },
+                      borderRadius: BorderRadius.circular(12),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 14),
+                        decoration: BoxDecoration(
+                          border: Border.all(color: Colors.grey.shade700),
+                          borderRadius: BorderRadius.circular(12)
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(
+                              Icons.calendar_month_outlined,
+                            ),
+                            const SizedBox(width: 16),
+                            const Text(
+                              '측정 날짜',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            const Spacer(), // Row 안에서 남아 있는 가로 공간을 Spacer()가 차지
+                            Text(
+                              '${selectedDate.year}.${selectedDate.month.toString().padLeft(2, '0')}.${selectedDate.day.toString().padLeft(2, '0')}',
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(width: 4),
+                            const Icon(
+                              Icons.arrow_drop_down,
+                              color: Colors.grey,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 15),
+
+                    // 2. 몸무게 입력창
+                    TextField(
+                      controller: weightController,
+                      keyboardType: const TextInputType.numberWithOptions(
+                        decimal: true
+                      ),
+                      decoration: InputDecoration(
+                        labelText: '몸무게',
+                        hintText: '예: 3.5',
+                        suffixText: 'kg',
+                        prefixIcon: const Icon(Icons.monitor_weight_outlined),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 15),
+
+                    // 3. 메모 입력창
+                    TextField(
+                      controller: memoController,
+                      maxLines: 4,
+                      decoration: InputDecoration(
+                        labelText: '메모',
+                        hintText: '메모를 입력해주세요.',
+                        alignLabelWithHint: true, // TextField의 labelText와 hintText의 세로 정렬을 맞춰주는 옵션
+                        prefixIcon: const Padding(
+                          padding: EdgeInsets.only(bottom: 30),
+                          child: Icon(Icons.notes),
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-                
-                child: Text(
-                  '${selectedDate.year}.${selectedDate.month.toString().padLeft(2, '0')}.${selectedDate.day.toString().padLeft(2, '0')}'
+              )
+            ),
+
+            // 저장 버튼
+            Padding(
+              padding: const EdgeInsets.all(20),
+              child: SizedBox(
+                width: double.infinity,
+                height: 50,
+                child: ElevatedButton(
+                  onPressed: saveWeightRecord, 
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(
+                        Icons.pets,
+                        size: 20,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        isEdit ? '수정하기' : '저장하기',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      )
+                    ],
+                  )
                 ),
               ),
-            ),
-
-            const SizedBox(height: 20),
-
-            const Text(
-              '몸무게',
-              style: TextStyle(
-                fontWeight: FontWeight.bold
-              ),
-            ),
-
-            const SizedBox(height: 8),
-
-            TextField(
-              controller: weightController,
-              keyboardType: const TextInputType.numberWithOptions(
-                decimal: true
-              ),
-              decoration: const InputDecoration(
-                border: OutlineInputBorder(),
-                hintText: 'ex. 3.5',
-                suffixText: 'kg'
-              ),
-            ),
-
-            const SizedBox(height: 20),
-
-            const Text(
-              '메모',
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-
-            const SizedBox(height: 8),
-
-            TextField(
-              controller: memoController,
-              maxLines: 3,
-              decoration: const InputDecoration(
-                border: OutlineInputBorder(),
-                hintText: '메모를 입력해주세요.'
-              ),
-            ),
-
-            const Spacer(),
-
-            SizedBox(
-              width: double.infinity,
-              height: 50,
-              child: ElevatedButton(
-                onPressed: saveWeightRecord, 
-                child: const Text(
-                  '저장',
-                  style: TextStyle(
-                    fontSize: 16
-                  ),
-                )
-              ),
-            )            
+            )
           ],
-        ),
-      ),
+        )
+      )
     );
   }
 }

@@ -265,75 +265,78 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
                   children: healthRecords.map((record) {
                     return Card(
                       margin: const EdgeInsets.only(bottom: 8),
-                      child: ListTile(
-                        title: Text(
-                          record.title,
-                          style: const TextStyle(
-                            fontWeight: FontWeight.w600
+                      child: Padding(
+                        padding: const EdgeInsets.only(left: 14),
+                        child: ListTile(
+                          title: Text(
+                            record.title,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w600
+                            ),
                           ),
-                        ),
-                        subtitle: Text(
-                          '${record.date.year}.${record.date.month.toString().padLeft(2, '0')}.${record.date.day.toString().padLeft(2, '0')}'
-                          '${record.hospital != null ? '\n${record.hospital}' : ''}'
-                        ),
-                        // trailing: record.cost != null ? Text('${record.cost}원') : null, // trailing: ListTile의 오른쪽에 표시할 내용을 지정
-                        trailing: Row( 
-                          mainAxisSize: MainAxisSize.min, // Row나 Column이 주축(main axis) 방향으로 얼마나 공간을 차지할지 정하는 옵션. 즉, mainAxis 방향으로 필요한 만큼만 공간을 차지하겠다는 뜻
-                          children: [
-                            if (record.cost != null)
-                              Padding(
-                                padding: const EdgeInsetsGeometry.only(right: 8),
-                                child: Text(
-                                  '${record.cost}원',
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.bold
+                          subtitle: Text(
+                            '${record.date.year}.${record.date.month.toString().padLeft(2, '0')}.${record.date.day.toString().padLeft(2, '0')}'
+                            '${record.hospital != null ? '\n${record.hospital}' : ''}'
+                          ),
+                          // trailing: record.cost != null ? Text('${record.cost}원') : null, // trailing: ListTile의 오른쪽에 표시할 내용을 지정
+                          trailing: Row( 
+                            mainAxisSize: MainAxisSize.min, // Row나 Column이 주축(main axis) 방향으로 얼마나 공간을 차지할지 정하는 옵션. 즉, mainAxis 방향으로 필요한 만큼만 공간을 차지하겠다는 뜻
+                            children: [
+                              if (record.cost != null)
+                                Padding(
+                                  padding: const EdgeInsetsGeometry.only(right: 8),
+                                  child: Text(
+                                    '${record.cost}원',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold
+                                    ),
                                   ),
                                 ),
-                              ),
-                            
-                            IconButton(
-                              icon: const Icon(
-                                Icons.edit_outlined,
-                                size: 20
-                              ),
-                              onPressed: () async {
-                                final result = await Navigator.push(
-                                  context, 
-                                  MaterialPageRoute(
-                                    builder: (context) => HealthRecordRegisterScreen(
-                                      petId: pet.id!,
-                                      record: record
+                              
+                              IconButton(
+                                icon: const Icon(
+                                  Icons.edit_outlined,
+                                  size: 20
+                                ),
+                                onPressed: () async {
+                                  final result = await Navigator.push(
+                                    context, 
+                                    MaterialPageRoute(
+                                      builder: (context) => HealthRecordRegisterScreen(
+                                        petId: pet.id!,
+                                        record: record
+                                      )
                                     )
-                                  )
-                                );
-                                
-                                if(result == true) {
-                                  await loadHealthRecords();
-                                }
-                              }, 
-                            ),
-                            
-                            IconButton(
-                              icon: const Icon(
-                                Icons.delete_outline,
-                                size: 20
+                                  );
+                                  
+                                  if(result == true) {
+                                    await loadHealthRecords();
+                                  }
+                                }, 
                               ),
-                              onPressed: () async {
-                                final confirmed = await showDeleteConfirmDialog(
-                                  context: context, 
-                                  // title: '병원 기록 삭제', 
-                                  content: '${record.title} 기록을 삭제하시겠습니까?'
-                                );
+                              
+                              IconButton(
+                                icon: const Icon(
+                                  Icons.delete_outline,
+                                  size: 20
+                                ),
+                                onPressed: () async {
+                                  final confirmed = await showDeleteConfirmDialog(
+                                    context: context, 
+                                    // title: '병원 기록 삭제', 
+                                    content: '${record.title} 기록을 삭제하시겠습니까?'
+                                  );
 
-                                if (confirmed != true) {
-                                  return;
-                                }
+                                  if (confirmed != true) {
+                                    return;
+                                  }
 
-                                await DatabaseHelper.instance.deleteHealthRecord(record.id!);
-                                await loadHealthRecords();
-                              },
-                            ),
-                          ],
+                                  await DatabaseHelper.instance.deleteHealthRecord(record.id!);
+                                  await loadHealthRecords();
+                                },
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     );
@@ -370,69 +373,72 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
                   children: vaccinations.map((vaccination) {
                     return Card(
                       margin: const EdgeInsets.only(bottom: 8),
-                      child: ListTile(
-                        title: Text(
-                          vaccination.vaccineName,
-                          style: TextStyle(
-                            fontWeight: FontWeight.w600
+                      child: Padding(
+                        padding: const EdgeInsets.only(left: 14),
+                        child: ListTile(
+                          title: Text(
+                            vaccination.vaccineName,
+                            style: TextStyle(
+                              fontWeight: FontWeight.w600
+                            ),
                           ),
-                        ),
-                        subtitle: Text(
-                          '접종일: '
-                          '${vaccination.vaccinationDate.year}.'
-                          '${vaccination.vaccinationDate.month.toString().padLeft(2, '0')}.'
-                          '${vaccination.vaccinationDate.day.toString().padLeft(2, '0')}'
-                          '${vaccination.nextDate != null 
-                              ? '\n다음 접종: ${vaccination.nextDate!.year}.${vaccination.nextDate!.month.toString().padLeft(2, '0')}.${vaccination.nextDate!.day.toString().padLeft(2, '0')}' : ''}'
-                          '${vaccination.hospital != null ? '\n${vaccination.hospital}' : ''}'
-                        ),
-                        trailing: Row(
-                          mainAxisSize: MainAxisSize.min, // Row나 Column이 주축(main axis) 방향으로 필요한 만큼만 공간 차지
-                          children: [
-                            IconButton(
-                              icon: const Icon(
-                                Icons.edit_outlined,
-                                size: 20,
-                              ),
-                              onPressed: () async {
-                                final result = await Navigator.push(
-                                  context, 
-                                  MaterialPageRoute(
-                                    builder: (context) => VaccinationRegisterScreen(
-                                      petId: pet.id!,
-                                      vaccination: vaccination,
+                          subtitle: Text(
+                            '접종일: '
+                            '${vaccination.vaccinationDate.year}.'
+                            '${vaccination.vaccinationDate.month.toString().padLeft(2, '0')}.'
+                            '${vaccination.vaccinationDate.day.toString().padLeft(2, '0')}'
+                            '${vaccination.nextDate != null 
+                                ? '\n다음 접종: ${vaccination.nextDate!.year}.${vaccination.nextDate!.month.toString().padLeft(2, '0')}.${vaccination.nextDate!.day.toString().padLeft(2, '0')}' : ''}'
+                            '${vaccination.hospital != null ? '\n${vaccination.hospital}' : ''}'
+                          ),
+                          trailing: Row(
+                            mainAxisSize: MainAxisSize.min, // Row나 Column이 주축(main axis) 방향으로 필요한 만큼만 공간 차지
+                            children: [
+                              IconButton(
+                                icon: const Icon(
+                                  Icons.edit_outlined,
+                                  size: 20,
+                                ),
+                                onPressed: () async {
+                                  final result = await Navigator.push(
+                                    context, 
+                                    MaterialPageRoute(
+                                      builder: (context) => VaccinationRegisterScreen(
+                                        petId: pet.id!,
+                                        vaccination: vaccination,
+                                      )
                                     )
-                                  )
-                                );
+                                  );
 
-                                if(result == true) {
+                                  if(result == true) {
+                                    await loadVaccinations();
+                                  }
+                                }
+                              ),
+
+                              IconButton(
+                                icon: const Icon(
+                                  Icons.delete_outline,
+                                  size: 20
+                                ),
+                                onPressed: () async {
+                                  final confirmed = await showDeleteConfirmDialog(
+                                    context: context, 
+                                    // title: '예방 접종 삭제', 
+                                    content: '${vaccination.vaccineName} 기록을 삭제하시겠습니까?'
+                                  );
+
+                                  if(confirmed != true) {
+                                    return;
+                                  }
+                                  
+                                  await DatabaseHelper.instance.deleteVaccination(vaccination.id!);
                                   await loadVaccinations();
                                 }
-                              }
-                            ),
-
-                            IconButton(
-                              icon: const Icon(
-                                Icons.delete_outline,
-                                size: 20
-                              ),
-                              onPressed: () async {
-                                final confirmed = await showDeleteConfirmDialog(
-                                  context: context, 
-                                  // title: '예방 접종 삭제', 
-                                  content: '${vaccination.vaccineName} 기록을 삭제하시겠습니까?'
-                                );
-
-                                if(confirmed != true) {
-                                  return;
-                                }
-                                
-                                await DatabaseHelper.instance.deleteVaccination(vaccination.id!);
-                                await loadVaccinations();
-                              }
-                            )
-                          ],
-                        )
+                              )
+                            ],
+                          )
+                        ),
                       ),
                     );
                   }).toList(),
@@ -516,63 +522,66 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
                   children: weightRecords.map((record) {
                     return Card(
                       margin: const EdgeInsets.only(bottom: 8),
-                      child: ListTile(
-                        title: Text(
-                          '${record.weight} kg',
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold
+                      child: Padding(
+                        padding: const EdgeInsets.only(left: 14),
+                        child: ListTile(
+                          title: Text(
+                            '${record.weight} kg',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold
+                            ),
                           ),
-                        ),
-                        subtitle: Text(
-                          '${record.date.year}.${record.date.month.toString().padLeft(2, '0')}.${record.date.day.toString().padLeft(2, '0')}'
-                          '${record.memo != null ? '\n${record.memo}' : ''}'
-                        ),
-                        trailing: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            IconButton(
-                              icon: const Icon(
-                                Icons.edit_outlined,
-                                size: 20
-                              ),
-                              onPressed: () async {
-                                final result = await Navigator.push(
-                                  context, 
-                                  MaterialPageRoute(
-                                    builder: (context) => WeightRecordRegisterScreen(
-                                      petId: pet.id!,
-                                      record: record,
+                          subtitle: Text(
+                            '${record.date.year}.${record.date.month.toString().padLeft(2, '0')}.${record.date.day.toString().padLeft(2, '0')}'
+                            // '${record.memo != null ? '\n${record.memo}' : ''}'
+                          ),
+                          trailing: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              IconButton(
+                                icon: const Icon(
+                                  Icons.edit_outlined,
+                                  size: 20
+                                ),
+                                onPressed: () async {
+                                  final result = await Navigator.push(
+                                    context, 
+                                    MaterialPageRoute(
+                                      builder: (context) => WeightRecordRegisterScreen(
+                                        petId: pet.id!,
+                                        record: record,
+                                      )
                                     )
-                                  )
-                                );
+                                  );
 
-                                if(result == true) {
-                                  loadWeightRecords();
+                                  if(result == true) {
+                                    loadWeightRecords();
+                                  }
                                 }
-                              }
-                            ),
-                            IconButton(
-                              icon: const Icon(
-                                Icons.delete_outline,
-                                size: 20,
                               ),
-                              onPressed: () async {
-                                final confirmed = await showDeleteConfirmDialog(
-                                  context: context, 
-                                  // title: '체중 기록 삭제', 
-                                  content: '${record.weight} kg 기록을 삭제하시겠습니까?'
-                                );
+                              IconButton(
+                                icon: const Icon(
+                                  Icons.delete_outline,
+                                  size: 20,
+                                ),
+                                onPressed: () async {
+                                  final confirmed = await showDeleteConfirmDialog(
+                                    context: context, 
+                                    // title: '체중 기록 삭제', 
+                                    content: '${record.weight} kg 기록을 삭제하시겠습니까?'
+                                  );
 
-                                if(confirmed != true) {
-                                  return;
+                                  if(confirmed != true) {
+                                    return;
+                                  }
+
+                                  await DatabaseHelper.instance.deleteWeightRecord(record.id!);
+                                  await loadWeightRecords();
                                 }
-
-                                await DatabaseHelper.instance.deleteWeightRecord(record.id!);
-                                await loadWeightRecords();
-                              }
-                            ),
-                          ],
-                        )
+                              ),
+                            ],
+                          )
+                        ),
                       ),
                     );
                   }).toList(),

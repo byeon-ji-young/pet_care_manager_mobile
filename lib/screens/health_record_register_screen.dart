@@ -15,10 +15,10 @@ class HealthRecordRegisterScreen extends StatefulWidget {
   });
 
   @override
-  State<HealthRecordRegisterScreen> createState() => __HealthRecordRegisterScreenState();
+  State<HealthRecordRegisterScreen> createState() => _HealthRecordRegisterScreenState();
 }
 
-class __HealthRecordRegisterScreenState extends State<HealthRecordRegisterScreen> {
+class _HealthRecordRegisterScreenState extends State<HealthRecordRegisterScreen> {
   final TextEditingController hospitalController = TextEditingController();
   final TextEditingController titleController = TextEditingController();
   final TextEditingController descriptionController = TextEditingController();
@@ -54,154 +54,242 @@ class __HealthRecordRegisterScreenState extends State<HealthRecordRegisterScreen
 
   @override
   Widget build(BuildContext context) {
+    final isEditing = widget.record != null;
+    
     return Scaffold(
       appBar: AppBar(
-        title: Text(
-          widget.record == null
-            ? '병원 기록 등록'
-            : '병원 기록 수정'
-        ),
+        // title: Text(isEditing ? '병원 기록 수정' : '병원 기록 등록'),
+        title: null,
+        centerTitle: true,
       ),
 
-      body: Padding(
-        padding: EdgeInsets.all(20),
+      body: SafeArea(
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              '병원 기록',
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold
-              ),
-            ),
+            Expanded(
+              child: SingleChildScrollView(
+                padding: EdgeInsets.all(20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      isEditing ? '병원 진료 내역 수정' : '새로운 병원 기록',
+                      style: const TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      '진료받은 내용을 꼼꼼하게 기록해 주세요.',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.grey[600],
+                      ),
+                    ),
+                    const SizedBox(height: 24),
 
-            const SizedBox(height: 30),
+                    // 1. 병원명 입력창
+                    TextField(
+                      controller: hospitalController,
+                      decoration: InputDecoration(
+                        labelText: '병원명',
+                        hintText: '예: 펫몽 동물병원',
+                        prefixIcon: const Icon(Icons.local_hospital_outlined),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                    ),
 
-            TextField(
-              controller: hospitalController,
-              decoration: const InputDecoration(
-                labelText: '병원명',
-                border: OutlineInputBorder()
-              ),
-            ),
+                    const SizedBox(height: 15),
 
-            const SizedBox(height: 15),
+                    // 2. 진료 제목 입력창
+                    TextField(
+                      controller: titleController,
+                      decoration: InputDecoration(
+                        labelText: '진료 제목',
+                        hintText: '예: 예방접종 / 정기검진',
+                        prefixIcon: const Icon(Icons.medical_services_outlined),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                    ),
 
-            TextField(
-              controller: titleController,
-              decoration: const InputDecoration(
-                labelText: '진료 제목',
-                border: OutlineInputBorder()
-              ),
-            ),
+                    const SizedBox(height: 15),
 
-            const SizedBox(height: 15),
+                    // 3. 진료 내용 입력창
+                    TextField(
+                      controller: descriptionController,
+                      maxLines: 4,
+                      decoration: InputDecoration(
+                        labelText: '진료 내용',
+                        hintText: '진료 소견이나 처방받은 약 정보를 적어주세요.',
+                        alignLabelWithHint: true, // TextField의 labelText와 hintText의 세로 정렬을 맞춰주는 옵션
+                        prefixIcon: const Padding(
+                          padding: EdgeInsets.only(bottom: 40),
+                          child: Icon(Icons.notes),
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                    ),
 
-            TextField(
-              controller: descriptionController,
-              maxLines: 4,
-              decoration: const InputDecoration(
-                labelText: '진료 내용',
-                border: OutlineInputBorder()
-              ),
-            ),
+                    const SizedBox(height: 15),
 
-            const SizedBox(height: 15),
+                    // 4. 진료비 입력창
+                    TextField(
+                      controller: costController,
+                      keyboardType: TextInputType.number,
+                      decoration: InputDecoration(
+                        labelText: '진료비',
+                        hintText: '0',
+                        suffixText: '원',
+                        prefixIcon: const Icon(Icons.payments_outlined),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                    ),
 
-            TextField(
-              controller: costController,
-              keyboardType: TextInputType.number,
-              decoration: const InputDecoration(
-                labelText: '진료비',
-                suffixText: '원',
-                border: OutlineInputBorder()
-              ),
-            ),
+                    const SizedBox(height: 15),
 
-            const SizedBox(height: 15),
+                    // 5. 방문 날짜 선택
+                    /*
+                    InkWell: 터치했을 때 물결처럼 퍼지는 클릭 효과를 만들어주는 위젯
 
-            Row(
-              children: [
-                const Text(
-                  '방문 날짜',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold
-                  ),
+                    onTap → 한 번 탭
+                    onDoubleTap → 두 번 탭
+                    onLongPress → 길게 누르기
+                    onTapDown → 누르는 순간
+                    onTapUp → 손가락을 뗀 순간
+                    */
+                    InkWell(
+                      onTap: () async {
+                        final pickedDate = await showDatePicker(
+                          context: context,
+                          initialDate: selectedDate,
+                          firstDate: DateTime(2000), 
+                          lastDate: DateTime.now()
+                        );
+
+                        if(pickedDate != null) {
+                          setState(() {
+                            selectedDate = pickedDate;
+                          });
+                        }
+                      },
+                      borderRadius: BorderRadius.circular(12),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 14),
+                        decoration: BoxDecoration(
+                          border: Border.all(color: Colors.grey.shade700),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(
+                              Icons.calendar_month_outlined, 
+                              // color: Colors.grey
+                            ),
+                            const SizedBox(width: 16),
+                            const Text(
+                              '방문 날짜',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            const Spacer(),
+                            Text(
+                              '${selectedDate.year}.${selectedDate.month.toString().padLeft(2, '0')}.${selectedDate.day.toString().padLeft(2, '0')}',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(width: 4),
+                            const Icon(
+                              Icons.arrow_drop_down,
+                              color: Colors.grey,
+                            )
+                          ],
+                        ),
+                      )
+                    ),
+                  ],
                 ),
-
-                const SizedBox(height: 20),
-
-                Text(
-                  '${selectedDate.year}.${selectedDate.month.toString().padLeft(2, '0')}.${selectedDate.day.toString().padLeft(2, '0')}',
-                ),
-
-                const Spacer(), // 남는 공간을 자동으로 차지하게 만드는 위젯. 즉, 여기 빈 공간을 최대한 만들어서 다른 위젯들을 밀어내라는 뜻
-
-                TextButton(
+              )
+            ),
+            
+            // 저장 버튼
+            Padding(
+              padding: const EdgeInsets.all(20.0),
+              child: SizedBox(
+                width: double.infinity, // 가로 너비를 가능한 한 최대로 늘리기
+                height: 50,
+                child: ElevatedButton(
                   onPressed: () async {
-                    final pickedDate = await showDatePicker(
-                      context: context,
-                      initialDate: selectedDate,
-                      firstDate: DateTime(2000), 
-                      lastDate: DateTime(2100)
+                    if(titleController.text.trim().isEmpty) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text("진료 제목을 입력해주세요.")
+                        )
+                      );
+                      return;
+                    }
+
+                    final record = HealthRecord(
+                      id: widget.record?.id,
+                      petId: widget.petId,
+                      date: selectedDate,
+                      hospital: hospitalController.text.trim().isEmpty
+                        ? null
+                        : hospitalController.text.trim(),
+                      title: titleController.text.trim(),
+                      description: descriptionController.text.trim().isEmpty
+                        ? null
+                        : descriptionController.text.trim(),
+                      cost: int.tryParse(costController.text.trim()) // tryParse: 비어있으면 null
                     );
 
-                    if(pickedDate != null) {
-                      setState(() {
-                        selectedDate = pickedDate;
-                      });
+                    if(widget.record == null) {
+                      await DatabaseHelper.instance.insertHealthRecord(record);
+                    }else {    
+                      await DatabaseHelper.instance.updateHealthRecord(record);
                     }
-                  }, 
-                  child: const Text('날짜 선택')
-                )
-              ],
-            ),
 
-            const Spacer(),
+                    if(!context.mounted) {
+                      return;
+                    }
 
-            SizedBox(
-              width: double.infinity, // 가로 너비를 가능한 한 최대로 늘리기
-              height: 50,
-              child: ElevatedButton(
-                onPressed: () async {
-                  final record = HealthRecord(
-                    id: widget.record?.id,
-                    petId: widget.petId,
-                    date: selectedDate,
-                    hospital: hospitalController.text.trim().isEmpty
-                      ? null
-                      : hospitalController.text.trim(),
-                    title: titleController.text.trim(),
-                    description: descriptionController.text.trim().isEmpty
-                      ? null
-                      : descriptionController.text.trim(),
-                    cost: int.tryParse(costController.text.trim()) // tryParse: 비어있으면 null
-                  );
-
-                  if(widget.record == null) {
-                    await DatabaseHelper.instance.insertHealthRecord(record);
-                  }else {    
-                    await DatabaseHelper.instance.updateHealthRecord(record);
-                  }
-
-                  if(!context.mounted) {
-                    return;
-                  }
-
-                  Navigator.pop(context, true);
-                },
-                child: const Text(
-                  '저장',
-                  style: TextStyle(
-                    fontSize: 16
-                  ),
-                )
+                    Navigator.pop(context, true);
+                  },
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(
+                        Icons.pets,
+                        size: 20,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        isEditing ? '수정하기' : '저장하기',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold
+                        ),
+                      )
+                    ],
+                  )
+                ),
               ),
             )
           ],
-        ),
-      ),
+        )
+      )
     );
   }
 }
