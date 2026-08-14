@@ -49,7 +49,40 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('PetCareManager'),
+        // title: const Text('🐾 PetCareManager'),
+        title: Row( // Row는 기본적으로 가로 방향으로 배치. 세로 배치는 Column
+          children: const [
+            Icon(
+              Icons.pets,
+            ),
+
+            SizedBox(width: 8),
+            
+            Text(
+              '펫몽',
+              /*
+              // 개별 텍스트에 구글폰트 적용시키는 방법 *
+              style: GoogleFonts.jua( 
+                fontWeight: FontWeight.bold
+              ),
+              */
+              style: TextStyle(
+                fontWeight: FontWeight.bold
+              ),
+            ),
+            
+            Spacer(),
+            
+            Text(
+              '우리 아이 건강일지',
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.blueGrey,
+              ),
+            ),
+          ],
+        ),
+        centerTitle: false, // 타이틀 좌측 정렬 유지
       ),
 
       body: pets.isEmpty
@@ -74,8 +107,12 @@ class _HomeScreenState extends State<HomeScreen> {
 
                   const SizedBox(height: 10),
 
-                  const Text(
+                  Text(
                     '우리 아이를 등록해 주세요.',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.grey[600],
+                    ),
                   ),
 
                   const SizedBox(height: 30),
@@ -101,31 +138,69 @@ class _HomeScreenState extends State<HomeScreen> {
                     },
                     icon: const Icon(Icons.add),
                     label: const Text('반려동물 등록'),
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 24,
+                        vertical: 12
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12)
+                      )
+                    ),
                   ),
                 ],
               ),
             )
           : ListView.builder(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12), // 리스트 전체 여백 추가
               itemCount: pets.length,
               itemBuilder: (context, index) {
                 final pet = pets[index];
 
                 return Card(
+                  elevation: 1, // 카드 그림자 살짝 부여
+                  margin: const EdgeInsets.only(bottom: 12), // 카드 사이 간격
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16), // 카드 모서리 둥글게
+                  ),
                   child: ListTile(
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 15,
+                      vertical: 2,
+                    ),
                     leading: CircleAvatar(
+                      radius: 28,
                       backgroundImage: pet.imagePath != null
                         ? FileImage(File(pet.imagePath!))
                         : null,
                       child: pet.imagePath == null
-                        ? Icon(Icons.pets)
+                        ? Icon(Icons.pets, size: 28)
                         : null,
                     ),
 
-                    title: Text(pet.name),
+                    title: Text(
+                      pet.name,
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
 
-                    subtitle: Text(
-                      '${pet.breed ?? '품종 미입력'} · '
-                      '${pet.weight != null ? '${pet.weight}kg' : '몸무게 미입력'}',
+                    subtitle: Padding(
+                      padding: const EdgeInsets.only(top: 4.0),
+                      child: Text(
+                        '${pet.breed?.isEmpty == true ? '품종 미입력' : pet.breed} · '
+                        '${pet.weight != null ? '${pet.weight}kg' : '몸무게 미입력'}',
+                        style: TextStyle(
+                          color: Colors.grey[600],
+                          fontSize: 14,
+                        ),
+                      ),
+                    ),
+
+                    trailing: const Icon(
+                      Icons.chevron_right, // 이동 가능함을 암시하는 화살표 아이콘
+                      color: Colors.grey,
                     ),
 
                     /*
@@ -153,6 +228,22 @@ class _HomeScreenState extends State<HomeScreen> {
                 );
               },
             ),
+
+      floatingActionButton: pets.isNotEmpty // FloatingActionButton: 화면 위에 둥둥 떠있는 버튼
+        ? FloatingActionButton(
+            onPressed: () async {
+              await Navigator.push(
+                context, 
+                MaterialPageRoute(
+                  builder: (context) => const PetRegisterScreen()
+                )
+              );
+
+              loadPets();
+            },
+            child: const Icon(Icons.add),
+          )
+        : null
     );
   }
 }

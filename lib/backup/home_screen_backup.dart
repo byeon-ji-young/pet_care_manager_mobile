@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart'; // 플루터 제공 디자인 라이브러리
 
-import 'pet_register_screen.dart';
+import '../screens/pet_register_screen.dart';
 
 class HomeScreenBackup extends StatelessWidget { // StatelessWidget: 사용자에 동작에 의해 화면 자체의 데이터(상태)가 바로 바뀌지 않는 정적인 화면을 의미
   const HomeScreenBackup({super.key}); // 플러터가 위젯을 효율적으로 관리할 수 있도록 돕는 생성자 선언
