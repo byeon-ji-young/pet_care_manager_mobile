@@ -582,44 +582,8 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
   }
 }
 
-// 상세 정보 한 줄을 만드는 위젯
-class _InfoRow extends StatelessWidget { // StatelessWidget: 화면에 그려질 수 있는 위젯의 자격을 부여하기 위해 상속받음
-  final String label;
-  final String value;
-
-  const _InfoRow({
-    required this.label,
-    required this.value,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 10), // symmetric(vertical: 10): 위쪽과 아래쪽에 각각 10px 여백
-
-      child: Row( // Row (가로 배치). 안에 들어가는 SizedBox, Expanded를 가로방향으로 일렬 배치함
-        children: [
-          SizedBox(
-            width: 70,
-            child: Text(
-              label,
-              style: const TextStyle(
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
-
-          Expanded( // Expanded: 가로 공간 중에서 남은 나머지 가로 공간 전체를 꽉 채우도록 확장시켜줌. 만약에 값이 길 경우 자동으로 줄바꿈되도록 하기 위해 extended로 감싸줌
-            child: Text(value),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 // 섹션 헤더 (제목 + 추가 버튼 우측 배치)
-class _SectionHeader extends StatelessWidget {
+class _SectionHeader extends StatelessWidget { // StatelessWidget: 화면에 그려질 수 있는 위젯의 자격을 부여하기 위해 상속받음
   final String title;
   final VoidCallback onAddPressed;
 
@@ -630,7 +594,7 @@ class _SectionHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
+    return Row( // Row (가로 배치). 안에 들어가는 항목들을 일렬 배치함
       mainAxisAlignment: MainAxisAlignment.spaceBetween, // Row나 Column 안의 자식들을 양 끝으로 벌려서 배치하는 설정
       children: [
         Text(
