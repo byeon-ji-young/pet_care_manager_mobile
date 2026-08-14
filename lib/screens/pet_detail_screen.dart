@@ -227,59 +227,8 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-             // 1. 반려동물 정보
-              Center(
-                child: Column(
-                  children: [
-                    CircleAvatar(
-                      radius: 45,
-                      backgroundImage: pet.imagePath != null
-                        ? FileImage(File(pet.imagePath!))
-                        : null,
-                      child: pet.imagePath == null
-                        ? const Icon(
-                            Icons.pets,
-                            size: 45,
-                          )
-                        : null,
-                    ),
-
-                    const SizedBox(height: 15),
-
-                    Text(
-                      pet.name,
-                      style: const TextStyle(
-                        fontSize: 26,
-                        fontWeight: FontWeight.bold
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              const SizedBox(height: 30),
-
-              // 기본 정보
-              _InfoRow(
-                label: '생일', 
-                value: pet.birthDate != null ? '${pet.birthDate!.year}년 ${pet.birthDate!.month}월 ${pet.birthDate!.day}일' : '미입력'
-              ),
-              _InfoRow(
-                label: '성별',
-                value: pet.gender ?? '미입력',
-              ),
-              /*
-                ?. (Null-Aware Access): "값이 null이 아닐 때만 뒤의 함수(toIso8601String())를 실행하고, 만약 null이면 더 이상 진행하지 말고 그냥 null을 반환하라
-                ?? (Null-Coalescing): "그 결과가 결국 null이면 대신 '미입력'을 출력하라
-              */
-              _InfoRow(
-                label: '품종', 
-                value: pet.breed ?? '미입력',
-              ),
-              _InfoRow(
-                label: '몸무게', 
-                value: pet.weight != null ? '${pet.weight} kg' : '미입력'
-              ),
+              // 1. 반려동물 정보
+              _PetProfileHeader(pet: pet),
 
               const SizedBox(height: 30),
 
@@ -728,6 +677,122 @@ class _EmptyStateText extends StatelessWidget {
           fontSize: 14
         ),
       ),
+    );
+  }
+}
+
+// 반려동물 메인 프로필 (카드가 아닌 모던한 프로필 뱃지 형태)
+class _PetProfileHeader extends StatelessWidget {
+  final Pet pet; // _PetProfileHeader(pet: pet)을 호출하면 클래스의 생성자가 실행되면서 전달받은 pet 값이 클래스 내부의 final Pet pet; 변수에 저장(보관) 됨. 일반함수는 매개변수로 넘어온 pet을 직접 사용
+
+  const _PetProfileHeader({
+    required this.pet
+  });
+
+  // 생년월일로 나이 변환
+  String _getAgeText(DateTime birthDate) {
+    final now = DateTime.now();
+    
+    int ageYear = now.year - birthDate.year;
+    int ageMonth = now.month - birthDate.month;
+
+    // 일(day) 수 비교하여 개월 수 보정
+    if(now.day < birthDate.day) {
+      ageMonth--;
+    }
+
+    // 개월 수가 음수일 경우 연도에서 차감
+    if(ageMonth < 0) {
+      ageYear--;
+      ageMonth += 12;
+    }
+
+    // 1살 미만인 경우 'x개월' 표시
+    if(ageYear == 0) {
+      return '$ageMonth개월';
+    }
+    // 개월이 0인 경우 'x살' 표시
+    else if(ageMonth == 0) {
+      return '$ageYear살';
+    }
+    // 1살 이상 & 개월이 있는 경우 'x살 y개월' 표시
+    else {
+      return '$ageYear살 $ageMonth개월';
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // 성별/품종/몸무게 텍스트 조합
+    final List<String> details = [];
+
+    if(pet.breed != null && pet.breed!.isNotEmpty) {
+      details.add(pet.breed!);
+    }
+
+    if(pet.gender != null && pet.gender!.isNotEmpty) {
+      details.add(pet.gender!);
+    }
+
+    if(pet.weight != null) {
+      details.add('${pet.weight}kg');
+    }
+
+    return Column(
+      children: [
+        // 1. 원형 사진
+        CircleAvatar(
+          radius: 52,
+          // backgroundColor: Colors.grey[200],
+          backgroundImage: pet.imagePath != null ? FileImage(File(pet.imagePath!)) : null,
+          child: pet.imagePath == null
+              ? Icon(Icons.pets, size: 48)
+              : null,
+        ),
+        
+        const SizedBox(height: 16),
+
+        // 2. 이름
+        Text(
+          pet.name,
+          style: const TextStyle(
+            fontSize: 26,
+            fontWeight: FontWeight.bold,
+            letterSpacing: -0.5,
+          ),
+        ),
+
+        const SizedBox(height: 6),
+
+        // 3. 주요 정보
+        if(details.isNotEmpty)
+          Text(
+            details.join('  •  '), // join: 리스트의 문자열들을 하나의 문자열로 합치는 것
+            style: TextStyle(
+              fontSize: 15,
+              color: Colors.grey[700],
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+
+        // 4. 생일 정보
+        if(pet.birthDate != null) ...[
+          const SizedBox(height: 6),
+
+          Text(
+            '${_getAgeText(pet.birthDate!)} (${pet.birthDate!.year}.${pet.birthDate!.month.toString().padLeft(2, '0')}.${pet.birthDate!.day.toString().padLeft(2, '0')})',
+            style: TextStyle(
+              fontSize: 13,
+              color: Colors.grey[700],
+            ),
+          ),
+        ],
+
+        const SizedBox(height: 20),
+        
+        // 병원 기록/예방접종 네모 섹션들과 경계를 지어주는 얇은 경계선
+        Divider(height: 1, thickness: 1, color: Colors.grey[200]),
+      ],
     );
   }
 }
