@@ -177,9 +177,14 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
     return Scaffold(
       // backgroundColor: Colors.green[10],
       appBar: AppBar(
-        title: Text('${pet.name} 정보'),
-        // centerTitle: true,
-        elevation: 0,
+        title: Text(
+          '${pet.name} 프로필',
+          style: TextStyle(
+            fontWeight: FontWeight.bold
+          ),
+        ),
+        centerTitle: true,
+        elevation: 0, // 위젯에 주는 그림자(입체감)를 없애는 설정
         actions: [
           IconButton(
             icon: const Icon(Icons.edit_outlined),

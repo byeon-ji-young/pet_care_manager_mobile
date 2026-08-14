@@ -77,7 +77,8 @@ class _HomeScreenState extends State<HomeScreen> {
               '우리 아이 건강일지',
               style: TextStyle(
                 fontSize: 14,
-                color: Colors.blueGrey,
+                color: Colors.grey,
+                fontWeight: FontWeight.w700
               ),
             ),
           ],
