@@ -11,11 +11,12 @@ class VaccinationRegisterScreen extends StatefulWidget {
   const VaccinationRegisterScreen({
     super.key,
     required this.petId,
-    this.vaccination
+    this.vaccination,
   });
 
   @override
-  State<VaccinationRegisterScreen> createState() => _VaccinationRegisterScreen();
+  State<VaccinationRegisterScreen> createState() =>
+      _VaccinationRegisterScreen();
 }
 
 class _VaccinationRegisterScreen extends State<VaccinationRegisterScreen> {
@@ -32,7 +33,7 @@ class _VaccinationRegisterScreen extends State<VaccinationRegisterScreen> {
 
     final vaccination = widget.vaccination;
 
-    if(vaccination != null) {
+    if (vaccination != null) {
       vaccineNameController.text = vaccination.vaccineName;
       hospitalController.text = vaccination.hospital ?? '';
       memoController.text = vaccination.memo ?? '';
@@ -54,7 +55,7 @@ class _VaccinationRegisterScreen extends State<VaccinationRegisterScreen> {
   @override
   Widget build(BuildContext context) {
     final isEditing = widget.vaccination != null;
-    
+
     return Scaffold(
       appBar: AppBar(
         // title: Text(isEditing ? '예방접종 수정' : '예방접종 등록'),
@@ -184,7 +185,9 @@ class _VaccinationRegisterScreen extends State<VaccinationRegisterScreen> {
                       onTap: () async {
                         final pickedDate = await showDatePicker(
                           context: context,
-                          initialDate: nextDate ?? vaccinationDate, // ?? (null-aware 연산자). nextDate가 있으면 nextDate를 사용하고, 없으면 vaccinationDate를 사용
+                          initialDate:
+                              nextDate ??
+                              vaccinationDate, // ?? (null-aware 연산자). nextDate가 있으면 nextDate를 사용하고, 없으면 vaccinationDate를 사용
                           firstDate: vaccinationDate,
                           lastDate: DateTime(2100),
                         );
@@ -219,26 +222,50 @@ class _VaccinationRegisterScreen extends State<VaccinationRegisterScreen> {
                                 fontWeight: FontWeight.w500,
                               ),
                             ),
+
                             const Spacer(),
-                            Text(
-                              nextDate != null
-                                  ? '${nextDate!.year}.${nextDate!.month.toString().padLeft(2, '0')}.${nextDate!.day.toString().padLeft(2, '0')}'
-                                  : '날짜 선택 (선택사항)',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: nextDate != null
-                                    ? FontWeight.bold
-                                    : FontWeight.normal,
-                                color: nextDate != null
-                                    ? Colors.black
-                                    : Colors.grey,
+
+                            if (nextDate != null) ...[
+                              Text(
+                                '${nextDate!.year}.${nextDate!.month.toString().padLeft(2, '0')}.${nextDate!.day.toString().padLeft(2, '0')}',
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
-                            ),
-                            const SizedBox(width: 4),
-                            const Icon(
-                              Icons.arrow_drop_down,
-                              color: Colors.grey,
-                            ),
+
+                              const SizedBox(width: 6),
+
+                              GestureDetector(
+                                onTap: () {
+                                  setState(() {
+                                    nextDate = null;
+                                  });
+                                },
+                                child: const Icon(
+                                  Icons.close,
+                                  size: 16,
+                                  color: Colors.grey,
+                                ),
+                              ),
+
+                              const SizedBox(width: 3),
+                            ] else ...[
+                              const Text(
+                                '날짜 선택 (선택사항)',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  color: Colors.grey,
+                                ),
+                              ),
+
+                              const SizedBox(width: 4),
+
+                              const Icon(
+                                Icons.arrow_drop_down,
+                                color: Colors.grey,
+                              ),
+                            ],
                           ],
                         ),
                       ),
@@ -253,7 +280,8 @@ class _VaccinationRegisterScreen extends State<VaccinationRegisterScreen> {
                       decoration: InputDecoration(
                         labelText: '메모',
                         hintText: '특이사항이나 참고할 사항을 적어주세요.',
-                        alignLabelWithHint: true, // TextField의 labelText와 hintText의 세로 정렬을 맞춰주는 옵션
+                        alignLabelWithHint:
+                            true, // TextField의 labelText와 hintText의 세로 정렬을 맞춰주는 옵션
                         prefixIcon: const Padding(
                           padding: EdgeInsets.only(bottom: 30),
                           child: Icon(Icons.notes),
@@ -278,9 +306,7 @@ class _VaccinationRegisterScreen extends State<VaccinationRegisterScreen> {
                   onPressed: () async {
                     if (vaccineNameController.text.trim().isEmpty) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text("접종 종류를 입력해주세요."),
-                        ),
+                        const SnackBar(content: Text("접종 종류를 입력해주세요.")),
                       );
                       return;
                     }
@@ -300,9 +326,13 @@ class _VaccinationRegisterScreen extends State<VaccinationRegisterScreen> {
                     );
 
                     if (widget.vaccination == null) {
-                      await DatabaseHelper.instance.insertVaccination(vaccination);
+                      await DatabaseHelper.instance.insertVaccination(
+                        vaccination,
+                      );
                     } else {
-                      await DatabaseHelper.instance.updateVaccination(vaccination);
+                      await DatabaseHelper.instance.updateVaccination(
+                        vaccination,
+                      );
                     }
 
                     if (!context.mounted) {
@@ -314,10 +344,7 @@ class _VaccinationRegisterScreen extends State<VaccinationRegisterScreen> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Icon(
-                        Icons.pets,
-                        size: 20,
-                      ),
+                      const Icon(Icons.pets, size: 20),
                       const SizedBox(width: 8),
                       Text(
                         isEditing ? '수정하기' : '저장하기',
