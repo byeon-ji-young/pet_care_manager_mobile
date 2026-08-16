@@ -61,15 +61,12 @@ class DatabaseHelper {
     final databasePath = await getDatabasesPath();
     final path = join(databasePath, 'pet_care_manager.db');
   */
-  Future<Database> _initDatabase() async { 
+  Future<Database> _initDatabase() async {
     final databasePath = await getDatabasesPath();
 
     // async = 비동기 작업을 할 수 있게 함수 만들기
     // await = 그 작업의 결과를 기다리기
-    final path = join(
-      databasePath,
-      'pet_care_manager.db',
-    );
+    final path = join(databasePath, 'pet_care_manager.db');
 
     /*
       openDatabase: DB 파일이 없으면 새로 만들고, 이미 존재하면 열어줌
@@ -131,13 +128,11 @@ class DatabaseHelper {
       },
 
       onUpgrade: (db, oldVersion, newVersion) async {
-        if(oldVersion < 2) {
-          await db.execute(
-            'ALTER TABLE pets ADD COLUMN image_path TEXT',
-          );
+        if (oldVersion < 2) {
+          await db.execute('ALTER TABLE pets ADD COLUMN image_path TEXT');
         }
 
-        if(oldVersion < 3) {
+        if (oldVersion < 3) {
           await db.execute('''
             CREATE TABLE health_records (
               id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -152,7 +147,7 @@ class DatabaseHelper {
           ''');
         }
 
-        if(oldVersion < 4) {
+        if (oldVersion < 4) {
           await db.execute('''
             CREATE TABLE vaccinations (
               id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -197,7 +192,8 @@ class DatabaseHelper {
       'pets', // 저장할 테이블 이름
       {
         'name': pet.name,
-        'birth_date': pet.birthDate?.toIso8601String(), // 날짜를 문자열 형태(2026-08-11...)로 변환
+        'birth_date': pet.birthDate
+            ?.toIso8601String(), // 날짜를 문자열 형태(2026-08-11...)로 변환
         'gender': pet.gender,
         'breed': pet.breed,
         'weight': pet.weight,
@@ -215,7 +211,8 @@ class DatabaseHelper {
       orderBy: 'id DESC',
     );
 
-    return maps.map((map) { // SQLite 데이터 -> Map -> Pet 객체
+    return maps.map((map) {
+      // SQLite 데이터 -> Map -> Pet 객체
       return Pet(
         id: map['id'] as int,
         name: map['name'] as String,
@@ -227,17 +224,17 @@ class DatabaseHelper {
         weight: map['weight'] != null
             ? (map['weight'] as num).toDouble()
             : null,
-        imagePath: map['image_path'] as String?
+        imagePath: map['image_path'] as String?,
       );
     }).toList();
   }
 
   // 반려동물 수정
-  Future<int> updatePet(Pet pet) async { 
+  Future<int> updatePet(Pet pet) async {
     final db = await database;
 
     return await db.update(
-      'pets', 
+      'pets',
       {
         'name': pet.name,
         'birth_date': pet.birthDate?.toIso8601String(),
@@ -247,7 +244,7 @@ class DatabaseHelper {
         'image_path': pet.imagePath,
       },
       where: 'id = ?',
-      whereArgs: [pet.id]
+      whereArgs: [pet.id],
     );
   }
 
@@ -259,10 +256,10 @@ class DatabaseHelper {
       'pets',
       where: 'id = ?',
       whereArgs: [id],
-      limit: 1
+      limit: 1,
     );
 
-    if(maps.isEmpty) {
+    if (maps.isEmpty) {
       return null;
     }
 
@@ -271,11 +268,13 @@ class DatabaseHelper {
     return Pet(
       id: map['id'] as int,
       name: map['name'] as String,
-      birthDate: map['birth_date'] != null ? DateTime.parse(map['birth_date'] as String) : null,
+      birthDate: map['birth_date'] != null
+          ? DateTime.parse(map['birth_date'] as String)
+          : null,
       gender: map['gender'] as String?,
       breed: map['breed'] as String?,
       weight: map['weight'] != null ? (map['weight'] as num).toDouble() : null,
-      imagePath: map['image_path'] as String?
+      imagePath: map['image_path'] as String?,
     );
   }
 
@@ -283,29 +282,22 @@ class DatabaseHelper {
   Future<int> deletePet(int id) async {
     final db = await database;
 
-    return await db.delete(
-      'pets',
-      where: 'id = ?',
-      whereArgs: [id]
-    );
+    return await db.delete('pets', where: 'id = ?', whereArgs: [id]);
   }
 
   // ========================================================= health_records =========================================================
   // 병원 기록 추가
   Future<int> insertHealthRecord(HealthRecord record) async {
-   final db = await database;
+    final db = await database;
 
-   return await db.insert(
-      'health_records', 
-      {
-        'pet_id': record.petId,
-        'date': record.date.toIso8601String(),
-        'hospital': record.hospital,
-        'title': record.title,
-        'description': record.description,
-        'cost': record.cost,
-      }
-    );
+    return await db.insert('health_records', {
+      'pet_id': record.petId,
+      'date': record.date.toIso8601String(),
+      'hospital': record.hospital,
+      'title': record.title,
+      'description': record.description,
+      'cost': record.cost,
+    });
   }
 
   // 반려동물별 동물기록 조회
@@ -316,10 +308,11 @@ class DatabaseHelper {
       'health_records',
       where: 'pet_id = ?',
       whereArgs: [petId],
-      orderBy: 'date DESC'
+      orderBy: 'date DESC',
     );
 
-    return List.generate( // List.generate(개수, 함수): 정해진 개수만큼 리스트 만들어주는 함수
+    return List.generate(
+      // List.generate(개수, 함수): 정해진 개수만큼 리스트 만들어주는 함수
       maps.length,
       (i) {
         return HealthRecord(
@@ -339,11 +332,7 @@ class DatabaseHelper {
   Future<int> deleteHealthRecord(int id) async {
     final db = await database;
 
-    return await db.delete(
-      'health_records',
-      where: 'id = ?',
-      whereArgs: [id],
-    );
+    return await db.delete('health_records', where: 'id = ?', whereArgs: [id]);
   }
 
   // 병원기록 수정
@@ -351,7 +340,7 @@ class DatabaseHelper {
     final db = await database;
 
     return await db.update(
-      'health_records', 
+      'health_records',
       {
         'pet_id': record.petId,
         'date': record.date.toIso8601String(),
@@ -361,7 +350,7 @@ class DatabaseHelper {
         'cost': record.cost,
       },
       where: 'id = ?',
-      whereArgs: [record.id]
+      whereArgs: [record.id],
     );
   }
 
@@ -370,21 +359,18 @@ class DatabaseHelper {
   Future<int> insertVaccination(Vaccination vaccination) async {
     final db = await database;
 
-    return await db.insert(
-      'vaccinations', 
-      vaccination.toMap()
-    );
+    return await db.insert('vaccinations', vaccination.toMap());
   }
 
   //반려동물별 예방접종 조회
   Future<List<Vaccination>> getVaccinationsByPetId(int petId) async {
     final db = await database;
 
-    final maps = await db.query( 
+    final maps = await db.query(
       'vaccinations',
       where: 'pet_id = ?',
       whereArgs: [petId],
-      orderBy: 'vaccination_date DESC'
+      orderBy: 'vaccination_date DESC',
     );
 
     return maps.map((map) => Vaccination.fromMap(map)).toList();
@@ -395,7 +381,7 @@ class DatabaseHelper {
     final db = await database;
 
     return db.update(
-      'vaccinations', 
+      'vaccinations',
       {
         'pet_id': vaccination.petId,
         'vaccine_name': vaccination.vaccineName,
@@ -405,7 +391,7 @@ class DatabaseHelper {
         'memo': vaccination.memo,
       },
       where: 'id = ?',
-      whereArgs: [vaccination.id]
+      whereArgs: [vaccination.id],
     );
   }
 
@@ -413,11 +399,22 @@ class DatabaseHelper {
   Future<int> deleteVaccination(int id) async {
     final db = await database;
 
-    return db.delete(
+    return db.delete('vaccinations', where: 'id = ?', whereArgs: [id]);
+  }
+
+  Future<List<Vaccination>> getUpcomingVaccinations(int petId) async {
+    final db = await database;
+
+    final maps = await db.query(
       'vaccinations',
-      where: 'id = ?',
-      whereArgs: [id]
+      where: 'pet_id = ? AND next_date IS NOT NULL',
+      whereArgs: [petId],
+      orderBy: 'next_date ASC',
     );
+
+    return maps.map((map) {
+      return Vaccination.fromMap(map);
+    }).toList();
   }
 
   // ========================================================= weight_records =========================================================
@@ -425,10 +422,7 @@ class DatabaseHelper {
   Future<int> insertWeightRecord(WeightRecord record) async {
     final db = await database;
 
-    return db.insert(
-      'weight_records', 
-      record.toMap()
-    );
+    return db.insert('weight_records', record.toMap());
   }
 
   // 반려동물별 체중 조회
@@ -450,15 +444,15 @@ class DatabaseHelper {
     final db = await database;
 
     return db.update(
-      'weight_records', 
+      'weight_records',
       {
         'pet_id': record.petId,
         'date': record.date.toIso8601String(),
         'weight': record.weight,
-        'memo': record.memo
+        'memo': record.memo,
       },
       where: 'id = ?',
-      whereArgs: [record.id]
+      whereArgs: [record.id],
     );
   }
 
@@ -466,10 +460,6 @@ class DatabaseHelper {
   Future<int> deleteWeightRecord(int id) async {
     final db = await database;
 
-    return db.delete(
-      'weight_records',
-      where: 'id = ?',
-      whereArgs: [id]
-    );
+    return db.delete('weight_records', where: 'id = ?', whereArgs: [id]);
   }
 }

@@ -19,10 +19,7 @@ import 'weight_record_register_screen.dart';
 class PetDetailScreen extends StatefulWidget {
   final Pet pet;
 
-  const PetDetailScreen({
-    super.key,
-    required this.pet,
-  });
+  const PetDetailScreen({super.key, required this.pet});
 
   /*
     StatefulWidget 자체는 화면의 상태를 직접 저장하는 역할을 하지 않기 때문에 실제 상태를 관리할 state 객체를 만들어야 함.
@@ -45,6 +42,8 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
 
   List<WeightRecord> weightRecords = [];
 
+  List<Vaccination> upcomingVaccinations = [];
+
   @override
   void initState() {
     super.initState();
@@ -56,12 +55,16 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
     loadVaccinations();
 
     loadWeightRecords();
+
+    loadUpcomingVaccinations();
   }
 
   Future<void> loadHealthRecords() async {
-    final records = await DatabaseHelper.instance.getHealthRecordByPetId(widget.pet.id!);
+    final records = await DatabaseHelper.instance.getHealthRecordByPetId(
+      widget.pet.id!,
+    );
 
-    if(!mounted) {
+    if (!mounted) {
       return;
     }
 
@@ -71,9 +74,11 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
   }
 
   Future<void> loadVaccinations() async {
-    final vaccines = await DatabaseHelper.instance.getVaccinationsByPetId(widget.pet.id!);
+    final vaccines = await DatabaseHelper.instance.getVaccinationsByPetId(
+      widget.pet.id!,
+    );
 
-    if(!mounted) {
+    if (!mounted) {
       return;
     }
 
@@ -83,9 +88,11 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
   }
 
   Future<void> loadWeightRecords() async {
-    final records = await DatabaseHelper.instance.getWeightRecordsByPetId(widget.pet.id!);
+    final records = await DatabaseHelper.instance.getWeightRecordsByPetId(
+      widget.pet.id!,
+    );
 
-    if(!mounted) {
+    if (!mounted) {
       return;
     }
 
@@ -94,16 +101,29 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
     });
   }
 
+  Future<void> loadUpcomingVaccinations() async {
+    final upcomings = await DatabaseHelper.instance.getUpcomingVaccinations(
+      widget.pet.id!,
+    );
+
+    if (!mounted) {
+      return;
+    }
+
+    setState(() {
+      upcomingVaccinations = upcomings;
+    });
+  }
+
   // 반려동물 삭제
   Future<void> _deletePet(Pet pet) async {
-    final bool? confirmed = await showDialog<bool>( // bool?을 사용한 이유는 null도 반환될 수 있기 때문
+    final bool? confirmed = await showDialog<bool>(
+      // bool?을 사용한 이유는 null도 반환될 수 있기 때문
       context: context,
       builder: (context) {
         return AlertDialog(
           title: const Text('반려동물 삭제'),
-          content: Text(
-            '${pet.name}을(를) 정말 삭제하시겠습니까?',
-          ),
+          content: Text('${pet.name}을(를) 정말 삭제하시겠습니까?'),
           actions: [
             TextButton(
               onPressed: () {
@@ -143,9 +163,13 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
   */
 
   // 공통 삭제 확인 다이얼로그 함수
-  Future<bool> showDeleteConfirmDialog({required BuildContext context, String? title, required String content}) async {
+  Future<bool> showDeleteConfirmDialog({
+    required BuildContext context,
+    String? title,
+    required String content,
+  }) async {
     final result = await showDialog<bool>(
-      context: context, 
+      context: context,
       builder: (context) {
         return AlertDialog(
           title: title != null ? Text(title) : null,
@@ -157,9 +181,7 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
             ),
             TextButton(
               onPressed: () => Navigator.pop(context, true),
-              style: TextButton.styleFrom(
-                foregroundColor: Colors.redAccent
-              ),
+              style: TextButton.styleFrom(foregroundColor: Colors.redAccent),
               child: const Text('삭제'),
             ),
           ],
@@ -167,11 +189,48 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
       },
     );
 
-    return result ?? false; // 다이얼로그 바깥 영역(배경)을 눌러서 닫은 경우 null이 반환되므로 false 처리. 즉, result가 있으면 result, 없으면 false
+    return result ??
+        false; // 다이얼로그 바깥 영역(배경)을 눌러서 닫은 경우 null이 반환되므로 false 처리. 즉, result가 있으면 result, 없으면 false
+  }
+
+  Widget _buildVaccinationMessage(Vaccination vaccination) {
+    final nextDate = vaccination.nextDate!;
+
+    final today = DateTime.now();
+    final todatDate = DateTime(today.year, today.month, today.day);
+    final targetDate = DateTime(nextDate.year, nextDate.month, nextDate.day);
+
+    final difference = targetDate.difference(todatDate).inDays;
+
+    if (difference == 0) {
+      return const Text(
+        '🔔 오늘은 예방접종 예정일이에요!',
+        style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+      );
+    } else if (difference > 0) {
+      return Text(
+        '💉 ${vaccination.vaccineName} 예방접종까지 $difference일 남았어요.',
+        style: TextStyle(
+          fontSize: 14,
+          fontWeight: FontWeight.w500,
+          color: Colors.blueGrey[600],
+        ),
+      );
+    }
+
+    return Text(
+      '⚠️ ${vaccination.vaccineName} 예방접종 예정일이 ${difference.abs()}일 지났어요.', // abs()는 absolute value(절댓값)를 구하는 함수
+      style: const TextStyle(
+        fontSize: 14,
+        fontWeight: FontWeight.w600,
+        color: Colors.redAccent,
+      ),
+    );
   }
 
   @override
-  Widget build(BuildContext context) { // build()는 _PetDetailScreenState 안에 존재. State에서 부모 StatefulWidget의 값을 가져오려면 ~ 으로r 써야함. 즉 pet -> pet 작성해야 됨
+  Widget build(BuildContext context) {
+    // build()는 _PetDetailScreenState 안에 존재. State에서 부모 StatefulWidget의 값을 가져오려면 ~ 으로r 써야함. 즉 pet -> pet 작성해야 됨
     final pet = currentPet!;
 
     return Scaffold(
@@ -179,9 +238,7 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
       appBar: AppBar(
         title: Text(
           '${pet.name} 프로필',
-          style: TextStyle(
-            fontWeight: FontWeight.bold
-          ),
+          style: TextStyle(fontWeight: FontWeight.bold),
         ),
         centerTitle: true,
         elevation: 0, // 위젯에 주는 그림자(입체감)를 없애는 설정
@@ -190,23 +247,23 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
             icon: const Icon(Icons.edit_outlined),
             onPressed: () async {
               final result = await Navigator.push(
-                context, 
+                context,
                 MaterialPageRoute(
-                  builder: (context) => PetRegisterScreen(
-                    pet: pet,
-                  ),
+                  builder: (context) => PetRegisterScreen(pet: pet),
                 ),
               );
 
               // Navigator.pop(context, true) 이걸로 true를 넘겼기 때문에, 정상적으로 수정이 됐으면 진행됨
               if (result == true) {
-                final updatedPet = await DatabaseHelper.instance.getPetById(pet.id!); // pet.id!의 !은 DB에서 생성된 반려동물 ID는 반드시 존재한다는 의미
+                final updatedPet = await DatabaseHelper.instance.getPetById(
+                  pet.id!,
+                ); // pet.id!의 !은 DB에서 생성된 반려동물 ID는 반드시 존재한다는 의미
 
-                if(!context.mounted) {
+                if (!context.mounted) {
                   return;
                 }
 
-                if(updatedPet != null) {
+                if (updatedPet != null) {
                   setState(() {
                     currentPet = updatedPet;
                   });
@@ -214,15 +271,12 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
 
                 Navigator.pop(context, true);
               }
-            }, 
+            },
           ),
           IconButton(
-            icon: const Icon(
-              Icons.delete_outline,
-              color: Colors.redAccent,
-            ),
-            onPressed: () => _deletePet(pet)
-          )
+            icon: const Icon(Icons.delete_outline, color: Colors.redAccent),
+            onPressed: () => _deletePet(pet),
+          ),
         ],
       ),
 
@@ -237,28 +291,39 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
 
               const SizedBox(height: 30),
 
+              // 1-1. 예방 접종 알림
+              if (upcomingVaccinations.isNotEmpty) ...[
+                _buildVaccinationMessage(upcomingVaccinations.first),
+
+                const SizedBox(height: 20),
+              ],
+
               // 2. 병원 기록 섹션
               _SectionHeader(
-                title: '🏥 병원 기록', 
+                title: '🏥 병원 기록',
                 onAddPressed: () async {
-                  final result = await Navigator.push( // Navigator는 Flutter에서 화면 이동을 관리하는 역할. push는 새로운 화면을 위에 추가
+                  final result = await Navigator.push(
+                    // Navigator는 Flutter에서 화면 이동을 관리하는 역할. push는 새로운 화면을 위에 추가
                     context, // context는 Flutter의 현재 위젯이 어디에 위치하고 있는지 알려주는 정보
-                    MaterialPageRoute( // MaterialPageRoute: 어떤 방식으로 새로운 화면을 띄울지 정의하는 것
-                      builder: (context) => HealthRecordRegisterScreen( // builder는 실제로 이동할 화면을 만들어주는 부분
-                        petId: pet.id!
-                      )
-                    )
+                    MaterialPageRoute(
+                      // MaterialPageRoute: 어떤 방식으로 새로운 화면을 띄울지 정의하는 것
+                      builder: (context) => HealthRecordRegisterScreen(
+                        // builder는 실제로 이동할 화면을 만들어주는 부분
+                        petId: pet.id!,
+                      ),
+                    ),
                   );
 
-                  if(result == true) {
+                  if (result == true) {
                     await loadHealthRecords();
                   }
-                }
+                },
               ),
 
               const SizedBox(height: 8),
 
-              if(healthRecords.isEmpty) // Flutter의 children: [] 안에서 {}를 사용하면 안됨. {}를 Dart가 Set으로 해석하기 때문에 에러남
+              if (healthRecords
+                  .isEmpty) // Flutter의 children: [] 안에서 {}를 사용하면 안됨. {}를 Dart가 Set으로 해석하기 때문에 에러남
                 const _EmptyStateText(text: '등록된 병원 기록이 없습니다.')
               else
                 Column(
@@ -270,68 +335,70 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
                         child: ListTile(
                           title: Text(
                             record.title,
-                            style: const TextStyle(
-                              fontWeight: FontWeight.w600
-                            ),
+                            style: const TextStyle(fontWeight: FontWeight.w600),
                           ),
                           subtitle: Text(
                             '${record.date.year}.${record.date.month.toString().padLeft(2, '0')}.${record.date.day.toString().padLeft(2, '0')}'
-                            '${record.hospital != null ? '\n${record.hospital}' : ''}'
+                            '${record.hospital != null ? '\n${record.hospital}' : ''}',
                           ),
                           // trailing: record.cost != null ? Text('${record.cost}원') : null, // trailing: ListTile의 오른쪽에 표시할 내용을 지정
-                          trailing: Row( 
-                            mainAxisSize: MainAxisSize.min, // Row나 Column이 주축(main axis) 방향으로 얼마나 공간을 차지할지 정하는 옵션. 즉, mainAxis 방향으로 필요한 만큼만 공간을 차지하겠다는 뜻
+                          trailing: Row(
+                            mainAxisSize: MainAxisSize
+                                .min, // Row나 Column이 주축(main axis) 방향으로 얼마나 공간을 차지할지 정하는 옵션. 즉, mainAxis 방향으로 필요한 만큼만 공간을 차지하겠다는 뜻
                             children: [
                               if (record.cost != null)
                                 Padding(
-                                  padding: const EdgeInsetsGeometry.only(right: 8),
+                                  padding: const EdgeInsetsGeometry.only(
+                                    right: 8,
+                                  ),
                                   child: Text(
                                     '${record.cost}원',
                                     style: TextStyle(
-                                      fontWeight: FontWeight.bold
+                                      fontWeight: FontWeight.bold,
                                     ),
                                   ),
                                 ),
-                              
+
                               IconButton(
-                                icon: const Icon(
-                                  Icons.edit_outlined,
-                                  size: 20
-                                ),
+                                icon: const Icon(Icons.edit_outlined, size: 20),
                                 onPressed: () async {
                                   final result = await Navigator.push(
-                                    context, 
+                                    context,
                                     MaterialPageRoute(
-                                      builder: (context) => HealthRecordRegisterScreen(
-                                        petId: pet.id!,
-                                        record: record
-                                      )
-                                    )
+                                      builder: (context) =>
+                                          HealthRecordRegisterScreen(
+                                            petId: pet.id!,
+                                            record: record,
+                                          ),
+                                    ),
                                   );
-                                  
-                                  if(result == true) {
+
+                                  if (result == true) {
                                     await loadHealthRecords();
                                   }
-                                }, 
+                                },
                               ),
-                              
+
                               IconButton(
                                 icon: const Icon(
                                   Icons.delete_outline,
-                                  size: 20
+                                  size: 20,
                                 ),
                                 onPressed: () async {
-                                  final confirmed = await showDeleteConfirmDialog(
-                                    context: context, 
-                                    // title: '병원 기록 삭제', 
-                                    content: '${record.title} 기록을 삭제하시겠습니까?'
-                                  );
+                                  final confirmed =
+                                      await showDeleteConfirmDialog(
+                                        context: context,
+                                        // title: '병원 기록 삭제',
+                                        content:
+                                            '${record.title} 기록을 삭제하시겠습니까?',
+                                      );
 
                                   if (confirmed != true) {
                                     return;
                                   }
 
-                                  await DatabaseHelper.instance.deleteHealthRecord(record.id!);
+                                  await DatabaseHelper.instance
+                                      .deleteHealthRecord(record.id!);
                                   await loadHealthRecords();
                                 },
                               ),
@@ -344,29 +411,34 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
                 ),
 
               const SizedBox(height: 30),
-              
+
               // 3. 예방접종 섹션
               _SectionHeader(
-                title: '💉 예방접종', 
+                title: '💉 예방접종',
                 onAddPressed: () async {
-                  final result = await Navigator.push( // Navigator는 Flutter에서 화면 이동을 관리하는 역할. push는 새로운 화면을 위에 추가
+                  final result = await Navigator.push(
+                    // Navigator는 Flutter에서 화면 이동을 관리하는 역할. push는 새로운 화면을 위에 추가
                     context, // context는 Flutter의 현재 위젯이 어디에 위치하고 있는지 알려주는 정보
-                    MaterialPageRoute( // MaterialPageRoute: 어떤 방식으로 새로운 화면을 띄울지 정의하는 것
-                      builder: (context) => VaccinationRegisterScreen( // builder는 실제로 이동할 화면을 만들어주는 부분
-                        petId: pet.id!
-                      )
-                    )
+                    MaterialPageRoute(
+                      // MaterialPageRoute: 어떤 방식으로 새로운 화면을 띄울지 정의하는 것
+                      builder: (context) => VaccinationRegisterScreen(
+                        // builder는 실제로 이동할 화면을 만들어주는 부분
+                        petId: pet.id!,
+                      ),
+                    ),
                   );
 
-                  if(result == true) {
+                  if (result == true) {
                     await loadVaccinations();
+                    await loadUpcomingVaccinations();
                   }
-                }
+                },
               ),
 
               const SizedBox(height: 8),
 
-              if(vaccinations.isEmpty) // Flutter의 children: [] 안에서 {}를 사용하면 안됨. {}를 Dart가 Set으로 해석하기 때문에 에러남
+              if (vaccinations
+                  .isEmpty) // Flutter의 children: [] 안에서 {}를 사용하면 안됨. {}를 Dart가 Set으로 해석하기 때문에 에러남
                 const _EmptyStateText(text: '등록된 예방접종 기록이 없습니다.')
               else
                 Column(
@@ -378,93 +450,92 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
                         child: ListTile(
                           title: Text(
                             vaccination.vaccineName,
-                            style: TextStyle(
-                              fontWeight: FontWeight.w600
-                            ),
+                            style: TextStyle(fontWeight: FontWeight.w600),
                           ),
                           subtitle: Text(
                             '접종일: '
                             '${vaccination.vaccinationDate.year}.'
                             '${vaccination.vaccinationDate.month.toString().padLeft(2, '0')}.'
                             '${vaccination.vaccinationDate.day.toString().padLeft(2, '0')}'
-                            '${vaccination.nextDate != null 
-                                ? '\n다음 접종: ${vaccination.nextDate!.year}.${vaccination.nextDate!.month.toString().padLeft(2, '0')}.${vaccination.nextDate!.day.toString().padLeft(2, '0')}' : ''}'
-                            '${vaccination.hospital != null ? '\n${vaccination.hospital}' : ''}'
+                            '${vaccination.nextDate != null ? '\n다음 접종: ${vaccination.nextDate!.year}.${vaccination.nextDate!.month.toString().padLeft(2, '0')}.${vaccination.nextDate!.day.toString().padLeft(2, '0')}' : ''}'
+                            '${vaccination.hospital != null ? '\n${vaccination.hospital}' : ''}',
                           ),
                           trailing: Row(
-                            mainAxisSize: MainAxisSize.min, // Row나 Column이 주축(main axis) 방향으로 필요한 만큼만 공간 차지
+                            mainAxisSize: MainAxisSize
+                                .min, // Row나 Column이 주축(main axis) 방향으로 필요한 만큼만 공간 차지
                             children: [
                               IconButton(
-                                icon: const Icon(
-                                  Icons.edit_outlined,
-                                  size: 20,
-                                ),
+                                icon: const Icon(Icons.edit_outlined, size: 20),
                                 onPressed: () async {
                                   final result = await Navigator.push(
-                                    context, 
+                                    context,
                                     MaterialPageRoute(
-                                      builder: (context) => VaccinationRegisterScreen(
-                                        petId: pet.id!,
-                                        vaccination: vaccination,
-                                      )
-                                    )
+                                      builder: (context) =>
+                                          VaccinationRegisterScreen(
+                                            petId: pet.id!,
+                                            vaccination: vaccination,
+                                          ),
+                                    ),
                                   );
 
-                                  if(result == true) {
+                                  if (result == true) {
                                     await loadVaccinations();
+                                    await loadUpcomingVaccinations();
                                   }
-                                }
+                                },
                               ),
 
                               IconButton(
                                 icon: const Icon(
                                   Icons.delete_outline,
-                                  size: 20
+                                  size: 20,
                                 ),
                                 onPressed: () async {
                                   final confirmed = await showDeleteConfirmDialog(
-                                    context: context, 
-                                    // title: '예방 접종 삭제', 
-                                    content: '${vaccination.vaccineName} 기록을 삭제하시겠습니까?'
+                                    context: context,
+                                    // title: '예방 접종 삭제',
+                                    content:
+                                        '${vaccination.vaccineName} 기록을 삭제하시겠습니까?',
                                   );
 
-                                  if(confirmed != true) {
+                                  if (confirmed != true) {
                                     return;
                                   }
-                                  
-                                  await DatabaseHelper.instance.deleteVaccination(vaccination.id!);
+
+                                  await DatabaseHelper.instance
+                                      .deleteVaccination(vaccination.id!);
                                   await loadVaccinations();
-                                }
-                              )
+                                  await loadUpcomingVaccinations();
+                                },
+                              ),
                             ],
-                          )
+                          ),
                         ),
                       ),
                     );
                   }).toList(),
                 ),
-              
+
               const SizedBox(height: 30),
 
               // 4. 체중 기록 섹션
               _SectionHeader(
-                title: '⚖️ 체중 기록', 
+                title: '⚖️ 체중 기록',
                 onAddPressed: () async {
                   final result = await Navigator.push(
-                    context, 
+                    context,
                     MaterialPageRoute(
-                      builder: (context) => WeightRecordRegisterScreen(
-                        petId: pet.id!
-                      )
-                    )
+                      builder: (context) =>
+                          WeightRecordRegisterScreen(petId: pet.id!),
+                    ),
                   );
 
-                  if(result == true) {
+                  if (result == true) {
                     await loadWeightRecords();
                   }
-                }
+                },
               ),
-              
+
               const SizedBox(height: 8),
 
               /*
@@ -489,7 +560,8 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
                 ],
               ]
               */
-              if(weightRecords.length >= 2) ...[ // ...은 Spread Operator(스프레드 연산자). 즉, 이 리스트 안에 들어있는 위젯들을 하나씩 꺼내서 children에 넣어달라는 말
+              if (weightRecords.length >= 2) ...[
+                // ...은 Spread Operator(스프레드 연산자). 즉, 이 리스트 안에 들어있는 위젯들을 하나씩 꺼내서 children에 넣어달라는 말
                 Card(
                   child: Padding(
                     padding: const EdgeInsetsGeometry.all(10),
@@ -503,10 +575,10 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
                             fontWeight: FontWeight.bold,
                           ),
                         ),
-                        
+
                         const SizedBox(height: 12),
-                        
-                        WeightChart(records: weightRecords)
+
+                        WeightChart(records: weightRecords),
                       ],
                     ),
                   ),
@@ -515,7 +587,7 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
                 const SizedBox(height: 12),
               ],
 
-              if(weightRecords.isEmpty)
+              if (weightRecords.isEmpty)
                 const _EmptyStateText(text: '등록된 체중 기록이 없습니다.')
               else
                 Column(
@@ -527,37 +599,33 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
                         child: ListTile(
                           title: Text(
                             '${record.weight} kg',
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold
-                            ),
+                            style: TextStyle(fontWeight: FontWeight.bold),
                           ),
                           subtitle: Text(
-                            '${record.date.year}.${record.date.month.toString().padLeft(2, '0')}.${record.date.day.toString().padLeft(2, '0')}'
+                            '${record.date.year}.${record.date.month.toString().padLeft(2, '0')}.${record.date.day.toString().padLeft(2, '0')}',
                             // '${record.memo != null ? '\n${record.memo}' : ''}'
                           ),
                           trailing: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               IconButton(
-                                icon: const Icon(
-                                  Icons.edit_outlined,
-                                  size: 20
-                                ),
+                                icon: const Icon(Icons.edit_outlined, size: 20),
                                 onPressed: () async {
                                   final result = await Navigator.push(
-                                    context, 
+                                    context,
                                     MaterialPageRoute(
-                                      builder: (context) => WeightRecordRegisterScreen(
-                                        petId: pet.id!,
-                                        record: record,
-                                      )
-                                    )
+                                      builder: (context) =>
+                                          WeightRecordRegisterScreen(
+                                            petId: pet.id!,
+                                            record: record,
+                                          ),
+                                    ),
                                   );
 
-                                  if(result == true) {
+                                  if (result == true) {
                                     loadWeightRecords();
                                   }
-                                }
+                                },
                               ),
                               IconButton(
                                 icon: const Icon(
@@ -565,65 +633,62 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
                                   size: 20,
                                 ),
                                 onPressed: () async {
-                                  final confirmed = await showDeleteConfirmDialog(
-                                    context: context, 
-                                    // title: '체중 기록 삭제', 
-                                    content: '${record.weight} kg 기록을 삭제하시겠습니까?'
-                                  );
+                                  final confirmed =
+                                      await showDeleteConfirmDialog(
+                                        context: context,
+                                        // title: '체중 기록 삭제',
+                                        content:
+                                            '${record.weight} kg 기록을 삭제하시겠습니까?',
+                                      );
 
-                                  if(confirmed != true) {
+                                  if (confirmed != true) {
                                     return;
                                   }
 
-                                  await DatabaseHelper.instance.deleteWeightRecord(record.id!);
+                                  await DatabaseHelper.instance
+                                      .deleteWeightRecord(record.id!);
                                   await loadWeightRecords();
-                                }
+                                },
                               ),
                             ],
-                          )
+                          ),
                         ),
                       ),
                     );
                   }).toList(),
                 ),
 
-              const SizedBox(height: 20)
+              const SizedBox(height: 20),
             ],
           ),
         ),
-      )
+      ),
     );
   }
 }
 
 // 섹션 헤더 (제목 + 추가 버튼 우측 배치)
-class _SectionHeader extends StatelessWidget { // StatelessWidget: 화면에 그려질 수 있는 위젯의 자격을 부여하기 위해 상속받음
+class _SectionHeader extends StatelessWidget {
+  // StatelessWidget: 화면에 그려질 수 있는 위젯의 자격을 부여하기 위해 상속받음
   final String title;
   final VoidCallback onAddPressed;
 
-  const _SectionHeader({
-    required this.title,
-    required this.onAddPressed,
-  });
+  const _SectionHeader({required this.title, required this.onAddPressed});
 
   @override
   Widget build(BuildContext context) {
-    return Row( // Row (가로 배치). 안에 들어가는 항목들을 일렬 배치함
-      mainAxisAlignment: MainAxisAlignment.spaceBetween, // Row나 Column 안의 자식들을 양 끝으로 벌려서 배치하는 설정
+    return Row(
+      // Row (가로 배치). 안에 들어가는 항목들을 일렬 배치함
+      mainAxisAlignment: MainAxisAlignment
+          .spaceBetween, // Row나 Column 안의 자식들을 양 끝으로 벌려서 배치하는 설정
       children: [
         Text(
           title,
-          style: const TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-          ),
+          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
         ),
         TextButton.icon(
           onPressed: onAddPressed,
-          icon: const Icon(
-            Icons.add, 
-            size: 18
-          ),
+          icon: const Icon(Icons.add, size: 18),
           label: const Text('추가'),
         ),
       ],
@@ -639,9 +704,7 @@ class _SectionHeader extends StatelessWidget { // StatelessWidget: 화면에 그
 class _EmptyStateText extends StatelessWidget {
   final String text;
 
-  const _EmptyStateText({
-    required this.text
-  });
+  const _EmptyStateText({required this.text});
 
   @override
   Widget build(BuildContext context) {
@@ -650,10 +713,7 @@ class _EmptyStateText extends StatelessWidget {
       padding: const EdgeInsetsGeometry.only(top: 5),
       child: Text(
         text,
-        style: TextStyle(
-          color: Colors.grey[500],
-          fontSize: 14
-        ),
+        style: TextStyle(color: Colors.grey[500], fontSize: 14),
       ),
     );
   }
@@ -661,36 +721,35 @@ class _EmptyStateText extends StatelessWidget {
 
 // 반려동물 메인 프로필 (카드가 아닌 모던한 프로필 뱃지 형태)
 class _PetProfileHeader extends StatelessWidget {
-  final Pet pet; // _PetProfileHeader(pet: pet)을 호출하면 클래스의 생성자가 실행되면서 전달받은 pet 값이 클래스 내부의 final Pet pet; 변수에 저장(보관) 됨. 일반함수는 매개변수로 넘어온 pet을 직접 사용
+  final Pet
+  pet; // _PetProfileHeader(pet: pet)을 호출하면 클래스의 생성자가 실행되면서 전달받은 pet 값이 클래스 내부의 final Pet pet; 변수에 저장(보관) 됨. 일반함수는 매개변수로 넘어온 pet을 직접 사용
 
-  const _PetProfileHeader({
-    required this.pet
-  });
+  const _PetProfileHeader({required this.pet});
 
   // 생년월일로 나이 변환
   String _getAgeText(DateTime birthDate) {
     final now = DateTime.now();
-    
+
     int ageYear = now.year - birthDate.year;
     int ageMonth = now.month - birthDate.month;
 
     // 일(day) 수 비교하여 개월 수 보정
-    if(now.day < birthDate.day) {
+    if (now.day < birthDate.day) {
       ageMonth--;
     }
 
     // 개월 수가 음수일 경우 연도에서 차감
-    if(ageMonth < 0) {
+    if (ageMonth < 0) {
       ageYear--;
       ageMonth += 12;
     }
 
     // 1살 미만인 경우 'x개월' 표시
-    if(ageYear == 0) {
+    if (ageYear == 0) {
       return '$ageMonth개월';
     }
     // 개월이 0인 경우 'x살' 표시
-    else if(ageMonth == 0) {
+    else if (ageMonth == 0) {
       return '$ageYear살';
     }
     // 1살 이상 & 개월이 있는 경우 'x살 y개월' 표시
@@ -704,15 +763,15 @@ class _PetProfileHeader extends StatelessWidget {
     // 성별/품종/몸무게 텍스트 조합
     final List<String> details = [];
 
-    if(pet.breed != null && pet.breed!.isNotEmpty) {
+    if (pet.breed != null && pet.breed!.isNotEmpty) {
       details.add(pet.breed!);
     }
 
-    if(pet.gender != null && pet.gender!.isNotEmpty) {
+    if (pet.gender != null && pet.gender!.isNotEmpty) {
       details.add(pet.gender!);
     }
 
-    if(pet.weight != null) {
+    if (pet.weight != null) {
       details.add('${pet.weight}kg');
     }
 
@@ -722,12 +781,12 @@ class _PetProfileHeader extends StatelessWidget {
         CircleAvatar(
           radius: 52,
           // backgroundColor: Colors.grey[200],
-          backgroundImage: pet.imagePath != null ? FileImage(File(pet.imagePath!)) : null,
-          child: pet.imagePath == null
-              ? Icon(Icons.pets, size: 48)
+          backgroundImage: pet.imagePath != null
+              ? FileImage(File(pet.imagePath!))
               : null,
+          child: pet.imagePath == null ? Icon(Icons.pets, size: 48) : null,
         ),
-        
+
         const SizedBox(height: 16),
 
         // 2. 이름
@@ -743,7 +802,7 @@ class _PetProfileHeader extends StatelessWidget {
         const SizedBox(height: 6),
 
         // 3. 주요 정보
-        if(details.isNotEmpty)
+        if (details.isNotEmpty)
           Text(
             details.join('  •  '), // join: 리스트의 문자열들을 하나의 문자열로 합치는 것
             style: TextStyle(
@@ -754,20 +813,17 @@ class _PetProfileHeader extends StatelessWidget {
           ),
 
         // 4. 생일 정보
-        if(pet.birthDate != null) ...[
+        if (pet.birthDate != null) ...[
           const SizedBox(height: 6),
 
           Text(
             '${_getAgeText(pet.birthDate!)} (${pet.birthDate!.year}.${pet.birthDate!.month.toString().padLeft(2, '0')}.${pet.birthDate!.day.toString().padLeft(2, '0')})',
-            style: TextStyle(
-              fontSize: 13,
-              color: Colors.grey[700],
-            ),
+            style: TextStyle(fontSize: 13, color: Colors.grey[700]),
           ),
         ],
 
         const SizedBox(height: 20),
-        
+
         // 병원 기록/예방접종 네모 섹션들과 경계를 지어주는 얇은 경계선
         Divider(height: 1, thickness: 1, color: Colors.grey[200]),
       ],
