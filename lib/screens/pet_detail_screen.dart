@@ -289,11 +289,19 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
               // 1. 반려동물 정보
               _PetProfileHeader(pet: pet),
 
-              const SizedBox(height: 30),
+              const SizedBox(height: 20),
 
               // 1-1. 예방 접종 알림
               if (upcomingVaccinations.isNotEmpty) ...[
-                _buildVaccinationMessage(upcomingVaccinations.first),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: upcomingVaccinations.take(3).map((map) {
+                    return Padding(
+                      padding: const EdgeInsets.only(top: 8),
+                      child: _buildVaccinationMessage(map),
+                    );
+                  }).toList(),
+                ),
 
                 const SizedBox(height: 20),
               ],
