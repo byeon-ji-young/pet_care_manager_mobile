@@ -9,7 +9,8 @@ import '../database/database_helper.dart';
 
 import '../models/pet.dart';
 
-class HomeScreen extends StatefulWidget  { // StatelessWidget: 사용자에 동작에 의해 화면 자체의 데이터(상태)가 바로 바뀌지 않는 정적인 화면을 의미
+class HomeScreen extends StatefulWidget {
+  // StatelessWidget: 사용자에 동작에 의해 화면 자체의 데이터(상태)가 바로 바뀌지 않는 정적인 화면을 의미
   const HomeScreen({super.key}); // 플러터가 위젯을 효율적으로 관리할 수 있도록 돕는 생성자 선언
 
   @override
@@ -50,35 +51,35 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       appBar: AppBar(
         // title: const Text('🐾 PetCareManager'),
-        title: Row( // Row는 기본적으로 가로 방향으로 배치. 세로 배치는 Column
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.center,
           children: const [
-            Icon(
-              Icons.pets,
+            Row(
+              children: [
+                Icon(Icons.pets),
+                SizedBox(width: 6),
+                Text(
+                  '펫몽',
+                  /*
+                    // 개별 텍스트에 구글폰트 적용시키는 방법 *
+                    style: GoogleFonts.jua( 
+                      fontWeight: FontWeight.bold
+                    ),
+                */
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+              ],
             ),
 
-            SizedBox(width: 8),
-            
+            SizedBox(height: 5),
+
             Text(
-              '펫몽',
-              /*
-              // 개별 텍스트에 구글폰트 적용시키는 방법 *
-              style: GoogleFonts.jua( 
-                fontWeight: FontWeight.bold
-              ),
-              */
-              style: TextStyle(
-                fontWeight: FontWeight.bold
-              ),
-            ),
-            
-            Spacer(),
-            
-            Text(
-              '우리 아이 건강일지',
+              '우리 아이의 건강을 기록해주세요.',
               style: TextStyle(
                 fontSize: 14,
                 color: Colors.grey,
-                fontWeight: FontWeight.w700
+                fontWeight: FontWeight.w900,
               ),
             ),
           ],
@@ -91,29 +92,20 @@ class _HomeScreenState extends State<HomeScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(
-                    Icons.pets,
-                    size: 80,
-                  ),
+                  const Icon(Icons.pets, size: 80),
 
                   const SizedBox(height: 20),
 
                   const Text(
                     '등록된 반려동물이 없어요.',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                   ),
 
                   const SizedBox(height: 10),
 
                   Text(
                     '우리 아이를 등록해 주세요.',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.grey[600],
-                    ),
+                    style: TextStyle(fontSize: 14, color: Colors.grey[600]),
                   ),
 
                   const SizedBox(height: 30),
@@ -129,7 +121,8 @@ class _HomeScreenState extends State<HomeScreen> {
                   */
                   ElevatedButton.icon(
                     onPressed: () async {
-                      await Navigator.push( // 등록 화면에서 돌아오면 이미 loadPets()를 호출
+                      await Navigator.push(
+                        // 등록 화면에서 돌아오면 이미 loadPets()를 호출
                         context,
                         MaterialPageRoute(
                           builder: (context) => const PetRegisterScreen(),
@@ -143,41 +136,44 @@ class _HomeScreenState extends State<HomeScreen> {
                     style: ElevatedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 24,
-                        vertical: 12
+                        vertical: 12,
                       ),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12)
-                      )
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                     ),
                   ),
                 ],
               ),
             )
           : ListView.builder(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12), // 리스트 전체 여백 추가
+              padding: const EdgeInsets.symmetric(
+                horizontal: 10,
+                vertical: 12,
+              ), // 리스트 전체 여백 추가
               itemCount: pets.length,
               itemBuilder: (context, index) {
                 final pet = pets[index];
 
                 return Card(
                   elevation: 1, // 카드 그림자 살짝 부여
-                  margin: const EdgeInsets.only(bottom: 12), // 카드 사이 간격
+                  margin: const EdgeInsets.only(bottom: 10, top: 2), // 카드 사이 간격
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(16), // 카드 모서리 둥글게
                   ),
                   child: ListTile(
                     contentPadding: const EdgeInsets.symmetric(
                       horizontal: 15,
-                      vertical: 2,
+                      vertical: 10,
                     ),
                     leading: CircleAvatar(
-                      radius: 28,
+                      radius: 34,
                       backgroundImage: pet.imagePath != null
-                        ? FileImage(File(pet.imagePath!))
-                        : null,
+                          ? FileImage(File(pet.imagePath!))
+                          : null,
                       child: pet.imagePath == null
-                        ? Icon(Icons.pets, size: 28)
-                        : null,
+                          ? Icon(Icons.pets, size: 34)
+                          : null,
                     ),
 
                     title: Text(
@@ -193,10 +189,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       child: Text(
                         '${pet.breed?.isEmpty == true ? '품종 미입력' : pet.breed} · '
                         '${pet.weight != null ? '${pet.weight}kg' : '몸무게 미입력'}',
-                        style: TextStyle(
-                          color: Colors.grey[600],
-                          fontSize: 14,
-                        ),
+                        style: TextStyle(color: Colors.grey[600], fontSize: 14),
                       ),
                     ),
 
@@ -217,12 +210,13 @@ class _HomeScreenState extends State<HomeScreen> {
                         context,
                         MaterialPageRoute(
                           builder: (context) => PetDetailScreen(
-                            pet: pet, // 왼쪽 pet은 상세 화면에서 받는 변수 이름, 오른쪽 pet은 현재 홈 화면에서 선택한 Pet 객체
+                            pet:
+                                pet, // 왼쪽 pet은 상세 화면에서 받는 변수 이름, 오른쪽 pet은 현재 홈 화면에서 선택한 Pet 객체
                           ),
                         ),
                       );
 
-                      if(result == true) {
+                      if (result == true) {
                         loadPets();
                       }
                     },
@@ -231,21 +225,23 @@ class _HomeScreenState extends State<HomeScreen> {
               },
             ),
 
-      floatingActionButton: pets.isNotEmpty // FloatingActionButton: 화면 위에 둥둥 떠있는 버튼
-        ? FloatingActionButton(
-            onPressed: () async {
-              await Navigator.push(
-                context, 
-                MaterialPageRoute(
-                  builder: (context) => const PetRegisterScreen()
-                )
-              );
+      floatingActionButton:
+          pets
+              .isNotEmpty // FloatingActionButton: 화면 위에 둥둥 떠있는 버튼
+          ? FloatingActionButton(
+              onPressed: () async {
+                await Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const PetRegisterScreen(),
+                  ),
+                );
 
-              loadPets();
-            },
-            child: const Icon(Icons.add),
-          )
-        : null
+                loadPets();
+              },
+              child: const Icon(Icons.add),
+            )
+          : null,
     );
   }
 }
