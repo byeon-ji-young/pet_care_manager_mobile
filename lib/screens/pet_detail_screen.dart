@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:table_calendar/table_calendar.dart';
 
 import '../models/pet.dart';
 import '../models/health_record.dart';
@@ -43,6 +44,9 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
   List<WeightRecord> weightRecords = [];
 
   List<Vaccination> upcomingVaccinations = [];
+
+  DateTime selectedDay = DateTime.now();
+  DateTime focusedDay = DateTime.now();
 
   @override
   void initState() {
@@ -288,6 +292,33 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
             children: [
               // 1. 반려동물 정보
               _PetProfileHeader(pet: pet),
+
+              // 1. 건강 기록 캘린더
+              Text(
+                '🗓️ 건강 기록',
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+
+              const SizedBox(height: 12),
+
+              TableCalendar(
+                focusedDay: focusedDay,
+                firstDay: DateTime(2000),
+                lastDay: DateTime(2100),
+                selectedDayPredicate: (day) {
+                  // selectedDayPredicate: 이 날짜가 현재 선택된 날짜인가 알려주는 부분
+                  return isSameDay(selectedDay, day);
+                },
+                onDaySelected: (selected, focused) {
+                  setState(() {
+                    selectedDay = selected;
+                    focusedDay = focused;
+                  });
+                },
+              ),
 
               const SizedBox(height: 20),
 
