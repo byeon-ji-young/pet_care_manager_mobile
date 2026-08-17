@@ -8,6 +8,7 @@ import 'pet_detail_screen.dart';
 import '../database/database_helper.dart';
 
 import '../models/pet.dart';
+import '../models/vaccination.dart';
 
 class HomeScreen extends StatefulWidget {
   // StatelessWidget: 사용자에 동작에 의해 화면 자체의 데이터(상태)가 바로 바뀌지 않는 정적인 화면을 의미
@@ -20,6 +21,26 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   List<Pet> pets = [];
 
+  Map<int, Vaccination?> nextVaccinations = {};
+
+  String _getVaccinationMessage(Vaccination vaccination) {
+    final nextDate = vaccination.nextDate!;
+    final today = DateTime.now();
+
+    final todayOnly = DateTime(today.year, today.month, today.day);
+    final nextDateOnly = DateTime(nextDate.year, nextDate.month, nextDate.day);
+
+    final difference = nextDateOnly.difference(todayOnly).inDays;
+
+    if (difference == 0) {
+      return '⚠️ ${vaccination.vaccineName} 예방접종 예정일이에요.';
+    } else if (difference == 1) {
+      return '⚠️ ${vaccination.vaccineName} 예방접종이 내일이에요.';
+    }
+
+    return '⚠️ ${vaccination.vaccineName} 예방접종이 ${difference}일 남았어요.';
+  }
+
   @override
   void initState() {
     super.initState();
@@ -30,12 +51,23 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> loadPets() async {
     final loadedPets = await DatabaseHelper.instance.getPets();
 
+    final Map<int, Vaccination?> loadedNextVaccinations = {};
+
+    for (final pet in loadedPets) {
+      final nextVaccination = await DatabaseHelper.instance.getNextVaccination(
+        pet.id!,
+      );
+
+      loadedNextVaccinations[pet.id!] = nextVaccination;
+    }
+
     if (!mounted) {
       return;
     }
 
     setState(() {
       pets = loadedPets;
+      nextVaccinations = loadedNextVaccinations;
     });
   }
 
@@ -186,10 +218,31 @@ class _HomeScreenState extends State<HomeScreen> {
 
                     subtitle: Padding(
                       padding: const EdgeInsets.only(top: 4.0),
-                      child: Text(
-                        '${pet.breed?.isEmpty == true ? '품종 미입력' : pet.breed} · '
-                        '${pet.weight != null ? '${pet.weight}kg' : '몸무게 미입력'}',
-                        style: TextStyle(color: Colors.grey[600], fontSize: 14),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            '${pet.breed?.isEmpty == true ? '품종 미입력' : pet.breed} · '
+                            '${pet.weight != null ? '${pet.weight}kg' : '몸무게 미입력'}',
+                            style: TextStyle(
+                              color: Colors.grey[600],
+                              fontSize: 14,
+                            ),
+                          ),
+
+                          if (nextVaccinations[pet.id] != null) ...[
+                            const SizedBox(height: 4),
+
+                            Text(
+                              _getVaccinationMessage(nextVaccinations[pet.id]!),
+                              style: const TextStyle(
+                                color: Colors.orange,
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ],
                       ),
                     ),
 

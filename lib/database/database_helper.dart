@@ -402,6 +402,7 @@ class DatabaseHelper {
     return db.delete('vaccinations', where: 'id = ?', whereArgs: [id]);
   }
 
+  // 예방 접종일 조회
   Future<List<Vaccination>> getUpcomingVaccinations(int petId) async {
     final db = await database;
 
@@ -415,6 +416,31 @@ class DatabaseHelper {
     return maps.map((map) {
       return Vaccination.fromMap(map);
     }).toList();
+  }
+
+  // 다음 접종일 조회
+  Future<Vaccination?> getNextVaccination(int petId) async {
+    final db = await database;
+
+    final today = DateTime.now();
+    final todayString =
+        '${today.year.toString().padLeft(4, '0')}-'
+        '${today.month.toString().padLeft(2, '0')}-'
+        '${today.day.toString().padLeft(2, '0')}';
+
+    final maps = await db.query(
+      'vaccinations',
+      where: 'pet_id = ? AND next_date IS NOT NULL and next_date >= ?',
+      whereArgs: [petId, todayString],
+      orderBy: 'next_date ASC',
+      limit: 1,
+    );
+
+    if (maps.isEmpty) {
+      return null;
+    }
+
+    return Vaccination.fromMap(maps.first);
   }
 
   // ========================================================= weight_records =========================================================
