@@ -38,7 +38,7 @@ class _HomeScreenState extends State<HomeScreen> {
       return '⚠️ ${vaccination.vaccineName} 예방접종이 내일이에요.';
     }
 
-    return '⚠️ ${vaccination.vaccineName} 예방접종이 ${difference}일 남았어요.';
+    return '⚠️ ${vaccination.vaccineName} 예방접종이 $difference일 남았어요.';
   }
 
   @override
