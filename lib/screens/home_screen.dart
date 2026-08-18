@@ -23,24 +23,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Map<int, Vaccination?> nextVaccinations = {};
 
-  String _getVaccinationMessage(Vaccination vaccination) {
-    final nextDate = vaccination.nextDate!;
-    final today = DateTime.now();
-
-    final todayOnly = DateTime(today.year, today.month, today.day);
-    final nextDateOnly = DateTime(nextDate.year, nextDate.month, nextDate.day);
-
-    final difference = nextDateOnly.difference(todayOnly).inDays;
-
-    if (difference == 0) {
-      return '⚠️ ${vaccination.vaccineName} 예방접종 예정일이에요.';
-    } else if (difference == 1) {
-      return '⚠️ ${vaccination.vaccineName} 예방접종이 내일이에요.';
-    }
-
-    return '⚠️ ${vaccination.vaccineName} 예방접종이 $difference일 남았어요.';
-  }
-
   @override
   void initState() {
     super.initState();
@@ -48,6 +30,7 @@ class _HomeScreenState extends State<HomeScreen> {
     loadPets();
   }
 
+  // 반려동물 조회
   Future<void> loadPets() async {
     final loadedPets = await DatabaseHelper.instance.getPets();
 
@@ -69,6 +52,53 @@ class _HomeScreenState extends State<HomeScreen> {
       pets = loadedPets;
       nextVaccinations = loadedNextVaccinations;
     });
+  }
+
+  // 예방접종 알림 메세지
+  String _getVaccinationMessage(Vaccination vaccination) {
+    final nextDate = vaccination.nextDate!;
+    final today = DateTime.now();
+
+    final todayOnly = DateTime(today.year, today.month, today.day);
+    final nextDateOnly = DateTime(nextDate.year, nextDate.month, nextDate.day);
+
+    final difference = nextDateOnly.difference(todayOnly).inDays;
+
+    if (difference < 0) {
+      return '🔴 ${vaccination.vaccineName} 예방접종 예정일이 '
+          '${difference.abs()}일 지났어요.';
+    } else if (difference == 0) {
+      return '🔴 오늘은 ${vaccination.vaccineName} 예방접종 예정일이에요!';
+    } else if (difference == 1) {
+      return '🟠 ${vaccination.vaccineName} 예방접종이 내일이에요.';
+    } else if (difference <= 7) {
+      return '🟡 ${vaccination.vaccineName} 예방접종이 '
+          '$difference일 남았어요.';
+    }
+
+    return '💉 ${vaccination.vaccineName} 예방접종이 '
+        '$difference일 남았어요.';
+  }
+
+  // 예방접종 알림 배경
+  Color _getVaccinationColor(Vaccination vaccination) {
+    final nextDate = vaccination.nextDate!;
+    final today = DateTime.now();
+
+    final todayOnly = DateTime(today.year, today.month, today.day);
+    final nextDateOnly = DateTime(nextDate.year, nextDate.month, nextDate.day);
+
+    final difference = nextDateOnly.difference(todayOnly).inDays;
+
+    if (difference <= 0) {
+      return Colors.red;
+    } else if (difference == 1) {
+      return Colors.orange;
+    } else if (difference <= 7) {
+      return Colors.amber;
+    }
+
+    return Colors.blue;
   }
 
   /* 
@@ -111,7 +141,7 @@ class _HomeScreenState extends State<HomeScreen> {
               style: TextStyle(
                 fontSize: 14,
                 color: Colors.grey,
-                fontWeight: FontWeight.w900,
+                fontWeight: FontWeight.w600,
               ),
             ),
           ],
@@ -196,16 +226,14 @@ class _HomeScreenState extends State<HomeScreen> {
                   child: InkWell(
                     borderRadius: BorderRadius.circular(16),
                     onTap: () async {
-                      final result = await Navigator.push(
+                      await Navigator.push(
                         context,
                         MaterialPageRoute(
                           builder: (context) => PetDetailScreen(pet: pet),
                         ),
                       );
 
-                      if (result == true) {
-                        loadPets();
-                      }
+                      loadPets();
                     },
                     child: Padding(
                       padding: const EdgeInsets.all(20),
@@ -214,6 +242,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           // 반려동물 프로필 + 우측 상단 이동 아이콘
                           Stack(
                             children: [
+                              // 반려동물 프로필 카드
                               PetProfileHeader(pet: pet),
 
                               const Positioned(
@@ -232,26 +261,33 @@ class _HomeScreenState extends State<HomeScreen> {
                           if (nextVaccinations[pet.id] != null) ...[
                             const SizedBox(height: 12),
 
-                            Container(
-                              width: double.infinity,
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 14,
-                                vertical: 10,
-                              ),
-                              decoration: BoxDecoration(
-                                color: Colors.orange.withValues(alpha: 0.08),
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              child: Text(
-                                _getVaccinationMessage(
-                                  nextVaccinations[pet.id]!,
-                                ),
-                                style: const TextStyle(
-                                  color: Colors.orange,
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
+                            Builder(
+                              builder: (context) {
+                                final vaccination = nextVaccinations[pet.id]!;
+                                final alertColor = _getVaccinationColor(
+                                  vaccination,
+                                );
+
+                                return Container(
+                                  width: double.infinity,
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 14,
+                                    vertical: 10,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: alertColor.withValues(alpha: 0.08),
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  child: Text(
+                                    _getVaccinationMessage(vaccination),
+                                    style: TextStyle(
+                                      color: alertColor,
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                );
+                              },
                             ),
                           ],
                         ],
@@ -262,10 +298,10 @@ class _HomeScreenState extends State<HomeScreen> {
               },
             ),
 
-      floatingActionButton:
-          pets
-              .isNotEmpty // FloatingActionButton: 화면 위에 둥둥 떠있는 버튼
+      floatingActionButton: // FloatingActionButton: 화면 위에 둥둥 떠있는 버튼
+      pets.isNotEmpty
           ? FloatingActionButton(
+              // elevation: 0,
               onPressed: () async {
                 await Navigator.push(
                   context,
@@ -276,7 +312,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
                 loadPets();
               },
-              child: const Icon(Icons.add),
+              child: Icon(Icons.add, color: Theme.of(context).primaryColor),
             )
           : null,
     );
