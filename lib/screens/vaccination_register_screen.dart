@@ -401,7 +401,7 @@ class _VaccinationRegisterScreen extends State<VaccinationRegisterScreen> {
                       return;
                     }
 
-                    Navigator.pop(context, true);
+                    Navigator.pop(context, vaccinationDate);
                   },
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,

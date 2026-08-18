@@ -11,15 +11,15 @@ import '../database/database_helper.dart';
 import '../widgets/weight_chart.dart';
 import '../widgets/pet_profile_header.dart';
 
-import 'pet_register_screen.dart';
-import 'health_record_register_screen.dart';
-import 'vaccination_register_screen.dart';
-import 'weight_record_register_screen.dart';
+import '../screens/pet_register_screen.dart';
+import '../screens/health_record_register_screen.dart';
+import '../screens/vaccination_register_screen.dart';
+import '../screens/weight_record_register_screen.dart';
 
-class PetDetailScreen extends StatefulWidget {
+class PetDetailScreenBackup extends StatefulWidget {
   final Pet pet;
 
-  const PetDetailScreen({super.key, required this.pet});
+  const PetDetailScreenBackup({super.key, required this.pet});
 
   /*
     StatefulWidget 자체는 화면의 상태를 직접 저장하는 역할을 하지 않기 때문에 실제 상태를 관리할 state 객체를 만들어야 함.
@@ -30,10 +30,10 @@ class PetDetailScreen extends StatefulWidget {
     그리고 아래에 class _PetDetailScreenState extends State<PetDetailScreen> { ... } 이게 실제로 상태를 관리하는 부분이 됨
   */
   @override
-  State<PetDetailScreen> createState() => _PetDetailScreenState();
+  State<PetDetailScreenBackup> createState() => _PetDetailScreenState();
 }
 
-class _PetDetailScreenState extends State<PetDetailScreen> {
+class _PetDetailScreenState extends State<PetDetailScreenBackup> {
   Pet? currentPet;
 
   List<HealthRecord> healthRecords = [];
@@ -274,137 +274,6 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
         .toList();
   }
 
-  // 기록 추가 버튼 바텀 시트
-  /*
-  void _showAddRecordBottomSheet() {} 여기의 context는 상세화면의 context
-  builder: (context) {} 여기의 context는 바텀시트의 context
-  */
-  void _showAddRecordBottomSheet() {
-    final petId = currentPet!.id!;
-    final parentContext = context;
-
-    showModalBottomSheet(
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (context) {
-        return SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(20, 20, 20, 10),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  '기록 추가',
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                ),
-
-                const SizedBox(height: 16),
-
-                ListTile(
-                  leading: const Icon(Icons.local_hospital_outlined),
-                  title: const Text('병원기록'),
-                  trailing: const Icon(Icons.chevron_right, color: Colors.grey),
-                  onTap: () async {
-                    Navigator.pop(context); // 바텀시트 닫기
-                    // 여기서 바로 Navigator.push()를 하면 바텀시트 위에 등록 화면이 쌓이는 구조가 됨.
-
-                    final result = await Navigator.push(
-                      // 상세화면에서 등록화면 열기
-                      parentContext,
-                      MaterialPageRoute(
-                        builder: (context) =>
-                            HealthRecordRegisterScreen(petId: petId),
-                      ),
-                    );
-
-                    if (result is DateTime) {
-                      if (!mounted) {
-                        return;
-                      }
-
-                      setState(() {
-                        selectedDay = result;
-                        focusedDay = result;
-                      });
-
-                      await loadHealthRecords();
-                    }
-                  },
-                ),
-
-                ListTile(
-                  leading: const Icon(Icons.vaccines_outlined),
-                  title: const Text('예방접종'),
-                  trailing: const Icon(Icons.chevron_right, color: Colors.grey),
-                  onTap: () async {
-                    Navigator.pop(context);
-
-                    final result = await Navigator.push(
-                      parentContext,
-                      MaterialPageRoute(
-                        builder: (context) =>
-                            VaccinationRegisterScreen(petId: petId),
-                      ),
-                    );
-
-                    if (result is DateTime) {
-                      if (!mounted) {
-                        return;
-                      }
-
-                      setState(() {
-                        selectedDay = result;
-                        focusedDay = result;
-                      });
-
-                      await loadVaccinations();
-                      await loadUpcomingVaccinations();
-                    }
-                  },
-                ),
-
-                ListTile(
-                  leading: const Icon(Icons.monitor_weight_outlined),
-                  title: const Text('체중 기록'),
-                  trailing: const Icon(Icons.chevron_right, color: Colors.grey),
-                  onTap: () async {
-                    Navigator.pop(context);
-
-                    final result = await Navigator.push(
-                      parentContext,
-                      MaterialPageRoute(
-                        builder: (context) =>
-                            WeightRecordRegisterScreen(petId: petId),
-                      ),
-                    );
-
-                    // if (result == true) await loadWeightRecords();
-
-                    if (result is DateTime) {
-                      if (!mounted) {
-                        return;
-                      }
-
-                      setState(() {
-                        selectedDay = result;
-                        focusedDay = result;
-                      });
-
-                      await loadWeightRecords();
-                    }
-                  },
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     // build()는 _PetDetailScreenState 안에 존재. State에서 부모 StatefulWidget의 값을 가져오려면 ~ 으로r 써야함. 즉 pet -> pet 작성해야 됨
@@ -487,20 +356,6 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
                 focusedDay: focusedDay,
                 firstDay: DateTime(2000),
                 lastDay: DateTime(2100),
-                calendarStyle: CalendarStyle(
-                  todayDecoration: const BoxDecoration(
-                    // 오늘 날짜의 "배경/모양"
-                    color:
-                        Colors.transparent, // transparent: 투명한 색. 즉, 배경을 없애는 것
-                    shape: BoxShape.circle,
-                  ),
-                  todayTextStyle: const TextStyle(
-                    // 오늘 날짜의 "글자"
-                    color: Colors.black,
-                    fontWeight: FontWeight.normal,
-                  ),
-                ),
-
                 eventLoader: _getEventsForDay, // 리스트가 반환되면 점 표시
                 selectedDayPredicate: (day) {
                   // selectedDayPredicate: 이 날짜가 현재 선택된 날짜인가 알려주는 부분
@@ -589,16 +444,7 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
                             ),
                           );
 
-                          if (result is DateTime) {
-                            if (!mounted) {
-                              return;
-                            }
-
-                            setState(() {
-                              selectedDay = result;
-                              focusedDay = result;
-                            });
-
+                          if (result == true) {
                             await loadHealthRecords();
                           }
                         },
@@ -621,16 +467,7 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
                             ),
                           );
 
-                          if (result is DateTime) {
-                            if (!mounted) {
-                              return;
-                            }
-
-                            setState(() {
-                              selectedDay = result;
-                              focusedDay = result;
-                            });
-
+                          if (result == true) {
                             await loadVaccinations();
                             await loadUpcomingVaccinations();
                           }
@@ -653,33 +490,13 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
                             ),
                           );
 
-                          if (result is DateTime) {
-                            if (!mounted) {
-                              return;
-                            }
-
-                            setState(() {
-                              selectedDay = result;
-                              focusedDay = result;
-                            });
-
+                          if (result == true) {
                             await loadWeightRecords();
                           }
                         },
                       );
                     }),
                   ],
-
-                  const SizedBox(height: 12),
-
-                  SizedBox(
-                    width: double.infinity,
-                    child: OutlinedButton.icon(
-                      onPressed: _showAddRecordBottomSheet,
-                      icon: const Icon(Icons.add),
-                      label: const Text('기록 추가'),
-                    ),
-                  ),
                 ],
               ),
 
@@ -697,6 +514,246 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
 
                 const SizedBox(height: 20),
               ],
+
+              // 2. 병원 기록 섹션
+              _SectionHeader(
+                title: '🏥 병원 기록',
+                onAddPressed: () async {
+                  final result = await Navigator.push(
+                    // Navigator는 Flutter에서 화면 이동을 관리하는 역할. push는 새로운 화면을 위에 추가
+                    context, // context는 Flutter의 현재 위젯이 어디에 위치하고 있는지 알려주는 정보
+                    MaterialPageRoute(
+                      // MaterialPageRoute: 어떤 방식으로 새로운 화면을 띄울지 정의하는 것
+                      builder: (context) => HealthRecordRegisterScreen(
+                        // builder는 실제로 이동할 화면을 만들어주는 부분
+                        petId: pet.id!,
+                      ),
+                    ),
+                  );
+
+                  if (result == true) {
+                    await loadHealthRecords();
+                  }
+                },
+              ),
+
+              const SizedBox(height: 8),
+
+              if (healthRecords
+                  .isEmpty) // Flutter의 children: [] 안에서 {}를 사용하면 안됨. {}를 Dart가 Set으로 해석하기 때문에 에러남
+                const _EmptyStateText(text: '등록된 병원 기록이 없습니다.')
+              else
+                Column(
+                  children: healthRecords.map((record) {
+                    return Card(
+                      margin: const EdgeInsets.only(bottom: 8),
+                      child: Padding(
+                        padding: const EdgeInsets.only(left: 14),
+                        child: ListTile(
+                          title: Text(
+                            record.title,
+                            style: const TextStyle(fontWeight: FontWeight.w600),
+                          ),
+                          subtitle: Text(
+                            '${record.date.year}.${record.date.month.toString().padLeft(2, '0')}.${record.date.day.toString().padLeft(2, '0')}'
+                            '${record.hospital != null ? '\n${record.hospital}' : ''}',
+                          ),
+                          // trailing: record.cost != null ? Text('${record.cost}원') : null, // trailing: ListTile의 오른쪽에 표시할 내용을 지정
+                          trailing: Row(
+                            mainAxisSize: MainAxisSize
+                                .min, // Row나 Column이 주축(main axis) 방향으로 얼마나 공간을 차지할지 정하는 옵션. 즉, mainAxis 방향으로 필요한 만큼만 공간을 차지하겠다는 뜻
+                            children: [
+                              if (record.cost != null)
+                                Padding(
+                                  padding: const EdgeInsetsGeometry.only(
+                                    right: 8,
+                                  ),
+                                  child: Text(
+                                    '${record.cost}원',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+
+                              IconButton(
+                                icon: const Icon(Icons.edit_outlined, size: 20),
+                                onPressed: () async {
+                                  final result = await Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) =>
+                                          HealthRecordRegisterScreen(
+                                            petId: pet.id!,
+                                            record: record,
+                                          ),
+                                    ),
+                                  );
+
+                                  if (result == true) {
+                                    await loadHealthRecords();
+                                  }
+                                },
+                              ),
+
+                              IconButton(
+                                icon: const Icon(
+                                  Icons.delete_outline,
+                                  size: 20,
+                                ),
+                                onPressed: () async {
+                                  final confirmed =
+                                      await showDeleteConfirmDialog(
+                                        context: context,
+                                        // title: '병원 기록 삭제',
+                                        content:
+                                            '${record.title} 기록을 삭제하시겠습니까?',
+                                      );
+
+                                  if (confirmed != true) {
+                                    return;
+                                  }
+
+                                  await DatabaseHelper.instance
+                                      .deleteHealthRecord(record.id!);
+                                  await loadHealthRecords();
+                                },
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    );
+                  }).toList(),
+                ),
+
+              const SizedBox(height: 30),
+
+              // 3. 예방접종 섹션
+              _SectionHeader(
+                title: '💉 예방접종',
+                onAddPressed: () async {
+                  final result = await Navigator.push(
+                    // Navigator는 Flutter에서 화면 이동을 관리하는 역할. push는 새로운 화면을 위에 추가
+                    context, // context는 Flutter의 현재 위젯이 어디에 위치하고 있는지 알려주는 정보
+                    MaterialPageRoute(
+                      // MaterialPageRoute: 어떤 방식으로 새로운 화면을 띄울지 정의하는 것
+                      builder: (context) => VaccinationRegisterScreen(
+                        // builder는 실제로 이동할 화면을 만들어주는 부분
+                        petId: pet.id!,
+                      ),
+                    ),
+                  );
+
+                  if (result == true) {
+                    await loadVaccinations();
+                    await loadUpcomingVaccinations();
+                  }
+                },
+              ),
+
+              const SizedBox(height: 8),
+
+              if (vaccinations
+                  .isEmpty) // Flutter의 children: [] 안에서 {}를 사용하면 안됨. {}를 Dart가 Set으로 해석하기 때문에 에러남
+                const _EmptyStateText(text: '등록된 예방접종 기록이 없습니다.')
+              else
+                Column(
+                  children: vaccinations.map((vaccination) {
+                    return Card(
+                      margin: const EdgeInsets.only(bottom: 8),
+                      child: Padding(
+                        padding: const EdgeInsets.only(left: 14),
+                        child: ListTile(
+                          title: Text(
+                            vaccination.vaccineName,
+                            style: TextStyle(fontWeight: FontWeight.w600),
+                          ),
+                          subtitle: Text(
+                            '접종일: '
+                            '${vaccination.vaccinationDate.year}.'
+                            '${vaccination.vaccinationDate.month.toString().padLeft(2, '0')}.'
+                            '${vaccination.vaccinationDate.day.toString().padLeft(2, '0')}'
+                            '${vaccination.nextDate != null ? '\n다음 접종: ${vaccination.nextDate!.year}.${vaccination.nextDate!.month.toString().padLeft(2, '0')}.${vaccination.nextDate!.day.toString().padLeft(2, '0')}' : ''}'
+                            '${vaccination.hospital != null ? '\n${vaccination.hospital}' : ''}',
+                          ),
+                          trailing: Row(
+                            mainAxisSize: MainAxisSize
+                                .min, // Row나 Column이 주축(main axis) 방향으로 필요한 만큼만 공간 차지
+                            children: [
+                              IconButton(
+                                icon: const Icon(Icons.edit_outlined, size: 20),
+                                onPressed: () async {
+                                  final result = await Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) =>
+                                          VaccinationRegisterScreen(
+                                            petId: pet.id!,
+                                            vaccination: vaccination,
+                                          ),
+                                    ),
+                                  );
+
+                                  if (result == true) {
+                                    await loadVaccinations();
+                                    await loadUpcomingVaccinations();
+                                  }
+                                },
+                              ),
+
+                              IconButton(
+                                icon: const Icon(
+                                  Icons.delete_outline,
+                                  size: 20,
+                                ),
+                                onPressed: () async {
+                                  final confirmed = await showDeleteConfirmDialog(
+                                    context: context,
+                                    // title: '예방 접종 삭제',
+                                    content:
+                                        '${vaccination.vaccineName} 기록을 삭제하시겠습니까?',
+                                  );
+
+                                  if (confirmed != true) {
+                                    return;
+                                  }
+
+                                  await DatabaseHelper.instance
+                                      .deleteVaccination(vaccination.id!);
+                                  await loadVaccinations();
+                                  await loadUpcomingVaccinations();
+                                },
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    );
+                  }).toList(),
+                ),
+
+              const SizedBox(height: 30),
+
+              // 4. 체중 기록 섹션
+              _SectionHeader(
+                title: '⚖️ 체중 기록',
+                onAddPressed: () async {
+                  final result = await Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) =>
+                          WeightRecordRegisterScreen(petId: pet.id!),
+                    ),
+                  );
+
+                  if (result == true) {
+                    await loadWeightRecords();
+                  }
+                },
+              ),
+
+              const SizedBox(height: 8),
 
               /*
               위젯 하나 넣기
@@ -746,6 +803,79 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
 
                 const SizedBox(height: 12),
               ],
+
+              if (weightRecords.isEmpty)
+                const _EmptyStateText(text: '등록된 체중 기록이 없습니다.')
+              else
+                Column(
+                  children: weightRecords.map((record) {
+                    return Card(
+                      margin: const EdgeInsets.only(bottom: 8),
+                      child: Padding(
+                        padding: const EdgeInsets.only(left: 14),
+                        child: ListTile(
+                          title: Text(
+                            '${record.weight} kg',
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          subtitle: Text(
+                            '${record.date.year}.${record.date.month.toString().padLeft(2, '0')}.${record.date.day.toString().padLeft(2, '0')}',
+                            // '${record.memo != null ? '\n${record.memo}' : ''}'
+                          ),
+                          trailing: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              IconButton(
+                                icon: const Icon(Icons.edit_outlined, size: 20),
+                                onPressed: () async {
+                                  final result = await Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) =>
+                                          WeightRecordRegisterScreen(
+                                            petId: pet.id!,
+                                            record: record,
+                                          ),
+                                    ),
+                                  );
+
+                                  if (result == true) {
+                                    loadWeightRecords();
+                                  }
+                                },
+                              ),
+                              IconButton(
+                                icon: const Icon(
+                                  Icons.delete_outline,
+                                  size: 20,
+                                ),
+                                onPressed: () async {
+                                  final confirmed =
+                                      await showDeleteConfirmDialog(
+                                        context: context,
+                                        // title: '체중 기록 삭제',
+                                        content:
+                                            '${record.weight} kg 기록을 삭제하시겠습니까?',
+                                      );
+
+                                  if (confirmed != true) {
+                                    return;
+                                  }
+
+                                  await DatabaseHelper.instance
+                                      .deleteWeightRecord(record.id!);
+                                  await loadWeightRecords();
+                                },
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    );
+                  }).toList(),
+                ),
+
+              const SizedBox(height: 20),
             ],
           ),
         ),
@@ -754,7 +884,6 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
   }
 }
 
-/*
 // 섹션 헤더 (제목 + 추가 버튼 우측 배치)
 class _SectionHeader extends StatelessWidget {
   // StatelessWidget: 화면에 그려질 수 있는 위젯의 자격을 부여하기 위해 상속받음
@@ -774,10 +903,10 @@ class _SectionHeader extends StatelessWidget {
           title,
           style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
         ),
-        IconButton(
+        TextButton.icon(
           onPressed: onAddPressed,
-          icon: const Icon(Icons.add, size: 20),
-          tooltip: '추가',
+          icon: const Icon(Icons.add, size: 18),
+          label: const Text('추가'),
         ),
       ],
     );
@@ -806,9 +935,7 @@ class _EmptyStateText extends StatelessWidget {
     );
   }
 }
-*/
 
-// 선택한 날짜 자료
 class _SelectedRecordCard extends StatelessWidget {
   final IconData icon;
   final String title;

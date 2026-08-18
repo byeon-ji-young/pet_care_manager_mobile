@@ -336,7 +336,7 @@ class _HealthRecordRegisterScreenState
                       return;
                     }
 
-                    Navigator.pop(context, true);
+                    Navigator.pop(context, selectedDate);
                   },
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,

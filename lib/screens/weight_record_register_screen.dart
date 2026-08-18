@@ -87,7 +87,7 @@ class _WeightRecordRegisterScreen extends State<WeightRecordRegisterScreen> {
       return;
     }
 
-    Navigator.pop(context, true);
+    Navigator.pop(context, selectedDate);
   }
 
   // 체중 기록 삭제
