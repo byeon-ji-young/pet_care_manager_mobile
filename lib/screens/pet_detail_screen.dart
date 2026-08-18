@@ -53,13 +53,17 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
 
     currentPet = widget.pet;
 
-    loadHealthRecords();
+    _loadAllData();
+  }
 
-    loadVaccinations();
-
-    loadWeightRecords();
-
-    loadUpcomingVaccinations();
+  Future<void> _loadAllData() async {
+    await Future.wait([
+      // Future.wait()은 여러 개의 Future 작업을 동시에 실행하고, 모두 끝날 때까지 기다린다
+      loadHealthRecords(),
+      loadVaccinations(),
+      loadWeightRecords(),
+      loadUpcomingVaccinations(),
+    ]);
   }
 
   Future<void> loadHealthRecords() async {
@@ -67,13 +71,9 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
       widget.pet.id!,
     );
 
-    if (!mounted) {
-      return;
-    }
+    if (!mounted) return;
 
-    setState(() {
-      healthRecords = records;
-    });
+    setState(() => healthRecords = records);
   }
 
   Future<void> loadVaccinations() async {
@@ -81,13 +81,9 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
       widget.pet.id!,
     );
 
-    if (!mounted) {
-      return;
-    }
+    if (!mounted) return;
 
-    setState(() {
-      vaccinations = vaccines;
-    });
+    setState(() => vaccinations = vaccines);
   }
 
   Future<void> loadWeightRecords() async {
@@ -95,13 +91,9 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
       widget.pet.id!,
     );
 
-    if (!mounted) {
-      return;
-    }
+    if (!mounted) return;
 
-    setState(() {
-      weightRecords = records;
-    });
+    setState(() => weightRecords = records);
   }
 
   Future<void> loadUpcomingVaccinations() async {
@@ -109,13 +101,9 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
       widget.pet.id!,
     );
 
-    if (!mounted) {
-      return;
-    }
+    if (!mounted) return;
 
-    setState(() {
-      upcomingVaccinations = upcomings;
-    });
+    setState(() => upcomingVaccinations = upcomings);
   }
 
   // 반려동물 삭제
@@ -129,15 +117,11 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
           content: Text('${pet.name}을(를) 정말 삭제하시겠습니까?'),
           actions: [
             TextButton(
-              onPressed: () {
-                Navigator.pop(context, false);
-              },
+              onPressed: () => Navigator.pop(context, false),
               child: const Text('취소'),
             ),
             TextButton(
-              onPressed: () {
-                Navigator.pop(context, true);
-              },
+              onPressed: () => Navigator.pop(context, true),
               child: const Text('삭제'),
             ),
           ],
@@ -146,16 +130,12 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
     );
 
     // 취소했거나 아무것도 선택하지 않은 경우
-    if (confirmed != true) {
-      return;
-    }
+    if (confirmed != true) return;
 
     // SQLite에서 삭제
     await DatabaseHelper.instance.deletePet(pet.id!);
 
-    if (!mounted) {
-      return;
-    }
+    if (!mounted) return;
 
     // 상세 화면 닫고 홈 화면으로 이동
     Navigator.pop(context, true);
@@ -196,38 +176,70 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
         false; // 다이얼로그 바깥 영역(배경)을 눌러서 닫은 경우 null이 반환되므로 false 처리. 즉, result가 있으면 result, 없으면 false
   }
 
-  // 예방 접종 알림 메세지 출력
-  Widget _buildVaccinationMessage(Vaccination vaccination) {
+  // 예방 접종 알림 카드 위젯
+  Widget _buildVaccinationBanner(Vaccination vaccination) {
     final nextDate = vaccination.nextDate!;
-
     final today = DateTime.now();
-    final todatDate = DateTime(today.year, today.month, today.day);
+    final todayDate = DateTime(today.year, today.month, today.day);
     final targetDate = DateTime(nextDate.year, nextDate.month, nextDate.day);
+    final difference = targetDate.difference(todayDate).inDays;
 
-    final difference = targetDate.difference(todatDate).inDays;
+    Color bgColor;
+    Color borderColor;
+    Color textColor;
+    IconData iconData;
+    String message;
+
+    // final primaryColor = Theme.of(context).primaryColor;
 
     if (difference == 0) {
-      return const Text(
-        '🔔 오늘은 예방접종 예정일이에요!',
-        style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
-      );
+      bgColor = Colors.orange.shade50;
+      borderColor = Colors.orange.shade200;
+      textColor = Colors.orange.shade900;
+      iconData = Icons.notifications_active_rounded;
+      message = '오늘은 ${vaccination.vaccineName} 예방접종 날이에요!';
     } else if (difference > 0) {
-      return Text(
-        '💉 ${vaccination.vaccineName} 예방접종까지 $difference일 남았어요.',
-        style: TextStyle(
-          fontSize: 14,
-          fontWeight: FontWeight.w500,
-          color: Colors.blueGrey[600],
-        ),
-      );
+      // bgColor = primaryColor.withValues(alpha: 0.08);
+      // borderColor = primaryColor.withValues(alpha: 0.3);
+      // textColor = primaryColor;
+      bgColor = Colors.blue.shade50;
+      borderColor = Colors.blue.shade200;
+      textColor = Colors.blue.shade900;
+      iconData = Icons.event_available_rounded;
+      message = '${vaccination.vaccineName} 예방접종까지 $difference일 남았어요.';
+    } else {
+      bgColor = Colors.red.shade50;
+      borderColor = Colors.red.shade200;
+      textColor = Colors.red.shade900;
+      iconData = Icons.warning_amber_rounded;
+      message =
+          '${vaccination.vaccineName} 예방접종 예정일이 ${difference.abs()}일 지났어요!';
     }
 
-    return Text(
-      '⚠️ ${vaccination.vaccineName} 예방접종 예정일이 ${difference.abs()}일 지났어요.', // abs()는 absolute value(절댓값)를 구하는 함수
-      style: const TextStyle(
-        fontSize: 14,
-        fontWeight: FontWeight.w600,
-        color: Colors.redAccent,
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: bgColor,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: borderColor),
+      ),
+      child: Row(
+        children: [
+          Icon(iconData, color: textColor, size: 22),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              message,
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: textColor,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -296,15 +308,33 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  '기록 추가',
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                Center(
+                  child: Container(
+                    width: 40,
+                    height: 4,
+                    margin: const EdgeInsets.only(bottom: 16),
+                    decoration: BoxDecoration(
+                      color: Colors.grey[300],
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
                 ),
 
-                const SizedBox(height: 16),
+                const Text(
+                  '기록 추가',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+
+                const SizedBox(height: 12),
 
                 ListTile(
-                  leading: const Icon(Icons.local_hospital_outlined),
+                  leading: const CircleAvatar(
+                    backgroundColor: Color(0xFFE3F2FD),
+                    child: Icon(
+                      Icons.local_hospital_outlined,
+                      color: Colors.blue,
+                    ),
+                  ),
                   title: const Text('병원기록'),
                   trailing: const Icon(Icons.chevron_right, color: Colors.grey),
                   onTap: () async {
@@ -336,7 +366,10 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
                 ),
 
                 ListTile(
-                  leading: const Icon(Icons.vaccines_outlined),
+                  leading: const CircleAvatar(
+                    backgroundColor: Color(0xFFE8F5E9),
+                    child: Icon(Icons.vaccines_outlined, color: Colors.green),
+                  ),
                   title: const Text('예방접종'),
                   trailing: const Icon(Icons.chevron_right, color: Colors.grey),
                   onTap: () async {
@@ -367,7 +400,13 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
                 ),
 
                 ListTile(
-                  leading: const Icon(Icons.monitor_weight_outlined),
+                  leading: const CircleAvatar(
+                    backgroundColor: Color(0xFFF3E5F5),
+                    child: Icon(
+                      Icons.monitor_weight_outlined,
+                      color: Colors.purple,
+                    ),
+                  ),
                   title: const Text('체중 기록'),
                   trailing: const Icon(Icons.chevron_right, color: Colors.grey),
                   onTap: () async {
@@ -419,10 +458,11 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
       appBar: AppBar(
         title: Text(
           '${pet.name} 프로필',
-          style: TextStyle(fontWeight: FontWeight.bold),
+          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
         ),
         centerTitle: true,
         elevation: 0, // 위젯에 주는 그림자(입체감)를 없애는 설정
+        backgroundColor: Colors.transparent,
         actions: [
           IconButton(
             icon: const Icon(Icons.edit_outlined),
@@ -440,14 +480,10 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
                   pet.id!,
                 ); // pet.id!의 !은 DB에서 생성된 반려동물 ID는 반드시 존재한다는 의미
 
-                if (!context.mounted) {
-                  return;
-                }
+                if (!context.mounted) return;
 
                 if (updatedPet != null) {
-                  setState(() {
-                    currentPet = updatedPet;
-                  });
+                  setState(() => currentPet = updatedPet);
                 }
 
                 Navigator.pop(context, true);
@@ -462,242 +498,284 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
       ),
 
       body: SingleChildScrollView(
+        physics: const BouncingScrollPhysics(),
+        // physics: 스크롤의 물리 효과 설정. BouncingScrollPhysics(): 스크롤을 끝까지 밀었을 대 살짝 튕기는 효과 / ClampingScrollPhysics(): 튕기지 않고 멈추는 느낌
         child: Padding(
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // 1. 반려동물 정보
+              // 1. 반려동물 정보 (프로필 헤더)
               PetProfileHeader(pet: pet),
 
-              const SizedBox(height: 12),
+              const SizedBox(height: 16),
 
-              // 1-1. 건강 기록 캘린더
-              Text(
-                '🗓️ 건강 기록',
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-
-              const SizedBox(height: 12),
-
-              TableCalendar(
-                focusedDay: focusedDay,
-                firstDay: DateTime(2000),
-                lastDay: DateTime(2100),
-                calendarStyle: CalendarStyle(
-                  todayDecoration: const BoxDecoration(
-                    // 오늘 날짜의 "배경/모양"
-                    color:
-                        Colors.transparent, // transparent: 투명한 색. 즉, 배경을 없애는 것
-                    shape: BoxShape.circle,
-                  ),
-                  todayTextStyle: const TextStyle(
-                    // 오늘 날짜의 "글자"
-                    color: Colors.black,
-                    fontWeight: FontWeight.normal,
-                  ),
+              // 2. 예방 접종 알림
+              if (upcomingVaccinations.isNotEmpty) ...[
+                Column(
+                  children: upcomingVaccinations
+                      .take(2) // 최대 2개만 선택
+                      .map(
+                        (vaccine) => _buildVaccinationBanner(vaccine),
+                      ) // 각 데이터를 배너로 변환
+                      .toList(),
                 ),
 
-                eventLoader: _getEventsForDay, // 리스트가 반환되면 점 표시
-                selectedDayPredicate: (day) {
-                  // selectedDayPredicate: 이 날짜가 현재 선택된 날짜인가 알려주는 부분
-                  return isSameDay(selectedDay, day);
-                },
-                onDaySelected: (selected, focused) {
-                  setState(() {
-                    selectedDay = selected;
-                    focusedDay = focused;
-                  });
-                },
-                calendarFormat: CalendarFormat.month,
-                availableCalendarFormats: const {CalendarFormat.month: '월'},
-              ),
+                const SizedBox(height: 8),
+              ],
 
-              const SizedBox(height: 20),
-
-              // 1-2. 캘린더에 선택한 날짜 기록 표시
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    '${selectedDay.year}.'
-                    '${selectedDay.month.toString().padLeft(2, '0')}.'
-                    '${selectedDay.day.toString().padLeft(2, '0')}',
-                    style: const TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-
-                  const SizedBox(height: 4),
-
-                  Text(
-                    '선택한 날짜의 건강 기록이에요.',
-                    style: TextStyle(fontSize: 13, color: Colors.grey[600]),
-                  ),
-
-                  const SizedBox(height: 14),
-
-                  if (selectedHealthRecords.isEmpty &&
-                      selectedVaccinations.isEmpty &&
-                      selectedWeightRecords.isEmpty)
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.symmetric(vertical: 24),
-                      decoration: BoxDecoration(
-                        color: Colors.grey[100],
-                        borderRadius: BorderRadius.circular(14),
-                      ),
-                      child: Column(
-                        children: [
-                          Icon(
-                            Icons.event_available_outlined,
-                            size: 32,
-                            color: Colors.grey[400],
+              // 3. 캘린더 카드
+              Card(
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  side: BorderSide(color: Colors.grey.shade200),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Padding(
+                        padding: EdgeInsets.only(left: 8, top: 4, bottom: 8),
+                        child: Text(
+                          '🗓️ 건강 기록',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
                           ),
+                        ),
+                      ),
 
-                          const SizedBox(height: 8),
+                      TableCalendar(
+                        focusedDay: focusedDay,
+                        firstDay: DateTime(2000),
+                        lastDay: DateTime(2100),
+                        headerStyle: const HeaderStyle(
+                          formatButtonVisible:
+                              false, // 달력 헤더에 있는 Format 버튼을 숨기기
+                          titleCentered: true,
+                          titleTextStyle: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        calendarStyle: CalendarStyle(
+                          todayDecoration: const BoxDecoration(
+                            // 오늘 날짜의 "배경/모양"
+                            color: Colors
+                                .transparent, // transparent: 투명한 색. 즉, 배경을 없애는 것
+                            shape: BoxShape.circle,
+                          ),
+                          todayTextStyle: const TextStyle(
+                            // 오늘 날짜의 "글자"
+                            color: Colors.black,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          selectedDecoration: BoxDecoration(
+                            color: Theme.of(
+                              context,
+                            ).primaryColor.withValues(alpha: 0.5),
+                            shape: BoxShape.circle,
+                          ),
+                          markerDecoration: BoxDecoration(
+                            color: Theme.of(context).colorScheme.secondary,
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                        eventLoader: _getEventsForDay, // 리스트가 반환되면 점 표시
+                        selectedDayPredicate: (day) {
+                          // selectedDayPredicate: 이 날짜가 현재 선택된 날짜인가 알려주는 부분
+                          return isSameDay(selectedDay, day);
+                        },
+                        onDaySelected: (selected, focused) {
+                          setState(() {
+                            selectedDay = selected;
+                            focusedDay = focused;
+                          });
+                        },
+                        calendarFormat: CalendarFormat.month,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
 
+              const SizedBox(height: 16),
+
+              // 4. 선택한 날짜 기록 상세 카드
+              Card(
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  side: BorderSide(color: Colors.grey.shade200),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
                           Text(
-                            '이날은 기록이 없어요.',
-                            style: TextStyle(
-                              color: Colors.grey[600],
-                              fontSize: 14,
+                            '${selectedDay.year}.'
+                            '${selectedDay.month.toString().padLeft(2, '0')}.'
+                            '${selectedDay.day.toString().padLeft(2, '0')}',
+                            style: const TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          ElevatedButton.icon(
+                            onPressed: _showAddRecordBottomSheet,
+                            icon: const Icon(Icons.add, size: 18),
+                            label: const Text('기록 추가'),
+                            style: ElevatedButton.styleFrom(
+                              elevation: 0,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(20),
+                              ),
                             ),
                           ),
                         ],
                       ),
-                    )
-                  else ...[
-                    // 병원 기록
-                    ...selectedHealthRecords.map((record) {
-                      return _SelectedRecordCard(
-                        icon: Icons.local_hospital_outlined,
-                        title: record.title,
-                        subtitle: record.hospital,
-                        onTap: () async {
-                          final result = await Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => HealthRecordRegisterScreen(
-                                petId: pet.id!,
-                                record: record,
+
+                      const SizedBox(height: 12),
+
+                      if (selectedHealthRecords.isEmpty &&
+                          selectedVaccinations.isEmpty &&
+                          selectedWeightRecords.isEmpty)
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.symmetric(vertical: 24),
+                          decoration: BoxDecoration(
+                            color: Colors.grey[100],
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Column(
+                            children: [
+                              Icon(
+                                Icons.event_available_outlined,
+                                size: 32,
+                                color: Colors.grey[400],
                               ),
-                            ),
-                          );
 
-                          if (result is DateTime) {
-                            if (!mounted) {
-                              return;
-                            }
+                              const SizedBox(height: 8),
 
-                            setState(() {
-                              selectedDay = result;
-                              focusedDay = result;
-                            });
-
-                            await loadHealthRecords();
-                          }
-                        },
-                      );
-                    }),
-                    // 예방접종 기록
-                    ...selectedVaccinations.map((vaccination) {
-                      return _SelectedRecordCard(
-                        icon: Icons.vaccines_outlined,
-                        title: vaccination.vaccineName,
-                        subtitle: vaccination.hospital,
-                        onTap: () async {
-                          final result = await Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => VaccinationRegisterScreen(
-                                petId: pet.id!,
-                                vaccination: vaccination,
+                              Text(
+                                '선택한 날짜에 등록된 기록이 없습니다.',
+                                style: TextStyle(
+                                  color: Colors.grey[600],
+                                  fontSize: 14,
+                                ),
                               ),
-                            ),
+                            ],
+                          ),
+                        )
+                      else ...[
+                        // 병원 기록
+                        ...selectedHealthRecords.map((record) {
+                          return _SelectedRecordCard(
+                            icon: Icons.local_hospital_outlined,
+                            iconBgColor: const Color(0xFFE3F2FD),
+                            iconColor: Colors.blue,
+                            title: record.title,
+                            subtitle: record.hospital,
+                            onTap: () async {
+                              final result = await Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) =>
+                                      HealthRecordRegisterScreen(
+                                        petId: pet.id!,
+                                        record: record,
+                                      ),
+                                ),
+                              );
+
+                              if (result is DateTime && mounted) {
+                                setState(() {
+                                  selectedDay = result;
+                                  focusedDay = result;
+                                });
+
+                                await loadHealthRecords();
+                              }
+                            },
                           );
+                        }),
+                        // 예방접종 기록
+                        ...selectedVaccinations.map((vaccination) {
+                          return _SelectedRecordCard(
+                            icon: Icons.vaccines_outlined,
+                            iconBgColor: const Color(0xFFE8F5E9),
+                            iconColor: Colors.green,
+                            title: vaccination.vaccineName,
+                            subtitle: vaccination.hospital,
+                            onTap: () async {
+                              final result = await Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) =>
+                                      VaccinationRegisterScreen(
+                                        petId: pet.id!,
+                                        vaccination: vaccination,
+                                      ),
+                                ),
+                              );
 
-                          if (result is DateTime) {
-                            if (!mounted) {
-                              return;
-                            }
+                              if (result is DateTime && mounted) {
+                                setState(() {
+                                  selectedDay = result;
+                                  focusedDay = result;
+                                });
 
-                            setState(() {
-                              selectedDay = result;
-                              focusedDay = result;
-                            });
-
-                            await loadVaccinations();
-                            await loadUpcomingVaccinations();
-                          }
-                        },
-                      );
-                    }),
-                    // 체중 기록
-                    ...selectedWeightRecords.map((record) {
-                      return _SelectedRecordCard(
-                        icon: Icons.monitor_weight_outlined,
-                        title: '${record.weight} kg',
-                        onTap: () async {
-                          final result = await Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => WeightRecordRegisterScreen(
-                                petId: pet.id!,
-                                record: record,
-                              ),
-                            ),
+                                await loadVaccinations();
+                                await loadUpcomingVaccinations();
+                              }
+                            },
                           );
+                        }),
+                        // 체중 기록
+                        ...selectedWeightRecords.map((record) {
+                          return _SelectedRecordCard(
+                            icon: Icons.monitor_weight_outlined,
+                            iconBgColor: const Color(0xFFF3E5F5),
+                            iconColor: Colors.purple,
+                            title: '${record.weight} kg',
+                            onTap: () async {
+                              final result = await Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) =>
+                                      WeightRecordRegisterScreen(
+                                        petId: pet.id!,
+                                        record: record,
+                                      ),
+                                ),
+                              );
 
-                          if (result is DateTime) {
-                            if (!mounted) {
-                              return;
-                            }
+                              if (result is DateTime && mounted) {
+                                setState(() {
+                                  selectedDay = result;
+                                  focusedDay = result;
+                                });
 
-                            setState(() {
-                              selectedDay = result;
-                              focusedDay = result;
-                            });
-
-                            await loadWeightRecords();
-                          }
-                        },
-                      );
-                    }),
-                  ],
-
-                  const SizedBox(height: 12),
-
-                  SizedBox(
-                    width: double.infinity,
-                    child: OutlinedButton.icon(
-                      onPressed: _showAddRecordBottomSheet,
-                      icon: const Icon(Icons.add),
-                      label: const Text('기록 추가'),
-                    ),
+                                await loadWeightRecords();
+                              }
+                            },
+                          );
+                        }),
+                      ],
+                    ],
                   ),
-                ],
+                ),
               ),
 
-              // 1-3. 예방 접종 알림
-              if (upcomingVaccinations.isNotEmpty) ...[
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: upcomingVaccinations.take(3).map((map) {
-                    return Padding(
-                      padding: const EdgeInsets.only(top: 8),
-                      child: _buildVaccinationMessage(map),
-                    );
-                  }).toList(),
-                ),
+              const SizedBox(height: 16),
 
-                const SizedBox(height: 20),
-              ],
-
+              // 5. 체중 변화 그래프 섹션
               /*
               위젯 하나 넣기
               children: [
@@ -723,6 +801,11 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
               if (weightRecords.length >= 2) ...[
                 // ...은 Spread Operator(스프레드 연산자). 즉, 이 리스트 안에 들어있는 위젯들을 하나씩 꺼내서 children에 넣어달라는 말
                 Card(
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    side: BorderSide(color: Colors.grey.shade200),
+                  ),
                   child: Padding(
                     padding: const EdgeInsetsGeometry.all(10),
                     child: Column(
@@ -754,69 +837,19 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
   }
 }
 
-/*
-// 섹션 헤더 (제목 + 추가 버튼 우측 배치)
-class _SectionHeader extends StatelessWidget {
-  // StatelessWidget: 화면에 그려질 수 있는 위젯의 자격을 부여하기 위해 상속받음
-  final String title;
-  final VoidCallback onAddPressed;
-
-  const _SectionHeader({required this.title, required this.onAddPressed});
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      // Row (가로 배치). 안에 들어가는 항목들을 일렬 배치함
-      mainAxisAlignment: MainAxisAlignment
-          .spaceBetween, // Row나 Column 안의 자식들을 양 끝으로 벌려서 배치하는 설정
-      children: [
-        Text(
-          title,
-          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-        ),
-        IconButton(
-          onPressed: onAddPressed,
-          icon: const Icon(Icons.add, size: 20),
-          tooltip: '추가',
-        ),
-      ],
-    );
-  }
-}
-/*
-클래스 방식: _SectionHeader는 독립적인 위젯으로 인식되어, 상태(State) 변경 시 플러터 엔진이 변경된 부분만 효율적으로 다시 그릴(Rebuild) 수 있음
-일반 함수 방식: 부모 위젯(PetDetailScreen)의 화면이 조금이라도 다시 그려질 때 함수가 매번 새로 실행되어 불필요하게 UI를 계속 다시 생성
-*/
-
-// 빈 데이터 텍스트 스타일
-class _EmptyStateText extends StatelessWidget {
-  final String text;
-
-  const _EmptyStateText({required this.text});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      // padding: const EdgeInsetsGeometry.symmetric(horizontal: 4, vertical: 5),
-      padding: const EdgeInsetsGeometry.only(top: 5),
-      child: Text(
-        text,
-        style: TextStyle(color: Colors.grey[500], fontSize: 14),
-      ),
-    );
-  }
-}
-*/
-
 // 선택한 날짜 자료
 class _SelectedRecordCard extends StatelessWidget {
   final IconData icon;
+  final Color iconBgColor;
+  final Color iconColor;
   final String title;
   final String? subtitle;
   final VoidCallback? onTap;
 
   const _SelectedRecordCard({
     required this.icon,
+    this.iconBgColor = const Color(0xFFF5F5F5),
+    this.iconColor = Colors.black87,
     required this.title,
     this.subtitle,
     this.onTap,
@@ -833,15 +866,19 @@ class _SelectedRecordCard extends StatelessWidget {
       ),
       child: ListTile(
         onTap: onTap,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-        leading: Container(
-          width: 42,
-          height: 42,
-          decoration: BoxDecoration(
-            color: Colors.grey[100],
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Icon(icon, size: 22),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
+        // leading: Container(
+        //   width: 40,
+        //   height: 40,
+        //   decoration: BoxDecoration(
+        //     color: iconBgColor,
+        //     borderRadius: BorderRadius.circular(10),
+        //   ),
+        //   child: Icon(icon, color: iconColor, size: 22),
+        // ),
+        leading: CircleAvatar(
+          backgroundColor: iconBgColor,
+          child: Icon(icon, color: iconColor, size: 22),
         ),
 
         title: Text(
@@ -849,18 +886,15 @@ class _SelectedRecordCard extends StatelessWidget {
           style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
         ),
 
-        subtitle: subtitle != null
-            ? Padding(
-                padding: const EdgeInsetsGeometry.only(top: 3),
-                child: Text(
-                  subtitle!,
-                  style: TextStyle(fontSize: 13, color: Colors.grey[600]),
-                ),
+        subtitle: subtitle != null && subtitle!.isNotEmpty
+            ? Text(
+                subtitle!,
+                style: TextStyle(fontSize: 13, color: Colors.grey[600]),
               )
             : null,
 
         trailing: onTap != null
-            ? const Icon(Icons.chevron_right, color: Colors.grey)
+            ? const Icon(Icons.chevron_right, color: Colors.grey, size: 20)
             : null,
       ),
     );
