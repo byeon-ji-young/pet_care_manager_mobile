@@ -1,24 +1,24 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart'; // 플루터 제공 디자인 라이브러리
 
-import 'pet_register_screen.dart';
-import 'pet_detail_screen.dart';
+import '../screens/pet_register_screen.dart';
+import '../screens/pet_detail_screen.dart';
 
 import '../database/database_helper.dart';
 
 import '../models/pet.dart';
 import '../models/vaccination.dart';
 
-import '../widgets/pet_profile_header.dart';
-
-class HomeScreen extends StatefulWidget {
+class HomeScreenBackup2 extends StatefulWidget {
   // StatelessWidget: 사용자에 동작에 의해 화면 자체의 데이터(상태)가 바로 바뀌지 않는 정적인 화면을 의미
-  const HomeScreen({super.key}); // 플러터가 위젯을 효율적으로 관리할 수 있도록 돕는 생성자 선언
+  const HomeScreenBackup2({super.key}); // 플러터가 위젯을 효율적으로 관리할 수 있도록 돕는 생성자 선언
 
   @override
-  State<HomeScreen> createState() => _HomeScreenState();
+  State<HomeScreenBackup2> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _HomeScreenState extends State<HomeScreenBackup2> {
   List<Pet> pets = [];
 
   Map<int, Vaccination?> nextVaccinations = {};
@@ -188,18 +188,84 @@ class _HomeScreenState extends State<HomeScreen> {
                 final pet = pets[index];
 
                 return Card(
-                  elevation: 1,
-                  margin: const EdgeInsets.only(bottom: 12, top: 2),
+                  elevation: 1, // 카드 그림자 살짝 부여
+                  margin: const EdgeInsets.only(bottom: 10, top: 2), // 카드 사이 간격
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
+                    borderRadius: BorderRadius.circular(16), // 카드 모서리 둥글게
                   ),
-                  child: InkWell(
-                    borderRadius: BorderRadius.circular(16),
+                  child: ListTile(
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 15,
+                      vertical: 10,
+                    ),
+                    leading: CircleAvatar(
+                      radius: 34,
+                      backgroundImage: pet.imagePath != null
+                          ? FileImage(File(pet.imagePath!))
+                          : null,
+                      child: pet.imagePath == null
+                          ? Icon(Icons.pets, size: 34)
+                          : null,
+                    ),
+
+                    title: Text(
+                      pet.name,
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+
+                    subtitle: Padding(
+                      padding: const EdgeInsets.only(top: 4.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            '${pet.breed?.isEmpty == true ? '품종 미입력' : pet.breed} · '
+                            '${pet.weight != null ? '${pet.weight}kg' : '몸무게 미입력'}',
+                            style: TextStyle(
+                              color: Colors.grey[600],
+                              fontSize: 14,
+                            ),
+                          ),
+
+                          if (nextVaccinations[pet.id] != null) ...[
+                            const SizedBox(height: 4),
+
+                            Text(
+                              _getVaccinationMessage(nextVaccinations[pet.id]!),
+                              style: const TextStyle(
+                                color: Colors.orange,
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+
+                    trailing: const Icon(
+                      Icons.chevron_right, // 이동 가능함을 암시하는 화살표 아이콘
+                      color: Colors.grey,
+                    ),
+
+                    /*
+                      onTap은 사용자가 이 카드를 '터치(클릭)'했을 때 무슨 행동을 할지 정의하는 이벤트 함수
+
+                      Navigator.push(...): 새로운 화면을 화면 스택(Stack) 맨 위에 쌓아서(Push) 보여달라
+                      MaterialPageRoute(...): 안드로이드/iOS 스타일의 부드러운 화면 전환 애니메이션
+                      builder: (context) => PetDetailScreen(pet: pet): 이동할 목적지 화면인 PetDetailScreen을 생성하면서 선택된 데이터 전달
+                    */
                     onTap: () async {
                       final result = await Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => PetDetailScreen(pet: pet),
+                          builder: (context) => PetDetailScreen(
+                            pet:
+                                pet, // 왼쪽 pet은 상세 화면에서 받는 변수 이름, 오른쪽 pet은 현재 홈 화면에서 선택한 Pet 객체
+                          ),
                         ),
                       );
 
@@ -207,56 +273,6 @@ class _HomeScreenState extends State<HomeScreen> {
                         loadPets();
                       }
                     },
-                    child: Padding(
-                      padding: const EdgeInsets.all(20),
-                      child: Column(
-                        children: [
-                          // 반려동물 프로필 + 우측 상단 이동 아이콘
-                          Stack(
-                            children: [
-                              PetProfileHeader(pet: pet),
-
-                              const Positioned(
-                                top: 0,
-                                right: 0,
-                                child: Icon(
-                                  Icons.chevron_right,
-                                  size: 20,
-                                  color: Colors.grey,
-                                ),
-                              ),
-                            ],
-                          ),
-
-                          // 예방접종 알림
-                          if (nextVaccinations[pet.id] != null) ...[
-                            const SizedBox(height: 12),
-
-                            Container(
-                              width: double.infinity,
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 14,
-                                vertical: 10,
-                              ),
-                              decoration: BoxDecoration(
-                                color: Colors.orange.withValues(alpha: 0.08),
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              child: Text(
-                                _getVaccinationMessage(
-                                  nextVaccinations[pet.id]!,
-                                ),
-                                style: const TextStyle(
-                                  color: Colors.orange,
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ],
-                      ),
-                    ),
                   ),
                 );
               },
