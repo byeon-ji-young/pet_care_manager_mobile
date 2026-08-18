@@ -11,11 +11,12 @@ class WeightRecordRegisterScreen extends StatefulWidget {
   const WeightRecordRegisterScreen({
     super.key,
     required this.petId,
-    this.record
+    this.record,
   });
 
   @override
-  State<WeightRecordRegisterScreen> createState() => _WeightRecordRegisterScreen();
+  State<WeightRecordRegisterScreen> createState() =>
+      _WeightRecordRegisterScreen();
 }
 
 class _WeightRecordRegisterScreen extends State<WeightRecordRegisterScreen> {
@@ -30,7 +31,7 @@ class _WeightRecordRegisterScreen extends State<WeightRecordRegisterScreen> {
 
     final record = widget.record;
 
-    if(record != null) {
+    if (record != null) {
       weightController.text = record.weight.toString();
       memoController.text = record.memo ?? '';
 
@@ -50,23 +51,19 @@ class _WeightRecordRegisterScreen extends State<WeightRecordRegisterScreen> {
   Future<void> saveWeightRecord() async {
     final weightText = weightController.text.trim();
 
-    if(weightText.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('몸무게를 입력해주세요.')
-        )
-      );
+    if (weightText.isEmpty) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('몸무게를 입력해주세요.')));
       return;
     }
 
     final weight = double.tryParse(weightText);
 
-    if(weight == null || weight <= 0) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('올바른 몸무게를 입력해주세요.')
-        )
-      );
+    if (weight == null || weight <= 0) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('올바른 몸무게를 입력해주세요.')));
       return;
     }
 
@@ -80,13 +77,58 @@ class _WeightRecordRegisterScreen extends State<WeightRecordRegisterScreen> {
           : memoController.text.trim(),
     );
 
-    if(widget.record == null) {
+    if (widget.record == null) {
       await DatabaseHelper.instance.insertWeightRecord(record);
-    }else {
+    } else {
       await DatabaseHelper.instance.updateWeightRecord(record);
     }
 
-    if(!mounted) {
+    if (!mounted) {
+      return;
+    }
+
+    Navigator.pop(context, true);
+  }
+
+  // 체중 기록 삭제
+  Future<void> _deleteWeightRecord() async {
+    final record = widget.record;
+
+    // 신규 등록 화면은 삭제할 기록이 없으므로 종료
+    if (record == null) {
+      return;
+    }
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          // title: const Text('체중 기록 삭제'),
+          content: Text('${record.weight} kg 기록을 삭제하시겠습니까?'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('취소'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text(
+                '삭제',
+                style: TextStyle(color: Colors.redAccent),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirmed != true) {
+      return;
+    }
+
+    await DatabaseHelper.instance.deleteWeightRecord(record.id!);
+
+    if (!mounted) {
       return;
     }
 
@@ -112,12 +154,28 @@ class _WeightRecordRegisterScreen extends State<WeightRecordRegisterScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      isEdit ? '체중 기록 수정' : '새 체중 기록',
-                      style: const TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
-                      ),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            isEdit ? '체중 기록 수정' : '새 체중 기록',
+                            style: const TextStyle(
+                              fontSize: 22,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+
+                        if (isEdit)
+                          IconButton(
+                            onPressed: _deleteWeightRecord,
+                            icon: const Icon(
+                              Icons.delete_outline,
+                              color: Colors.redAccent,
+                            ),
+                            tooltip: '기록 삭제',
+                          ),
+                      ],
                     ),
 
                     const SizedBox(height: 24),
@@ -137,11 +195,11 @@ class _WeightRecordRegisterScreen extends State<WeightRecordRegisterScreen> {
                         final pickedDate = await showDatePicker(
                           context: context,
                           initialDate: selectedDate,
-                          firstDate: DateTime(2000), 
-                          lastDate: DateTime.now()
+                          firstDate: DateTime(2000),
+                          lastDate: DateTime.now(),
                         );
 
-                        if(pickedDate != null) {
+                        if (pickedDate != null) {
                           setState(() {
                             selectedDate = pickedDate;
                           });
@@ -149,16 +207,17 @@ class _WeightRecordRegisterScreen extends State<WeightRecordRegisterScreen> {
                       },
                       borderRadius: BorderRadius.circular(12),
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 14),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 14,
+                        ),
                         decoration: BoxDecoration(
                           border: Border.all(color: Colors.grey.shade700),
-                          borderRadius: BorderRadius.circular(12)
+                          borderRadius: BorderRadius.circular(12),
                         ),
                         child: Row(
                           children: [
-                            const Icon(
-                              Icons.calendar_month_outlined,
-                            ),
+                            const Icon(Icons.calendar_month_outlined),
                             const SizedBox(width: 16),
                             const Text(
                               '측정 날짜',
@@ -191,7 +250,7 @@ class _WeightRecordRegisterScreen extends State<WeightRecordRegisterScreen> {
                     TextField(
                       controller: weightController,
                       keyboardType: const TextInputType.numberWithOptions(
-                        decimal: true
+                        decimal: true,
                       ),
                       decoration: InputDecoration(
                         labelText: '몸무게',
@@ -213,7 +272,8 @@ class _WeightRecordRegisterScreen extends State<WeightRecordRegisterScreen> {
                       decoration: InputDecoration(
                         labelText: '메모',
                         hintText: '메모를 입력해주세요.',
-                        alignLabelWithHint: true, // TextField의 labelText와 hintText의 세로 정렬을 맞춰주는 옵션
+                        alignLabelWithHint:
+                            true, // TextField의 labelText와 hintText의 세로 정렬을 맞춰주는 옵션
                         prefixIcon: const Padding(
                           padding: EdgeInsets.only(bottom: 30),
                           child: Icon(Icons.notes),
@@ -225,7 +285,7 @@ class _WeightRecordRegisterScreen extends State<WeightRecordRegisterScreen> {
                     ),
                   ],
                 ),
-              )
+              ),
             ),
 
             // 저장 버튼
@@ -235,14 +295,11 @@ class _WeightRecordRegisterScreen extends State<WeightRecordRegisterScreen> {
                 width: double.infinity,
                 height: 50,
                 child: ElevatedButton(
-                  onPressed: saveWeightRecord, 
+                  onPressed: saveWeightRecord,
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Icon(
-                        Icons.pets,
-                        size: 20,
-                      ),
+                      const Icon(Icons.pets, size: 20),
                       const SizedBox(width: 8),
                       Text(
                         isEdit ? '수정하기' : '저장하기',
@@ -250,15 +307,15 @@ class _WeightRecordRegisterScreen extends State<WeightRecordRegisterScreen> {
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
                         ),
-                      )
+                      ),
                     ],
-                  )
+                  ),
                 ),
               ),
-            )
+            ),
           ],
-        )
-      )
+        ),
+      ),
     );
   }
 }

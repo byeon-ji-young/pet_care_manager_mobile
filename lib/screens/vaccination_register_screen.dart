@@ -52,6 +52,51 @@ class _VaccinationRegisterScreen extends State<VaccinationRegisterScreen> {
     super.dispose();
   }
 
+  // 예방접종 기록 삭제
+  Future<void> _deleteVaccination() async {
+    final vaccination = widget.vaccination;
+
+    // 신규 등록 화면에서는 삭제할 기록이 없으므로 종료
+    if (vaccination == null) {
+      return;
+    }
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          // title: const Text('예방접종 기록 삭제'),
+          content: Text('${vaccination.vaccineName} 기록을 삭제하시겠습니까?'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('취소'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text(
+                '삭제',
+                style: TextStyle(color: Colors.redAccent),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirmed != true) {
+      return;
+    }
+
+    await DatabaseHelper.instance.deleteVaccination(vaccination.id!);
+
+    if (!mounted) {
+      return;
+    }
+
+    Navigator.pop(context, true);
+  }
+
   @override
   Widget build(BuildContext context) {
     final isEditing = widget.vaccination != null;
@@ -72,13 +117,30 @@ class _VaccinationRegisterScreen extends State<VaccinationRegisterScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      isEditing ? '예방접종 기록 수정' : '새 예방접종 기록',
-                      style: const TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
-                      ),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            isEditing ? '예방접종 기록 수정' : '새 예방접종 기록',
+                            style: const TextStyle(
+                              fontSize: 22,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+
+                        if (isEditing)
+                          IconButton(
+                            onPressed: _deleteVaccination,
+                            icon: const Icon(
+                              Icons.delete_outline,
+                              color: Colors.redAccent,
+                            ),
+                            tooltip: '기록 삭제',
+                          ),
+                      ],
                     ),
+
                     const SizedBox(height: 24),
 
                     // 1. 접종 종류

@@ -11,19 +11,21 @@ class HealthRecordRegisterScreen extends StatefulWidget {
   const HealthRecordRegisterScreen({
     super.key,
     required this.petId,
-    this.record
+    this.record,
   });
 
   @override
-  State<HealthRecordRegisterScreen> createState() => _HealthRecordRegisterScreenState();
+  State<HealthRecordRegisterScreen> createState() =>
+      _HealthRecordRegisterScreenState();
 }
 
-class _HealthRecordRegisterScreenState extends State<HealthRecordRegisterScreen> {
+class _HealthRecordRegisterScreenState
+    extends State<HealthRecordRegisterScreen> {
   final TextEditingController hospitalController = TextEditingController();
   final TextEditingController titleController = TextEditingController();
   final TextEditingController descriptionController = TextEditingController();
   final TextEditingController costController = TextEditingController();
-  
+
   DateTime selectedDate = DateTime.now();
 
   @override
@@ -33,7 +35,8 @@ class _HealthRecordRegisterScreenState extends State<HealthRecordRegisterScreen>
     final record = widget.record;
 
     if (record != null) {
-      hospitalController.text = record.hospital ?? ''; // ??는 null일 경우 다른 값을 사용하라
+      hospitalController.text =
+          record.hospital ?? ''; // ??는 null일 경우 다른 값을 사용하라
       titleController.text = record.title;
       descriptionController.text = record.description ?? '';
       costController.text = record.cost?.toString() ?? '';
@@ -52,10 +55,56 @@ class _HealthRecordRegisterScreenState extends State<HealthRecordRegisterScreen>
     super.dispose();
   }
 
+  // 병원 기록 삭제
+  Future<void> _deleteRecord() async {
+    final record = widget.record;
+
+    // 신규 등록 화면은 삭제할 기록이 없으므로 종료
+    if (record == null) {
+      return;
+    }
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          // title: const Text('병원 기록 삭제'),
+          content: Text('${record.title} 기록을 삭제하시겠습니까?'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('취소'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(context, true),
+              // style: TextButton.styleFrom(foregroundColor: Colors.redAccent),
+              child: const Text(
+                '삭제',
+                style: TextStyle(color: Colors.redAccent),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirmed != true) {
+      return;
+    }
+
+    await DatabaseHelper.instance.deleteHealthRecord(record.id!);
+
+    if (!mounted) {
+      return;
+    }
+
+    Navigator.pop(context, true);
+  }
+
   @override
   Widget build(BuildContext context) {
     final isEditing = widget.record != null;
-    
+
     return Scaffold(
       appBar: AppBar(
         // title: Text(isEditing ? '병원 기록 수정' : '병원 기록 등록'),
@@ -72,21 +121,39 @@ class _HealthRecordRegisterScreenState extends State<HealthRecordRegisterScreen>
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      isEditing ? '병원 진료 내역 수정' : '새로운 병원 기록',
-                      style: const TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
-                      ),
+                    Row(
+                      children: [
+                        Text(
+                          isEditing ? '병원 진료 내역 수정' : '새로운 병원 기록',
+                          style: const TextStyle(
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+
+                        if (isEditing) ...[
+                          const Spacer(),
+
+                          IconButton(
+                            onPressed: _deleteRecord,
+                            padding: EdgeInsets.zero,
+                            constraints: const BoxConstraints(),
+                            icon: const Icon(
+                              Icons.delete_outline,
+                              color: Colors.redAccent,
+                              size: 22,
+                            ),
+                            tooltip: '기록 삭제',
+                          ),
+                        ],
+                      ],
                     ),
-                    const SizedBox(height: 8),
+
                     Text(
                       '진료받은 내용을 꼼꼼하게 기록해 주세요.',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.grey[600],
-                      ),
+                      style: TextStyle(fontSize: 14, color: Colors.grey[600]),
                     ),
+
                     const SizedBox(height: 24),
 
                     // 1. 병원명 입력창
@@ -126,7 +193,8 @@ class _HealthRecordRegisterScreenState extends State<HealthRecordRegisterScreen>
                       decoration: InputDecoration(
                         labelText: '진료 내용',
                         hintText: '진료 소견이나 처방받은 약 정보를 적어주세요.',
-                        alignLabelWithHint: true, // TextField의 labelText와 hintText의 세로 정렬을 맞춰주는 옵션
+                        alignLabelWithHint:
+                            true, // TextField의 labelText와 hintText의 세로 정렬을 맞춰주는 옵션
                         prefixIcon: const Padding(
                           padding: EdgeInsets.only(bottom: 40),
                           child: Icon(Icons.notes),
@@ -171,11 +239,11 @@ class _HealthRecordRegisterScreenState extends State<HealthRecordRegisterScreen>
                         final pickedDate = await showDatePicker(
                           context: context,
                           initialDate: selectedDate,
-                          firstDate: DateTime(2000), 
-                          lastDate: DateTime.now()
+                          firstDate: DateTime(2000),
+                          lastDate: DateTime.now(),
                         );
 
-                        if(pickedDate != null) {
+                        if (pickedDate != null) {
                           setState(() {
                             selectedDate = pickedDate;
                           });
@@ -183,7 +251,10 @@ class _HealthRecordRegisterScreenState extends State<HealthRecordRegisterScreen>
                       },
                       borderRadius: BorderRadius.circular(12),
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 14),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 14,
+                        ),
                         decoration: BoxDecoration(
                           border: Border.all(color: Colors.grey.shade700),
                           borderRadius: BorderRadius.circular(12),
@@ -191,7 +262,7 @@ class _HealthRecordRegisterScreenState extends State<HealthRecordRegisterScreen>
                         child: Row(
                           children: [
                             const Icon(
-                              Icons.calendar_month_outlined, 
+                              Icons.calendar_month_outlined,
                               // color: Colors.grey
                             ),
                             const SizedBox(width: 16),
@@ -214,16 +285,16 @@ class _HealthRecordRegisterScreenState extends State<HealthRecordRegisterScreen>
                             const Icon(
                               Icons.arrow_drop_down,
                               color: Colors.grey,
-                            )
+                            ),
                           ],
                         ),
-                      )
+                      ),
                     ),
                   ],
                 ),
-              )
+              ),
             ),
-            
+
             // 저장 버튼
             Padding(
               padding: const EdgeInsets.all(20.0),
@@ -232,11 +303,9 @@ class _HealthRecordRegisterScreenState extends State<HealthRecordRegisterScreen>
                 height: 50,
                 child: ElevatedButton(
                   onPressed: () async {
-                    if(titleController.text.trim().isEmpty) {
+                    if (titleController.text.trim().isEmpty) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text("진료 제목을 입력해주세요.")
-                        )
+                        const SnackBar(content: Text("진료 제목을 입력해주세요.")),
                       );
                       return;
                     }
@@ -246,22 +315,24 @@ class _HealthRecordRegisterScreenState extends State<HealthRecordRegisterScreen>
                       petId: widget.petId,
                       date: selectedDate,
                       hospital: hospitalController.text.trim().isEmpty
-                        ? null
-                        : hospitalController.text.trim(),
+                          ? null
+                          : hospitalController.text.trim(),
                       title: titleController.text.trim(),
                       description: descriptionController.text.trim().isEmpty
-                        ? null
-                        : descriptionController.text.trim(),
-                      cost: int.tryParse(costController.text.trim()) // tryParse: 비어있으면 null
+                          ? null
+                          : descriptionController.text.trim(),
+                      cost: int.tryParse(
+                        costController.text.trim(),
+                      ), // tryParse: 비어있으면 null
                     );
 
-                    if(widget.record == null) {
+                    if (widget.record == null) {
                       await DatabaseHelper.instance.insertHealthRecord(record);
-                    }else {    
+                    } else {
                       await DatabaseHelper.instance.updateHealthRecord(record);
                     }
 
-                    if(!context.mounted) {
+                    if (!context.mounted) {
                       return;
                     }
 
@@ -270,26 +341,23 @@ class _HealthRecordRegisterScreenState extends State<HealthRecordRegisterScreen>
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Icon(
-                        Icons.pets,
-                        size: 20,
-                      ),
+                      const Icon(Icons.pets, size: 20),
                       const SizedBox(width: 8),
                       Text(
                         isEditing ? '수정하기' : '저장하기',
                         style: TextStyle(
                           fontSize: 16,
-                          fontWeight: FontWeight.bold
+                          fontWeight: FontWeight.bold,
                         ),
-                      )
+                      ),
                     ],
-                  )
+                  ),
                 ),
               ),
-            )
+            ),
           ],
-        )
-      )
+        ),
+      ),
     );
   }
 }
