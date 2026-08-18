@@ -1,5 +1,6 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
-import 'package:table_calendar/table_calendar.dart';
 
 import '../models/pet.dart';
 import '../models/health_record.dart';
@@ -9,7 +10,6 @@ import '../models/weight_record.dart';
 import '../database/database_helper.dart';
 
 import '../widgets/weight_chart.dart';
-import '../widgets/pet_profile_header.dart';
 
 import '../screens/pet_register_screen.dart';
 import '../screens/health_record_register_screen.dart';
@@ -43,9 +43,6 @@ class _PetDetailScreenState extends State<PetDetailScreenBackup> {
   List<WeightRecord> weightRecords = [];
 
   List<Vaccination> upcomingVaccinations = [];
-
-  DateTime selectedDay = DateTime.now();
-  DateTime focusedDay = DateTime.now();
 
   @override
   void initState() {
@@ -196,7 +193,6 @@ class _PetDetailScreenState extends State<PetDetailScreenBackup> {
         false; // 다이얼로그 바깥 영역(배경)을 눌러서 닫은 경우 null이 반환되므로 false 처리. 즉, result가 있으면 result, 없으면 false
   }
 
-  // 예방 접종 알림 메세지 출력
   Widget _buildVaccinationMessage(Vaccination vaccination) {
     final nextDate = vaccination.nextDate!;
 
@@ -232,56 +228,10 @@ class _PetDetailScreenState extends State<PetDetailScreenBackup> {
     );
   }
 
-  // 현재 선택한 날짜의 전체 기록 찾기
-  List<dynamic> _getEventsForDay(DateTime day) {
-    // List<dynamic>: 아무 타입이나 들어갈 수 있는 List
-    final events = <dynamic>[];
-
-    // 병원 기록
-    events.addAll(healthRecords.where((record) => isSameDay(record.date, day)));
-
-    // 예방접종 기록
-    events.addAll(
-      vaccinations.where(
-        (vaccination) => isSameDay(vaccination.vaccinationDate, day),
-      ),
-    );
-
-    // 체중 기록
-    events.addAll(weightRecords.where((record) => isSameDay(record.date, day)));
-
-    return events;
-  }
-
-  // 현재 선택한 날짜의 병원 기록 찾기
-  List<HealthRecord> _getHealthRecordsForDay(DateTime day) {
-    return healthRecords
-        .where((record) => isSameDay(record.date, day))
-        .toList();
-  }
-
-  // 현재 선택한 날짜의 예방접종 기록 찾기
-  List<Vaccination> _getVaccinationsForDay(DateTime day) {
-    return vaccinations
-        .where((vaccination) => isSameDay(vaccination.vaccinationDate, day))
-        .toList();
-  }
-
-  // 현재 선택한 날짜의 체중 기록 찾기
-  List<WeightRecord> _getWeightRecordsForDay(DateTime day) {
-    return weightRecords
-        .where((record) => isSameDay(record.date, day))
-        .toList();
-  }
-
   @override
   Widget build(BuildContext context) {
     // build()는 _PetDetailScreenState 안에 존재. State에서 부모 StatefulWidget의 값을 가져오려면 ~ 으로r 써야함. 즉 pet -> pet 작성해야 됨
     final pet = currentPet!;
-
-    final selectedHealthRecords = _getHealthRecordsForDay(selectedDay);
-    final selectedVaccinations = _getVaccinationsForDay(selectedDay);
-    final selectedWeightRecords = _getWeightRecordsForDay(selectedDay);
 
     return Scaffold(
       // backgroundColor: Colors.green[10],
@@ -337,170 +287,11 @@ class _PetDetailScreenState extends State<PetDetailScreenBackup> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // 1. 반려동물 정보
-              PetProfileHeader(pet: pet),
-
-              const SizedBox(height: 12),
-
-              // 1-1. 건강 기록 캘린더
-              Text(
-                '🗓️ 건강 기록',
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-
-              const SizedBox(height: 12),
-
-              TableCalendar(
-                focusedDay: focusedDay,
-                firstDay: DateTime(2000),
-                lastDay: DateTime(2100),
-                eventLoader: _getEventsForDay, // 리스트가 반환되면 점 표시
-                selectedDayPredicate: (day) {
-                  // selectedDayPredicate: 이 날짜가 현재 선택된 날짜인가 알려주는 부분
-                  return isSameDay(selectedDay, day);
-                },
-                onDaySelected: (selected, focused) {
-                  setState(() {
-                    selectedDay = selected;
-                    focusedDay = focused;
-                  });
-                },
-                calendarFormat: CalendarFormat.month,
-                availableCalendarFormats: const {CalendarFormat.month: '월'},
-              ),
+              _PetProfileHeader(pet: pet),
 
               const SizedBox(height: 20),
 
-              // 1-2. 캘린더에 선택한 날짜 기록 표시
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    '${selectedDay.year}.'
-                    '${selectedDay.month.toString().padLeft(2, '0')}.'
-                    '${selectedDay.day.toString().padLeft(2, '0')}',
-                    style: const TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-
-                  const SizedBox(height: 4),
-
-                  Text(
-                    '선택한 날짜의 건강 기록이에요.',
-                    style: TextStyle(fontSize: 13, color: Colors.grey[600]),
-                  ),
-
-                  const SizedBox(height: 14),
-
-                  if (selectedHealthRecords.isEmpty &&
-                      selectedVaccinations.isEmpty &&
-                      selectedWeightRecords.isEmpty)
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.symmetric(vertical: 24),
-                      decoration: BoxDecoration(
-                        color: Colors.grey[100],
-                        borderRadius: BorderRadius.circular(14),
-                      ),
-                      child: Column(
-                        children: [
-                          Icon(
-                            Icons.event_available_outlined,
-                            size: 32,
-                            color: Colors.grey[400],
-                          ),
-
-                          const SizedBox(height: 8),
-
-                          Text(
-                            '이날은 기록이 없어요.',
-                            style: TextStyle(
-                              color: Colors.grey[600],
-                              fontSize: 14,
-                            ),
-                          ),
-                        ],
-                      ),
-                    )
-                  else ...[
-                    // 병원 기록
-                    ...selectedHealthRecords.map((record) {
-                      return _SelectedRecordCard(
-                        icon: Icons.local_hospital_outlined,
-                        title: record.title,
-                        subtitle: record.hospital,
-                        onTap: () async {
-                          final result = await Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => HealthRecordRegisterScreen(
-                                petId: pet.id!,
-                                record: record,
-                              ),
-                            ),
-                          );
-
-                          if (result == true) {
-                            await loadHealthRecords();
-                          }
-                        },
-                      );
-                    }),
-                    // 예방접종 기록
-                    ...selectedVaccinations.map((vaccination) {
-                      return _SelectedRecordCard(
-                        icon: Icons.vaccines_outlined,
-                        title: vaccination.vaccineName,
-                        subtitle: vaccination.hospital,
-                        onTap: () async {
-                          final result = await Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => VaccinationRegisterScreen(
-                                petId: pet.id!,
-                                vaccination: vaccination,
-                              ),
-                            ),
-                          );
-
-                          if (result == true) {
-                            await loadVaccinations();
-                            await loadUpcomingVaccinations();
-                          }
-                        },
-                      );
-                    }),
-                    // 체중 기록
-                    ...selectedWeightRecords.map((record) {
-                      return _SelectedRecordCard(
-                        icon: Icons.monitor_weight_outlined,
-                        title: '${record.weight} kg',
-                        onTap: () async {
-                          final result = await Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => WeightRecordRegisterScreen(
-                                petId: pet.id!,
-                                record: record,
-                              ),
-                            ),
-                          );
-
-                          if (result == true) {
-                            await loadWeightRecords();
-                          }
-                        },
-                      );
-                    }),
-                  ],
-                ],
-              ),
-
-              // 1-3. 예방 접종 알림
+              // 1-1. 예방 접종 알림
               if (upcomingVaccinations.isNotEmpty) ...[
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -936,60 +727,114 @@ class _EmptyStateText extends StatelessWidget {
   }
 }
 
-class _SelectedRecordCard extends StatelessWidget {
-  final IconData icon;
-  final String title;
-  final String? subtitle;
-  final VoidCallback? onTap;
+// 반려동물 메인 프로필
+class _PetProfileHeader extends StatelessWidget {
+  final Pet
+  pet; // _PetProfileHeader(pet: pet)을 호출하면 클래스의 생성자가 실행되면서 전달받은 pet 값이 클래스 내부의 final Pet pet; 변수에 저장(보관) 됨. 일반함수는 매개변수로 넘어온 pet을 직접 사용
 
-  const _SelectedRecordCard({
-    required this.icon,
-    required this.title,
-    this.subtitle,
-    this.onTap,
-  });
+  const _PetProfileHeader({required this.pet});
+
+  // 생년월일로 나이 변환
+  String _getAgeText(DateTime birthDate) {
+    final now = DateTime.now();
+
+    int ageYear = now.year - birthDate.year;
+    int ageMonth = now.month - birthDate.month;
+
+    // 일(day) 수 비교하여 개월 수 보정
+    if (now.day < birthDate.day) {
+      ageMonth--;
+    }
+
+    // 개월 수가 음수일 경우 연도에서 차감
+    if (ageMonth < 0) {
+      ageYear--;
+      ageMonth += 12;
+    }
+
+    // 1살 미만인 경우 'x개월' 표시
+    if (ageYear == 0) {
+      return '$ageMonth개월';
+    }
+    // 개월이 0인 경우 'x살' 표시
+    else if (ageMonth == 0) {
+      return '$ageYear살';
+    }
+    // 1살 이상 & 개월이 있는 경우 'x살 y개월' 표시
+    else {
+      return '$ageYear살 $ageMonth개월';
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      elevation: 0,
-      margin: const EdgeInsets.only(bottom: 8),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(14),
-        side: BorderSide(color: Colors.grey.shade200),
-      ),
-      child: ListTile(
-        onTap: onTap,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-        leading: Container(
-          width: 42,
-          height: 42,
-          decoration: BoxDecoration(
-            color: Colors.grey[100],
-            borderRadius: BorderRadius.circular(12),
+    // 성별/품종/몸무게 텍스트 조합
+    final List<String> details = [];
+
+    if (pet.breed != null && pet.breed!.isNotEmpty) {
+      details.add(pet.breed!);
+    }
+
+    if (pet.gender != null && pet.gender!.isNotEmpty) {
+      details.add(pet.gender!);
+    }
+
+    if (pet.weight != null) {
+      details.add('${pet.weight}kg');
+    }
+
+    return Column(
+      children: [
+        // 1. 원형 사진
+        CircleAvatar(
+          radius: 52,
+          // backgroundColor: Colors.grey[200],
+          backgroundImage: pet.imagePath != null
+              ? FileImage(File(pet.imagePath!))
+              : null,
+          child: pet.imagePath == null ? Icon(Icons.pets, size: 48) : null,
+        ),
+
+        const SizedBox(height: 16),
+
+        // 2. 이름
+        Text(
+          pet.name,
+          style: const TextStyle(
+            fontSize: 26,
+            fontWeight: FontWeight.bold,
+            letterSpacing: -0.5,
           ),
-          child: Icon(icon, size: 22),
         ),
 
-        title: Text(
-          title,
-          style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
-        ),
+        const SizedBox(height: 6),
 
-        subtitle: subtitle != null
-            ? Padding(
-                padding: const EdgeInsetsGeometry.only(top: 3),
-                child: Text(
-                  subtitle!,
-                  style: TextStyle(fontSize: 13, color: Colors.grey[600]),
-                ),
-              )
-            : null,
+        // 3. 주요 정보
+        if (details.isNotEmpty)
+          Text(
+            details.join('  •  '), // join: 리스트의 문자열들을 하나의 문자열로 합치는 것
+            style: TextStyle(
+              fontSize: 15,
+              color: Colors.grey[700],
+              fontWeight: FontWeight.w500,
+            ),
+          ),
 
-        trailing: onTap != null
-            ? const Icon(Icons.chevron_right, color: Colors.grey)
-            : null,
-      ),
+        // 4. 생일 정보
+        if (pet.birthDate != null) ...[
+          const SizedBox(height: 6),
+
+          Text(
+            '${_getAgeText(pet.birthDate!)} (${pet.birthDate!.year}.${pet.birthDate!.month.toString().padLeft(2, '0')}.${pet.birthDate!.day.toString().padLeft(2, '0')})',
+            style: TextStyle(fontSize: 13, color: Colors.grey[700]),
+          ),
+        ],
+
+        const SizedBox(height: 20),
+
+        // 병원 기록/예방접종 네모 섹션들과 경계를 지어주는 얇은 경계선
+        Divider(height: 1, thickness: 1, color: Colors.grey[200]),
+      ],
     );
   }
 }
