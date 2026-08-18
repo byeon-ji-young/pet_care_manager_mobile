@@ -694,11 +694,13 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
                                 ),
                               );
 
-                              if (result is DateTime && mounted) {
-                                setState(() {
-                                  selectedDay = result;
-                                  focusedDay = result;
-                                });
+                              if (result != null && mounted) {
+                                if (result is DateTime) {
+                                  setState(() {
+                                    selectedDay = result;
+                                    focusedDay = result;
+                                  });
+                                }
 
                                 await loadHealthRecords();
                               }
@@ -725,11 +727,13 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
                                 ),
                               );
 
-                              if (result is DateTime && mounted) {
-                                setState(() {
-                                  selectedDay = result;
-                                  focusedDay = result;
-                                });
+                              if (result != null && mounted) {
+                                if (result is DateTime) {
+                                  setState(() {
+                                    selectedDay = result;
+                                    focusedDay = result;
+                                  });
+                                }
 
                                 await loadVaccinations();
                                 await loadUpcomingVaccinations();
@@ -756,11 +760,13 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
                                 ),
                               );
 
-                              if (result is DateTime && mounted) {
-                                setState(() {
-                                  selectedDay = result;
-                                  focusedDay = result;
-                                });
+                              if (result != null && mounted) {
+                                if (result is DateTime) {
+                                  setState(() {
+                                    selectedDay = result;
+                                    focusedDay = result;
+                                  });
+                                }
 
                                 await loadWeightRecords();
                               }
