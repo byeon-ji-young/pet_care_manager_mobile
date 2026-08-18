@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart'; // 플루터 제공 디자인 라이브러리
 
 import 'pet_register_screen.dart';
@@ -7,8 +9,6 @@ import '../database/database_helper.dart';
 
 import '../models/pet.dart';
 import '../models/vaccination.dart';
-
-import '../widgets/pet_profile_header.dart';
 
 class HomeScreen extends StatefulWidget {
   // StatelessWidget: 사용자에 동작에 의해 화면 자체의 데이터(상태)가 바로 바뀌지 않는 정적인 화면을 의미
@@ -243,7 +243,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           Stack(
                             children: [
                               // 반려동물 프로필 카드
-                              PetProfileHeader(pet: pet),
+                              _PetHomeProfileHeader(pet: pet),
 
                               const Positioned(
                                 top: 0,
@@ -259,7 +259,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
                           // 예방접종 알림
                           if (nextVaccinations[pet.id] != null) ...[
-                            const SizedBox(height: 12),
+                            const SizedBox(height: 15),
 
                             Builder(
                               builder: (context) {
@@ -315,6 +315,106 @@ class _HomeScreenState extends State<HomeScreen> {
               child: Icon(Icons.add, color: Theme.of(context).primaryColor),
             )
           : null,
+    );
+  }
+}
+
+// 반려동물 프로필
+class _PetHomeProfileHeader extends StatelessWidget {
+  // _PetHomeProfileHeader(pet: pet)을 호출하면 클래스의 생성자가 실행되면서 전달받은 pet 값이 클래스 내부의 final Pet pet; 변수에 저장(보관) 됨. 일반함수는 매개변수로 넘어온 pet을 직접 사용
+  final Pet pet;
+
+  const _PetHomeProfileHeader({required this.pet});
+
+  // 생년월일로 나이 변환
+  String _getAgeText(DateTime birthDate) {
+    final now = DateTime.now();
+
+    int ageYear = now.year - birthDate.year;
+    int ageMonth = now.month - birthDate.month;
+
+    // 일(day) 수 비교하여 개월 수 보정
+    if (now.day < birthDate.day) {
+      ageMonth--;
+    }
+
+    // 개월 수가 음수일 경우 연도에서 차감
+    if (ageMonth < 0) {
+      ageYear--;
+      ageMonth += 12;
+    }
+
+    // 1살 미만인 경우 'x개월' 표시
+    if (ageYear == 0) {
+      return '$ageMonth개월';
+    }
+    // 개월이 0인 경우 'x살' 표시
+    else if (ageMonth == 0) {
+      return '$ageYear살';
+    }
+    // 1살 이상 & 개월이 있는 경우 'x살 y개월' 표시
+    else {
+      return '$ageYear살 $ageMonth개월';
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // 성별/품종/몸무게 텍스트 조합
+    final List<String> details = [];
+
+    if (pet.birthDate != null) {
+      details.add(_getAgeText(pet.birthDate!));
+    }
+
+    if (pet.weight != null) {
+      details.add('${pet.weight}kg');
+    }
+
+    return Row(
+      children: [
+        CircleAvatar(
+          radius: 36,
+          // backgroundColor: Colors.grey[100],
+          backgroundImage: pet.imagePath != null
+              ? FileImage(File(pet.imagePath!))
+              : null,
+          child: pet.imagePath == null
+              ? const Icon(Icons.pets, size: 32)
+              : null,
+        ),
+
+        const SizedBox(width: 14),
+
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                pet.name,
+                style: const TextStyle(
+                  fontSize: 19,
+                  fontWeight: FontWeight.bold,
+                  // letterSpacing: -0.5,
+                ),
+              ),
+
+              if (details.isNotEmpty) ...[
+                const SizedBox(height: 6),
+
+                Text(
+                  details.join('  •  '), // join: 리스트의 문자열들을 하나의 문자열로 합치는 것,
+                  style: TextStyle(
+                    fontSize: 15,
+                    color: Colors.grey[700],
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+      ],
     );
   }
 }
