@@ -175,7 +175,7 @@ class _HealthRecordRegisterScreenState
                     TextField(
                       controller: titleController,
                       decoration: InputDecoration(
-                        labelText: '진료 제목',
+                        labelText: '* 진료 제목',
                         hintText: '예: 예방접종 / 정기검진',
                         prefixIcon: const Icon(Icons.medical_services_outlined),
                         border: OutlineInputBorder(
@@ -267,7 +267,7 @@ class _HealthRecordRegisterScreenState
                             ),
                             const SizedBox(width: 16),
                             const Text(
-                              '방문 날짜',
+                              '* 방문 날짜',
                               style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w500,

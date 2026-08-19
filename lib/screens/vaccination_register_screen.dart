@@ -147,7 +147,7 @@ class _VaccinationRegisterScreen extends State<VaccinationRegisterScreen> {
                     TextField(
                       controller: vaccineNameController,
                       decoration: InputDecoration(
-                        labelText: '접종 종류',
+                        labelText: '* 접종 종류',
                         hintText: 'ex. 종합백신, 광견병',
                         prefixIcon: const Icon(Icons.vaccines_outlined),
                         border: OutlineInputBorder(
@@ -216,7 +216,7 @@ class _VaccinationRegisterScreen extends State<VaccinationRegisterScreen> {
                             ),
                             const SizedBox(width: 16),
                             const Text(
-                              '접종 날짜',
+                              '* 접종 날짜',
                               style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w500,

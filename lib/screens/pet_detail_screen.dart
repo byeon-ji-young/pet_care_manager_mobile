@@ -407,7 +407,7 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
                       color: Colors.purple,
                     ),
                   ),
-                  title: const Text('체중 기록'),
+                  title: const Text('체중기록'),
                   trailing: const Icon(Icons.chevron_right, color: Colors.grey),
                   onTap: () async {
                     Navigator.pop(context);

@@ -289,7 +289,7 @@ class _PetRegisterScreenState extends State<PetRegisterScreen> {
                     const SizedBox(height: 20),
 
                     // 2. 이름
-                    _buildSectionLabel('이름'),
+                    _buildSectionLabel('* 이름'),
 
                     TextField(
                       controller: nameController,

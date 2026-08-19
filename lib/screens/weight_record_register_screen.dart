@@ -220,7 +220,7 @@ class _WeightRecordRegisterScreen extends State<WeightRecordRegisterScreen> {
                             const Icon(Icons.calendar_month_outlined),
                             const SizedBox(width: 16),
                             const Text(
-                              '측정 날짜',
+                              '* 측정 날짜',
                               style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w500,
@@ -253,7 +253,7 @@ class _WeightRecordRegisterScreen extends State<WeightRecordRegisterScreen> {
                         decimal: true,
                       ),
                       decoration: InputDecoration(
-                        labelText: '몸무게',
+                        labelText: '* 몸무게',
                         hintText: '예: 3.5',
                         suffixText: 'kg',
                         prefixIcon: const Icon(Icons.monitor_weight_outlined),
