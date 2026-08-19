@@ -78,7 +78,7 @@ class DatabaseHelper {
     */
     return await openDatabase(
       path,
-      version: 1, // DB 구조가 바뀔 때만 올림
+      version: 2, // DB 구조가 바뀔 때만 올림
       onConfigure: (db) async {
         await db.execute('PRAGMA foreign_keys = ON');
       },
@@ -143,6 +143,7 @@ class DatabaseHelper {
             pet_id INTEGER NOT NULL,
             medication_name TEXT NOT NULL,
             medication_date TEXT NOT NULL,
+            medication_time TEXT,
             next_date TEXT,
             memo TEXT,
             FOREIGN KEY (pet_id) REFERENCES pets(id) ON DELETE CASCADE
@@ -150,7 +151,14 @@ class DatabaseHelper {
         ''');
       },
 
-      onUpgrade: (db, oldVersion, newVersion) async {},
+      onUpgrade: (db, oldVersion, newVersion) async {
+        // 1->2. 약 복용 테이블 - 복용 시간 컬럼 추가
+        if (oldVersion < 2) {
+          await db.execute(
+            'ALTER TABLE medications ADD COLUMN medication_time TEXT',
+          );
+        }
+      },
     );
   }
 
