@@ -406,10 +406,13 @@ class DatabaseHelper {
   Future<List<Vaccination>> getUpcomingVaccinations(int petId) async {
     final db = await database;
 
+    final today = DateTime.now();
+    final todayOnly = DateTime(today.year, today.month, today.day);
+
     final maps = await db.query(
       'vaccinations',
-      where: 'pet_id = ? AND next_date IS NOT NULL',
-      whereArgs: [petId],
+      where: 'pet_id = ? AND next_date IS NOT NULL AND next_date >= ?',
+      whereArgs: [petId, todayOnly.toIso8601String()],
       orderBy: 'next_date ASC',
     );
 
