@@ -5,6 +5,7 @@ import '../models/pet.dart';
 import '../models/health_record.dart';
 import '../models/vaccination.dart';
 import '../models/weight_record.dart';
+import '../models/medication.dart';
 
 import '../database/database_helper.dart';
 
@@ -15,6 +16,7 @@ import 'pet_register_screen.dart';
 import 'health_record_register_screen.dart';
 import 'vaccination_register_screen.dart';
 import 'weight_record_register_screen.dart';
+import 'medication_register_screen.dart';
 
 class PetDetailScreen extends StatefulWidget {
   final Pet pet;
@@ -44,6 +46,8 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
 
   List<Vaccination> upcomingVaccinations = [];
 
+  List<Medication> medications = [];
+
   DateTime selectedDay = DateTime.now();
   DateTime focusedDay = DateTime.now();
 
@@ -63,6 +67,7 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
       loadVaccinations(),
       loadWeightRecords(),
       loadUpcomingVaccinations(),
+      loadMedications(),
     ]);
   }
 
@@ -104,6 +109,16 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
     if (!mounted) return;
 
     setState(() => upcomingVaccinations = upcomings);
+  }
+
+  Future<void> loadMedications() async {
+    final datas = await DatabaseHelper.instance.getMedicationsByPetId(
+      widget.pet.id!,
+    );
+
+    if (!mounted) return;
+
+    setState(() => medications = datas);
   }
 
   // 반려동물 삭제
@@ -262,6 +277,13 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
     // 체중 기록
     events.addAll(weightRecords.where((record) => isSameDay(record.date, day)));
 
+    // 약 복용 기록
+    events.addAll(
+      medications.where(
+        (medication) => isSameDay(medication.medicationDate, day),
+      ),
+    );
+
     return events;
   }
 
@@ -283,6 +305,13 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
   List<WeightRecord> _getWeightRecordsForDay(DateTime day) {
     return weightRecords
         .where((record) => isSameDay(record.date, day))
+        .toList();
+  }
+
+  // 현재 선택한 날짜의 약 복용 기록 찾기
+  List<Medication> _getMedicationsForDay(DateTime day) {
+    return medications
+        .where((medication) => isSameDay(medication.medicationDate, day))
         .toList();
   }
 
@@ -436,6 +465,42 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
                     }
                   },
                 ),
+
+                ListTile(
+                  leading: const CircleAvatar(
+                    backgroundColor: Color(0xFFFFF3E0),
+                    child: Icon(
+                      Icons.medication_outlined,
+                      color: Colors.orange,
+                    ),
+                  ),
+                  title: const Text('약 복용'),
+                  trailing: const Icon(Icons.chevron_right, color: Colors.grey),
+                  onTap: () async {
+                    Navigator.pop(context);
+
+                    final result = await Navigator.push(
+                      parentContext,
+                      MaterialPageRoute(
+                        builder: (context) =>
+                            MedicationRegisterScreen(petId: petId),
+                      ),
+                    );
+
+                    if (result is DateTime) {
+                      if (!mounted) {
+                        return;
+                      }
+
+                      setState(() {
+                        selectedDay = result;
+                        focusedDay = result;
+                      });
+
+                      await loadMedications();
+                    }
+                  },
+                ),
               ],
             ),
           ),
@@ -452,6 +517,7 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
     final selectedHealthRecords = _getHealthRecordsForDay(selectedDay);
     final selectedVaccinations = _getVaccinationsForDay(selectedDay);
     final selectedWeightRecords = _getWeightRecordsForDay(selectedDay);
+    final selectedMedications = _getMedicationsForDay(selectedDay);
 
     return Scaffold(
       // backgroundColor: Colors.green[10],
@@ -645,7 +711,8 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
 
                       if (selectedHealthRecords.isEmpty &&
                           selectedVaccinations.isEmpty &&
-                          selectedWeightRecords.isEmpty)
+                          selectedWeightRecords.isEmpty &&
+                          selectedMedications.isEmpty)
                         Container(
                           width: double.infinity,
                           padding: const EdgeInsets.symmetric(vertical: 24),
@@ -769,6 +836,39 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
                                 }
 
                                 await loadWeightRecords();
+                              }
+                            },
+                          );
+                        }),
+                        // 약 복용 기록
+                        ...selectedMedications.map((medication) {
+                          return _SelectedRecordCard(
+                            icon: Icons.medication_outlined,
+                            iconBgColor: const Color(0xFFFFF3E0),
+                            iconColor: Colors.orange,
+                            title: medication.medicationName,
+                            subtitle: medication.memo,
+                            onTap: () async {
+                              final result = await Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) =>
+                                      MedicationRegisterScreen(
+                                        petId: pet.id!,
+                                        medication: medication,
+                                      ),
+                                ),
+                              );
+
+                              if (result != null && mounted) {
+                                if (result is DateTime) {
+                                  setState(() {
+                                    selectedDay = result;
+                                    focusedDay = result;
+                                  });
+                                }
+
+                                await loadMedications();
                               }
                             },
                           );

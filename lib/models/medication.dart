@@ -1,0 +1,43 @@
+class Medication {
+  final int? id; // DB에서 생성되는 약 기록 ID
+  final int petId; // 어떤 반려동물의 약인지
+  final String medicationName; // 약 이름
+  final DateTime medicationDate; // 복용일
+  final DateTime? nextDate; // 다음 복용 예정일
+  final String? memo; // 메모
+
+  Medication({
+    this.id,
+    required this.petId,
+    required this.medicationName,
+    required this.medicationDate,
+    this.nextDate,
+    this.memo,
+  });
+
+  // DB → Medication 객체
+  factory Medication.fromMap(Map<String, dynamic> map) {
+    return Medication(
+      id: map['id'] as int?,
+      petId: map['pet_id'] as int,
+      medicationName: map['medication_name'] as String,
+      medicationDate: DateTime.parse(map['medication_date'] as String),
+      nextDate: map['next_date'] != null
+          ? DateTime.parse(map['next_date'] as String)
+          : null,
+      memo: map['memo'] as String?,
+    );
+  }
+
+  // Medication 객체 → DB
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'pet_id': petId,
+      'medication_name': medicationName,
+      'medication_date': medicationDate.toIso8601String(),
+      'next_date': nextDate?.toIso8601String(),
+      'memo': memo,
+    };
+  }
+}

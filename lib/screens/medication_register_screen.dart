@@ -2,63 +2,60 @@ import 'package:flutter/material.dart';
 
 import '../database/database_helper.dart';
 
-import '../models/vaccination.dart';
+import '../models/medication.dart';
 
-class VaccinationRegisterScreen extends StatefulWidget {
+class MedicationRegisterScreen extends StatefulWidget {
   final int petId;
 
-  final Vaccination? vaccination;
+  final Medication? medication;
 
-  const VaccinationRegisterScreen({
+  const MedicationRegisterScreen({
     super.key,
     required this.petId,
-    this.vaccination,
+    this.medication,
   });
 
   @override
-  State<VaccinationRegisterScreen> createState() =>
-      _VaccinationRegisterScreen();
+  State<MedicationRegisterScreen> createState() => _MedicationRegisterScreen();
 }
 
-class _VaccinationRegisterScreen extends State<VaccinationRegisterScreen> {
-  final TextEditingController vaccineNameController = TextEditingController();
-  final TextEditingController hospitalController = TextEditingController();
+class _MedicationRegisterScreen extends State<MedicationRegisterScreen> {
+  final TextEditingController medicationNameController =
+      TextEditingController();
+
   final TextEditingController memoController = TextEditingController();
 
-  DateTime vaccinationDate = DateTime.now();
+  DateTime medicationDate = DateTime.now();
   DateTime? nextDate;
 
   @override
   void initState() {
     super.initState();
 
-    final vaccination = widget.vaccination;
+    final medication = widget.medication;
 
-    if (vaccination != null) {
-      vaccineNameController.text = vaccination.vaccineName;
-      hospitalController.text = vaccination.hospital ?? '';
-      memoController.text = vaccination.memo ?? '';
-
-      vaccinationDate = vaccination.vaccinationDate;
-      nextDate = vaccination.nextDate;
+    if (medication != null) {
+      medicationNameController.text = medication.medicationName;
+      memoController.text = medication.memo ?? '';
+      medicationDate = medication.medicationDate;
+      nextDate = medication.nextDate;
     }
   }
 
   @override
   void dispose() {
-    vaccineNameController.dispose();
-    hospitalController.dispose();
+    medicationNameController.dispose();
     memoController.dispose();
 
     super.dispose();
   }
 
-  // 예방접종 기록 삭제
-  Future<void> _deleteVaccination() async {
-    final vaccination = widget.vaccination;
+  // 약 복용 기록 삭제
+  Future<void> _deleteMedication() async {
+    final medication = widget.medication;
 
-    // 신규 등록 화면에서는 삭제할 기록이 없으므로 종료
-    if (vaccination == null) {
+    // 신규 등록
+    if (medication == null) {
       return;
     }
 
@@ -66,8 +63,7 @@ class _VaccinationRegisterScreen extends State<VaccinationRegisterScreen> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          // title: const Text('예방접종 기록 삭제'),
-          content: Text('${vaccination.vaccineName} 기록을 삭제하시겠습니까?'),
+          content: Text('${medication.medicationName} 기록을 삭제하시겠습니까?'),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context, false),
@@ -89,7 +85,7 @@ class _VaccinationRegisterScreen extends State<VaccinationRegisterScreen> {
       return;
     }
 
-    await DatabaseHelper.instance.deleteVaccination(vaccination.id!);
+    await DatabaseHelper.instance.deleteMedication(medication.id!);
 
     if (!mounted) {
       return;
@@ -100,15 +96,10 @@ class _VaccinationRegisterScreen extends State<VaccinationRegisterScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isEditing = widget.vaccination != null;
+    final isEditing = widget.medication != null;
 
     return Scaffold(
-      appBar: AppBar(
-        // title: Text(isEditing ? '예방접종 수정' : '예방접종 등록'),
-        title: null,
-        centerTitle: true,
-      ),
-
+      appBar: AppBar(title: null, centerTitle: true),
       body: SafeArea(
         child: Column(
           children: [
@@ -118,11 +109,12 @@ class _VaccinationRegisterScreen extends State<VaccinationRegisterScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    // 제목 + 삭제 버튼
                     Row(
                       children: [
                         Expanded(
                           child: Text(
-                            isEditing ? '예방접종 기록 수정' : '새 예방접종 기록',
+                            isEditing ? '약 복용 기록 수정' : '새 약 복용 기록',
                             style: const TextStyle(
                               fontSize: 22,
                               fontWeight: FontWeight.bold,
@@ -132,7 +124,7 @@ class _VaccinationRegisterScreen extends State<VaccinationRegisterScreen> {
 
                         if (isEditing)
                           IconButton(
-                            onPressed: _deleteVaccination,
+                            onPressed: _deleteMedication,
                             icon: const Icon(
                               Icons.delete_outline,
                               color: Colors.redAccent,
@@ -144,13 +136,13 @@ class _VaccinationRegisterScreen extends State<VaccinationRegisterScreen> {
 
                     const SizedBox(height: 24),
 
-                    // 1. 접종 종류
+                    // 1. 약 이름
                     TextField(
-                      controller: vaccineNameController,
+                      controller: medicationNameController,
                       decoration: InputDecoration(
-                        labelText: '* 접종 종류',
-                        hintText: '예. 종합백신, 광견병',
-                        prefixIcon: const Icon(Icons.vaccines_outlined),
+                        labelText: '* 약 이름',
+                        hintText: '예. 심장사상충 약, 구충제',
+                        prefixIcon: const Icon(Icons.medication_outlined),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
@@ -159,43 +151,19 @@ class _VaccinationRegisterScreen extends State<VaccinationRegisterScreen> {
 
                     const SizedBox(height: 15),
 
-                    // 2. 병원명
-                    TextField(
-                      controller: hospitalController,
-                      decoration: InputDecoration(
-                        labelText: '병원명',
-                        hintText: '예: 펫몽 동물병원',
-                        prefixIcon: const Icon(Icons.local_hospital_outlined),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                    ),
-
-                    const SizedBox(height: 15),
-
-                    // 3. 접종 날짜 선택
-                    /*
-                    InkWell: 터치했을 때 물결처럼 퍼지는 클릭 효과를 만들어주는 위젯
-
-                    onTap → 한 번 탭
-                    onDoubleTap → 두 번 탭
-                    onLongPress → 길게 누르기
-                    onTapDown → 누르는 순간
-                    onTapUp → 손가락을 뗀 순간
-                    */
+                    // 2. 복용 날짜
                     InkWell(
                       onTap: () async {
                         final pickedDate = await showDatePicker(
                           context: context,
-                          initialDate: vaccinationDate,
+                          initialDate: medicationDate,
                           firstDate: DateTime(2000),
                           lastDate: DateTime.now(),
                         );
 
                         if (pickedDate != null) {
                           setState(() {
-                            vaccinationDate = pickedDate;
+                            medicationDate = pickedDate;
                           });
                         }
                       },
@@ -211,21 +179,18 @@ class _VaccinationRegisterScreen extends State<VaccinationRegisterScreen> {
                         ),
                         child: Row(
                           children: [
-                            const Icon(
-                              Icons.calendar_month_outlined,
-                              // color: Colors.grey,
-                            ),
+                            Icon(Icons.calendar_month_outlined),
                             const SizedBox(width: 16),
                             const Text(
-                              '* 접종 날짜',
+                              '* 복용 날짜',
                               style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w500,
                               ),
                             ),
-                            const Spacer(), // Row 안에서 남아 있는 가로 공간을 Spacer()가 차지
+                            const Spacer(),
                             Text(
-                              '${vaccinationDate.year}.${vaccinationDate.month.toString().padLeft(2, '0')}.${vaccinationDate.day.toString().padLeft(2, '0')}',
+                              '${medicationDate.year}.${medicationDate.month.toString().padLeft(2, '0')}.${medicationDate.day.toString().padLeft(2, '0')}',
                               style: const TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,
@@ -243,15 +208,13 @@ class _VaccinationRegisterScreen extends State<VaccinationRegisterScreen> {
 
                     const SizedBox(height: 15),
 
-                    // 4. 다음 접종일 선택
+                    // 3. 다음 복용 예정일
                     InkWell(
                       onTap: () async {
                         final pickedDate = await showDatePicker(
                           context: context,
-                          initialDate:
-                              nextDate ??
-                              vaccinationDate, // ?? (null-aware 연산자). nextDate가 있으면 nextDate를 사용하고, 없으면 vaccinationDate를 사용
-                          firstDate: vaccinationDate,
+                          initialDate: nextDate ?? medicationDate,
+                          firstDate: medicationDate,
                           lastDate: DateTime(2100),
                         );
 
@@ -273,21 +236,16 @@ class _VaccinationRegisterScreen extends State<VaccinationRegisterScreen> {
                         ),
                         child: Row(
                           children: [
-                            const Icon(
-                              Icons.event_repeat_outlined,
-                              // color: Colors.grey,
-                            ),
+                            const Icon(Icons.event_repeat_outlined),
                             const SizedBox(width: 16),
                             const Text(
-                              '다음 접종일',
+                              '다음 복용일',
                               style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w500,
                               ),
                             ),
-
                             const Spacer(),
-
                             if (nextDate != null) ...[
                               Text(
                                 '${nextDate!.year}.${nextDate!.month.toString().padLeft(2, '0')}.${nextDate!.day.toString().padLeft(2, '0')}',
@@ -296,10 +254,9 @@ class _VaccinationRegisterScreen extends State<VaccinationRegisterScreen> {
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
-
                               const SizedBox(width: 6),
-
                               GestureDetector(
+                                // GestureDetector는 화면에서 사용자의 터치 동작을 감지하는 위젯
                                 onTap: () {
                                   setState(() {
                                     nextDate = null;
@@ -311,7 +268,6 @@ class _VaccinationRegisterScreen extends State<VaccinationRegisterScreen> {
                                   color: Colors.grey,
                                 ),
                               ),
-
                               const SizedBox(width: 3),
                             ] else ...[
                               const Text(
@@ -321,9 +277,7 @@ class _VaccinationRegisterScreen extends State<VaccinationRegisterScreen> {
                                   color: Colors.grey,
                                 ),
                               ),
-
                               const SizedBox(width: 4),
-
                               const Icon(
                                 Icons.arrow_drop_down,
                                 color: Colors.grey,
@@ -336,15 +290,14 @@ class _VaccinationRegisterScreen extends State<VaccinationRegisterScreen> {
 
                     const SizedBox(height: 15),
 
-                    // 5. 메모
+                    // 4.메모
                     TextField(
                       controller: memoController,
                       maxLines: 3,
                       decoration: InputDecoration(
-                        labelText: '메모',
-                        hintText: '특이사항이나 참고할 사항을 적어주세요.',
-                        alignLabelWithHint:
-                            true, // TextField의 labelText와 hintText의 세로 정렬을 맞춰주는 옵션
+                        labelText: '',
+                        hintText: '',
+                        alignLabelWithHint: true,
                         prefixIcon: const Padding(
                           padding: EdgeInsets.only(bottom: 30),
                           child: Icon(Icons.notes),
@@ -367,34 +320,32 @@ class _VaccinationRegisterScreen extends State<VaccinationRegisterScreen> {
                 height: 50,
                 child: ElevatedButton(
                   onPressed: () async {
-                    if (vaccineNameController.text.trim().isEmpty) {
+                    if (medicationNameController.text.trim().isEmpty) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text("접종 종류를 입력해주세요.")),
+                        const SnackBar(content: Text('약 이름을 입력해주세요.')),
                       );
+
                       return;
                     }
 
-                    final vaccination = Vaccination(
-                      id: widget.vaccination?.id,
+                    final medication = Medication(
+                      id: widget.medication?.id,
                       petId: widget.petId,
-                      vaccineName: vaccineNameController.text.trim(),
-                      vaccinationDate: vaccinationDate,
+                      medicationName: medicationNameController.text.trim(),
+                      medicationDate: medicationDate,
                       nextDate: nextDate,
-                      hospital: hospitalController.text.trim().isEmpty
-                          ? null
-                          : hospitalController.text.trim(),
                       memo: memoController.text.trim().isEmpty
                           ? null
                           : memoController.text.trim(),
                     );
 
-                    if (widget.vaccination == null) {
-                      await DatabaseHelper.instance.insertVaccination(
-                        vaccination,
+                    if (widget.medication == null) {
+                      await DatabaseHelper.instance.insertMedication(
+                        medication,
                       );
                     } else {
-                      await DatabaseHelper.instance.updateVaccination(
-                        vaccination,
+                      await DatabaseHelper.instance.updateMedication(
+                        medication,
                       );
                     }
 
@@ -402,7 +353,7 @@ class _VaccinationRegisterScreen extends State<VaccinationRegisterScreen> {
                       return;
                     }
 
-                    Navigator.pop(context, vaccinationDate);
+                    Navigator.pop(context, medicationDate);
                   },
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,

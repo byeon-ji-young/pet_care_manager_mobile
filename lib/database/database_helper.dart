@@ -469,4 +469,51 @@ class DatabaseHelper {
 
     return db.delete('weight_records', where: 'id = ?', whereArgs: [id]);
   }
+
+  // ========================================================= medication =========================================================
+  // 약 복용 기록 추가
+  Future<int> insertMedication(Medication medication) async {
+    final db = await database;
+
+    return db.insert('medications', medication.toMap());
+  }
+
+  // 반려동물별 약 복용 기록 조회
+  Future<List<Medication>> getMedicationsByPetId(int petId) async {
+    final db = await database;
+
+    final maps = await db.query(
+      'medications',
+      where: 'pet_id = ?',
+      whereArgs: [petId],
+      orderBy: 'medication_date DESC',
+    );
+
+    return maps.map((map) => Medication.fromMap(map)).toList();
+  }
+
+  // 약 복용 기록 수정
+  Future<int> updateMedication(Medication medication) async {
+    final db = await database;
+
+    return db.update(
+      'medications',
+      {
+        'pet_id': medication.petId,
+        'medication_name': medication.medicationName,
+        'medication_date': medication.medicationDate.toIso8601String(),
+        'next_date': medication.nextDate?.toIso8601String(),
+        'memo': medication.memo,
+      }, // toMap() 사용 안하고 직접 만든 이유: UPDATE에서는 ID를 수정할 필요가 없으니까 우리가 수정할 컬럼만 명시
+      where: 'id = ?',
+      whereArgs: [medication.id],
+    );
+  }
+
+  // 약 복용 기록 삭제
+  Future<int> deleteMedication(int id) async {
+    final db = await database;
+
+    return db.delete('medications', where: 'id = ?', whereArgs: [id]);
+  }
 }
