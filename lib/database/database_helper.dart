@@ -6,6 +6,7 @@ import '../models/pet.dart';
 import '../models/health_record.dart';
 import '../models/vaccination.dart';
 import '../models/weight_record.dart';
+import '../models/medication.dart';
 
 class DatabaseHelper {
   /*
@@ -77,8 +78,12 @@ class DatabaseHelper {
     */
     return await openDatabase(
       path,
-      version: 5, // DB 구조가 바뀔 때만 올림
+      version: 1, // DB 구조가 바뀔 때만 올림
+      onConfigure: (db) async {
+        await db.execute('PRAGMA foreign_keys = ON');
+      },
       onCreate: (db, version) async {
+        // pets
         await db.execute('''
           CREATE TABLE pets (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -91,6 +96,7 @@ class DatabaseHelper {
           )
         ''');
 
+        // health_records
         await db.execute('''
           CREATE TABLE health_records (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -100,10 +106,11 @@ class DatabaseHelper {
             title TEXT NOT NULL,
             description TEXT,
             cost INTEGER,
-            FOREIGN KEY (pet_id) REFERENCES pets(id)
+            FOREIGN KEY (pet_id) REFERENCES pets(id) ON DELETE CASCADE
           )
         ''');
 
+        // vaccinations
         await db.execute('''
           CREATE TABLE vaccinations (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -112,67 +119,38 @@ class DatabaseHelper {
             vaccination_date TEXT NOT NULL,
             next_date TEXT,
             hospital TEXT,
-            memo TEXT
+            memo TEXT,
+            FOREIGN KEY (pet_id) REFERENCES pets(id) ON DELETE CASCADE
           )
         ''');
 
+        // weight_records
         await db.execute('''
           CREATE TABLE weight_records (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             pet_id INTEGER NOT NULL,
             date TEXT NOT NULL,
             weight REAL NOT NULL,
-            memo TEXT
+            memo TEXT,
+            FOREIGN KEY (pet_id) REFERENCES pets(id) ON DELETE CASCADE
+          )
+        ''');
+
+        // medications
+        await db.execute('''
+          CREATE TABLE medications (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            pet_id INTEGER NOT NULL,
+            medication_name TEXT NOT NULL,
+            medication_date TEXT NOT NULL,
+            next_date TEXT,
+            memo TEXT,
+            FOREIGN KEY (pet_id) REFERENCES pets(id) ON DELETE CASCADE
           )
         ''');
       },
 
-      onUpgrade: (db, oldVersion, newVersion) async {
-        if (oldVersion < 2) {
-          await db.execute('ALTER TABLE pets ADD COLUMN image_path TEXT');
-        }
-
-        if (oldVersion < 3) {
-          await db.execute('''
-            CREATE TABLE health_records (
-              id INTEGER PRIMARY KEY AUTOINCREMENT,
-              pet_id INTEGER NOT NULL,
-              date TEXT NOT NULL,
-              hospital TEXT,
-              title TEXT NOT NULL,
-              description TEXT,
-              cost INTEGER,
-              FOREIGN KEY (pet_id) REFERENCES pets(id)
-            )
-          ''');
-        }
-
-        if (oldVersion < 4) {
-          await db.execute('''
-            CREATE TABLE vaccinations (
-              id INTEGER PRIMARY KEY AUTOINCREMENT,
-              pet_id INTEGER NOT NULL,
-              vaccine_name TEXT NOT NULL,
-              vaccination_date TEXT NOT NULL,
-              next_date TEXT,
-              hospital TEXT,
-              memo TEXT
-            )
-          ''');
-        }
-
-        if (oldVersion < 5) {
-          await db.execute('''
-            CREATE TABLE weight_records (
-              id INTEGER PRIMARY KEY AUTOINCREMENT,
-              pet_id INTEGER NOT NULL,
-              date TEXT NOT NULL,
-              weight REAL NOT NULL,
-              memo TEXT
-            )
-          ''');
-        }
-      },
+      onUpgrade: (db, oldVersion, newVersion) async {},
     );
   }
 
