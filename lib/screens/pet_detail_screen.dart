@@ -650,7 +650,7 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
                           width: double.infinity,
                           padding: const EdgeInsets.symmetric(vertical: 24),
                           decoration: BoxDecoration(
-                            color: Colors.grey[100],
+                            // color: Colors.grey[100],
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Column(
@@ -868,7 +868,7 @@ class _SelectedRecordCard extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 8),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(14),
-        side: BorderSide(color: Colors.grey.shade200),
+        side: BorderSide(color: Colors.grey.shade300),
       ),
       child: ListTile(
         onTap: onTap,
