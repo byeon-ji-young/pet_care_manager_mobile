@@ -3,7 +3,7 @@
 반려동물의 기본 정보와 건강 기록을 관리할 수 있는 모바일 앱입니다.
 
 Flutter와 SQLite를 사용하여 반려동물 정보를 저장하고 관리하며,
-병원 기록, 예방접종, 체중 변화 등을 한눈에 확인할 수 있도록 개발하고 있습니다.
+병원 기록, 예방접종, 체중 변화, 약 복용 기록 등을 한눈에 확인할 수 있도록 개발하고 있습니다.
 
 ---
 
@@ -46,6 +46,16 @@ Flutter와 SQLite를 사용하여 반려동물 정보를 저장하고 관리하�
 * 날짜별 체중 확인
 * 그래프 포인트 선택 시 날짜 및 체중 확인
 
+### 💊 약 복용 관리
+
+* 약 복용 기록 등록
+* 약 복용 기록 조회
+* 약 복용 기록 수정
+* 약 복용 기록 삭제
+* 복용 날짜 및 복용 시간 설정
+* 다음 복용 예정일 설정
+* 메모 관리
+
 ### 🏠 홈 화면
 
 * 등록된 반려동물 목록 확인
@@ -63,6 +73,7 @@ Flutter와 SQLite를 사용하여 반려동물 정보를 저장하고 관리하�
 * **SQLite**
 * **sqflite**
 * **fl_chart**
+* **flutter_local_notifications**
 
 ---
 
@@ -77,7 +88,9 @@ lib/
 │   ├── pet.dart
 │   ├── health_record.dart
 │   ├── vaccination.dart
-│   └── weight_record.dart
+│   ├── vaccination.dart
+│   ├── weight_record.dart
+│   └── medication.dart
 │
 ├── screens/
 │   ├── home_screen.dart
@@ -85,7 +98,11 @@ lib/
 │   ├── pet_register_screen.dart
 │   ├── health_record_register_screen.dart
 │   ├── vaccination_register_screen.dart
-│   └── weight_record_register_screen.dart
+│   ├── weight_record_register_screen.dart
+│   └── medication_register_screen.dart
+│
+├── services/
+│   └── notification_service.dart
 │
 └── widgets/
     └── weight_chart.dart
@@ -103,6 +120,7 @@ SQLite를 사용하여 반려동물과 관련된 데이터를 로컬에 저장�
 * 건강 기록
 * 예방접종 기록
 * 체중 기록
+* 약 복용 기록
 
 데이터베이스 버전 변경에 따라 필요한 테이블을 마이그레이션하도록 구현하고 있습니다.
 
@@ -132,9 +150,13 @@ SQLite를 사용하여 반려동물과 관련된 데이터를 로컬에 저장�
 * [x] 홈 화면 예방접종 예정 알림
 * [x] 체중 기록 CRUD
 * [x] 체중 변화 그래프
-* [ ] 건강 캘린더
-* [ ] 날짜별 건강 기록 조회
-* [ ] 알림 기능
+* [x] 건강 캘린더
+* [x] 날짜별 건강 기록 조회
+* [x] 약 복용 기록 CRUD
+* [x] 약 복용 시간 설정
+* [x] 다음 복용 예정일 관리
+* [x] 알림 서비스 초기화
+* [ ] 실제 알림 기능
 * [ ] UI/UX 개선
 
 ---
@@ -144,6 +166,8 @@ SQLite를 사용하여 반려동물과 관련된 데이터를 로컬에 저장�
 반려동물의 기본 정보부터 병원 기록, 예방접종, 체중 변화까지
 한 곳에서 편리하게 관리할 수 있는 반려동물 건강 관리 앱을 만드는 것을 목표로 합니다.
 
-향후 건강 캘린더 기능을 통해 날짜별 병원 기록과 예방접종 기록을 한눈에 확인할 수 있도록 구현할 예정입니다.
+건강 캘린더를 통해 날짜별 병원 기록, 예방접종, 체중 및 약 복용 기록을 한눈에 확인할 수 있도록 구현했습니다.
+
+향후 알림 기능을 추가하여 예방접종 예정일과 약 복용 일정을 놓치지 않고 관리할 수 있도록 개선할 예정입니다.
 
 개발 과정에서 Flutter, Dart, SQLite 등의 기술을 학습하고 실제 사용할 수 있는 모바일 애플리케이션으로 완성하는 것을 목표로 합니다.
