@@ -621,20 +621,30 @@ print('${pet.name}의 몸무게는 ${pet.weight}kg입니다.');
 
 Flutter에서 앱 내부 알림 기능을 구현하기 위해 `flutter_local_notifications` 패키지를 사용할 수 있습니다.
 
-`pubspec.yaml`에 패키지를 추가합니다.
+### 패키지 설치
+
+터미널에서 다음 명령어를 실행합니다.
+
+```bash
+flutter pub add flutter_local_notifications
+```
+
+`flutter pub add` 명령어를 실행하면 패키지가 `pubspec.yaml`의 `dependencies`에 자동으로 추가되고 필요한 패키지가 설치됩니다.
+
+예:
 
 ```yaml
 dependencies:
   flutter_local_notifications: ^19.5.0
 ```
 
-패키지를 추가한 후:
+`pubspec.yaml`에 패키지를 직접 추가하거나 의존성을 변경한 경우 다음 명령어를 실행합니다.
 
 ```bash
 flutter pub get
 ```
 
-을 실행합니다.
+`flutter pub add`를 사용한 경우에는 패키지 추가와 의존성 설치가 함께 처리되므로 별도로 `flutter pub get`을 실행하지 않아도 됩니다.
 
 ---
 
