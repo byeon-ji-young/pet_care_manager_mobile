@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart'; // 플루터 제공 디자인 라이브러리
+import 'package:pet_care_manager_mobile/models/medication.dart';
 
 import 'pet_register_screen.dart';
 import 'pet_detail_screen.dart';
@@ -22,6 +23,7 @@ class _HomeScreenState extends State<HomeScreen> {
   List<Pet> pets = [];
 
   Map<int, Vaccination?> nextVaccinations = {};
+  Map<int, Medication?> nextMedications = {};
 
   @override
   void initState() {
@@ -35,6 +37,7 @@ class _HomeScreenState extends State<HomeScreen> {
     final loadedPets = await DatabaseHelper.instance.getPets();
 
     final Map<int, Vaccination?> loadedNextVaccinations = {};
+    final Map<int, Medication?> loadedNextMedications = {};
 
     for (final pet in loadedPets) {
       final nextVaccination = await DatabaseHelper.instance.getNextVaccination(
@@ -42,6 +45,12 @@ class _HomeScreenState extends State<HomeScreen> {
       );
 
       loadedNextVaccinations[pet.id!] = nextVaccination;
+
+      final nextMedication = await DatabaseHelper.instance.getNextMedication(
+        pet.id!,
+      );
+
+      loadedNextMedications[pet.id!] = nextMedication;
     }
 
     if (!mounted) {
@@ -51,12 +60,13 @@ class _HomeScreenState extends State<HomeScreen> {
     setState(() {
       pets = loadedPets;
       nextVaccinations = loadedNextVaccinations;
+      nextMedications = loadedNextMedications;
     });
   }
 
-  // 예방접종 알림 메세지
-  String _getVaccinationMessage(Vaccination vaccination) {
-    final nextDate = vaccination.nextDate!;
+  // 예방접종, 약 복용 알림 메세지
+  String _getReminderMessage(String name, DateTime nextDate) {
+    // final nextDate = vaccination.nextDate!;
     final today = DateTime.now();
 
     final todayOnly = DateTime(today.year, today.month, today.day);
@@ -65,24 +75,24 @@ class _HomeScreenState extends State<HomeScreen> {
     final difference = nextDateOnly.difference(todayOnly).inDays;
 
     if (difference < 0) {
-      return '🔴 ${vaccination.vaccineName} 예방접종 예정일이 '
+      return '🔴 $name 예방접종 예정일이 '
           '${difference.abs()}일 지났어요.';
     } else if (difference == 0) {
-      return '🔴 오늘은 ${vaccination.vaccineName} 예방접종 예정일이에요!';
+      return '🔴 오늘은 $name 예방접종 예정일이에요!';
     } else if (difference == 1) {
-      return '🟠 ${vaccination.vaccineName} 예방접종이 내일이에요.';
+      return '🟠 $name 예방접종이 내일이에요.';
     } else if (difference <= 7) {
-      return '🟡 ${vaccination.vaccineName} 예방접종이 '
+      return '🟡 $name 예방접종이 '
           '$difference일 남았어요.';
     }
 
-    return '💉 ${vaccination.vaccineName} 예방접종이 '
+    return '💉 $name 예방접종이 '
         '$difference일 남았어요.';
   }
 
-  // 예방접종 알림 배경
-  Color _getVaccinationColor(Vaccination vaccination) {
-    final nextDate = vaccination.nextDate!;
+  // 예방접종, 약 복용 알림 배경
+  Color _getReminderColor(DateTime nextDate) {
+    // final nextDate = vaccination.nextDate!;
     final today = DateTime.now();
 
     final todayOnly = DateTime(today.year, today.month, today.day);
@@ -264,8 +274,8 @@ class _HomeScreenState extends State<HomeScreen> {
                             Builder(
                               builder: (context) {
                                 final vaccination = nextVaccinations[pet.id]!;
-                                final alertColor = _getVaccinationColor(
-                                  vaccination,
+                                final alertColor = _getReminderColor(
+                                  vaccination.nextDate!,
                                 );
 
                                 return Container(
@@ -279,7 +289,47 @@ class _HomeScreenState extends State<HomeScreen> {
                                     borderRadius: BorderRadius.circular(10),
                                   ),
                                   child: Text(
-                                    _getVaccinationMessage(vaccination),
+                                    _getReminderMessage(
+                                      vaccination.vaccineName,
+                                      vaccination.nextDate!,
+                                    ),
+                                    style: TextStyle(
+                                      color: alertColor,
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                          ],
+
+                          // 약 복용 알림
+                          if (nextMedications[pet.id!] != null) ...[
+                            const SizedBox(height: 5),
+
+                            Builder(
+                              builder: (context) {
+                                final medication = nextMedications[pet.id]!;
+                                final alertColor = _getReminderColor(
+                                  medication.nextDate!,
+                                );
+
+                                return Container(
+                                  width: double.infinity,
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 14,
+                                    vertical: 10,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: alertColor.withValues(alpha: 0.08),
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  child: Text(
+                                    _getReminderMessage(
+                                      medication.medicationName,
+                                      medication.nextDate!,
+                                    ),
                                     style: TextStyle(
                                       color: alertColor,
                                       fontSize: 13,

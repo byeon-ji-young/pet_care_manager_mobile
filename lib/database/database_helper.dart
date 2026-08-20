@@ -527,4 +527,48 @@ class DatabaseHelper {
 
     return db.delete('medications', where: 'id = ?', whereArgs: [id]);
   }
+
+  // 약 복용일 조회
+  Future<List<Medication>> getUpcomingMedications(int petId) async {
+    final db = await database;
+
+    final today = DateTime.now();
+    final todayOnly = DateTime(today.year, today.month, today.day);
+
+    final maps = await db.query(
+      'medications',
+      where: 'pet_id = ? AND next_date IS NOT NULL AND next_date >= ?',
+      whereArgs: [petId, todayOnly.toIso8601String()],
+      orderBy: 'next_date ASC',
+    );
+
+    return maps.map((map) {
+      return Medication.fromMap(map);
+    }).toList();
+  }
+
+  // 다음 약 복용일 조회
+  Future<Medication?> getNextMedication(int petId) async {
+    final db = await database;
+
+    final today = DateTime.now();
+    final todayString =
+        '${today.year.toString().padLeft(4, '0')}-'
+        '${today.month.toString().padLeft(2, '0')}-'
+        '${today.day.toString().padLeft(2, '0')}';
+
+    final maps = await db.query(
+      'medications',
+      where: 'pet_id = ? AND next_date IS NOT NULL and next_date >= ?',
+      whereArgs: [petId, todayString],
+      orderBy: 'next_date ASC',
+      limit: 1,
+    );
+
+    if (maps.isEmpty) {
+      return null;
+    }
+
+    return Medication.fromMap(maps.first);
+  }
 }

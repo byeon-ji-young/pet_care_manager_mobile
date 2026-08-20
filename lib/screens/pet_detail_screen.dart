@@ -48,6 +48,8 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
 
   List<Medication> medications = [];
 
+  List<Medication> upcomingMedications = [];
+
   DateTime selectedDay = DateTime.now();
   DateTime focusedDay = DateTime.now();
 
@@ -68,6 +70,7 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
       loadWeightRecords(),
       loadUpcomingVaccinations(),
       loadMedications(),
+      loadUpcomingMedications(),
     ]);
   }
 
@@ -119,6 +122,16 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
     if (!mounted) return;
 
     setState(() => medications = datas);
+  }
+
+  Future<void> loadUpcomingMedications() async {
+    final upcomings = await DatabaseHelper.instance.getUpcomingMedications(
+      widget.pet.id!,
+    );
+
+    if (!mounted) return;
+
+    setState(() => upcomingMedications = upcomings);
   }
 
   // 반려동물 삭제
@@ -229,6 +242,71 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
       iconData = Icons.warning_amber_rounded;
       message =
           '${vaccination.vaccineName} 예방접종 예정일이 ${difference.abs()}일 지났어요!';
+    }
+
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: bgColor,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: borderColor),
+      ),
+      child: Row(
+        children: [
+          Icon(iconData, color: textColor, size: 22),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              message,
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: textColor,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // 약 복용 알림 카드 위젯
+  Widget _buildMedicationBanner(Medication medication) {
+    final nextDate = medication.nextDate!;
+
+    final today = DateTime.now();
+    final todayDate = DateTime(today.year, today.month, today.day);
+    final targetDate = DateTime(nextDate.year, nextDate.month, nextDate.day);
+
+    final difference = targetDate.difference(todayDate).inDays;
+
+    Color bgColor;
+    Color borderColor;
+    Color textColor;
+    IconData iconData;
+    String message;
+
+    if (difference == 0) {
+      bgColor = Colors.orange.shade50;
+      borderColor = Colors.orange.shade200;
+      textColor = Colors.orange.shade900;
+      iconData = Icons.notifications_active_rounded;
+      message = '오늘은 ${medication.medicationName} 복용일이에요!';
+    } else if (difference > 0) {
+      bgColor = Colors.blue.shade50;
+      borderColor = Colors.blue.shade200;
+      textColor = Colors.blue.shade900;
+      iconData = Icons.event_available_rounded;
+      message = '${medication.medicationName} 복용까지 $difference일 남았어요.';
+    } else {
+      bgColor = Colors.red.shade50;
+      borderColor = Colors.red.shade200;
+      textColor = Colors.red.shade900;
+      iconData = Icons.warning_amber_rounded;
+      message =
+          '${medication.medicationName} 복용 예정일이 ${difference.abs()}일 지났어요!';
     }
 
     return Container(
@@ -576,14 +654,25 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
 
               const SizedBox(height: 16),
 
-              // 2. 예방 접종 알림
+              // 2-1. 예방 접종 알림
               if (upcomingVaccinations.isNotEmpty) ...[
                 Column(
                   children: upcomingVaccinations
-                      .take(2) // 최대 2개만 선택
+                      // .take(2) // 최대 2개만 선택
+                      .take(1) // 최대 1개만 선택
                       .map(
                         (vaccine) => _buildVaccinationBanner(vaccine),
                       ) // 각 데이터를 배너로 변환
+                      .toList(),
+                ),
+              ],
+
+              // 2-2. 약 복용 알림
+              if (upcomingMedications.isNotEmpty) ...[
+                Column(
+                  children: upcomingMedications
+                      .take(2)
+                      .map((medication) => _buildMedicationBanner(medication))
                       .toList(),
                 ),
 
@@ -871,6 +960,7 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
                                 }
 
                                 await loadMedications();
+                                await loadUpcomingMedications();
                               }
                             },
                           );
