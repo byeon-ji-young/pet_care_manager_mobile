@@ -1,4 +1,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/> <!-- 알림을 표시할 수 있는 권한 -->
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM"/> <!-- 정확한 시간에 알람을 예약하기 위한 권한 -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/> <!-- 휴대폰이 재부팅된 것을 앱이 알 수 있게 하는 권한 -->
+
     <application
         android:label="pet_care_manager_mobile"
         android:name="${applicationName}"
@@ -25,6 +29,19 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
+
+        <receiver
+            android:exported="false" 
+            android:name="com.dexterous.flutterlocalnotifications.ScheduledNotificationReceiver"/> 
+        <!-- 
+            android:exported="false": 다른 앱이 이 Receiver를 직접 실행할 수 없도록 함. 즉, 외부 앱에 공개하지 않고 내 앱 내부에서 사용하는 Receiver로 설정.
+            ScheduledNotificationReceiver: 예약해 둔 알림의 시간이 되었을 때 알림을 처리하는 역할 -->
+
+        <receiver
+            android:exported="false"
+            android:name="com.dexterous.flutterlocalnotifications.ScheduledNotificationBootReceiver"/> 
+        <!-- ScheduledNotificationBootReceiver: 부팅 이후 예약 알림을 다시 설정하는 역할 -->
+        
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->
         <meta-data

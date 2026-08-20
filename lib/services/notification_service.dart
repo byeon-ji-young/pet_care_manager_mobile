@@ -45,6 +45,17 @@ class NotificationService {
 
     // 실제 초기화 실행
     await _notifications.initialize(settings: settings);
+
+    // Android 13 이상 알림 권한 요청
+    final androidPlugin = _notifications
+        .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin
+        >();
+
+    await androidPlugin?.requestNotificationsPermission();
+
+    // 정확한 알람 권한 요청
+    await androidPlugin?.requestExactAlarmsPermission();
   }
 
   // 특정 날짜와 시간에 알림 예약
@@ -75,6 +86,9 @@ class NotificationService {
         exactAllowWhileIdle
         - exact: 예약한 시간을 정확하게 맞춰서 알림을 실행하도록 요청
         - AllowWhileIdle: 절전 상태(Doze/idle)에 들어가더라도 예약된 알림을 실행할 수 있도록 허용하는 방식
+
+        inexactAllowWhileIdle
+        - inexact: 정확하지 않은
       */
       androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
     );
