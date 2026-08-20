@@ -65,8 +65,11 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   // 예방접종, 약 복용 알림 메세지
-  String _getReminderMessage(String name, DateTime nextDate) {
-    // final nextDate = vaccination.nextDate!;
+  String _getReminderMessage({
+    required String name,
+    required DateTime nextDate,
+    required String categoryType,
+  }) {
     final today = DateTime.now();
 
     final todayOnly = DateTime(today.year, today.month, today.day);
@@ -75,24 +78,26 @@ class _HomeScreenState extends State<HomeScreen> {
     final difference = nextDateOnly.difference(todayOnly).inDays;
 
     if (difference < 0) {
-      return '🔴 $name 예방접종 예정일이 '
-          '${difference.abs()}일 지났어요.';
+      return categoryType == 'vaccine'
+          ? '🔔 $name 예방접종 예정일이 ${difference.abs()}일 지났어요.'
+          : '🔔 $name 복용 예정일이 ${difference.abs()}일 지났어요.';
     } else if (difference == 0) {
-      return '🔴 오늘은 $name 예방접종 예정일이에요!';
+      return categoryType == 'vaccine'
+          ? '🔔 오늘은 $name 예방접종 날이에요!'
+          : '🔔 오늘은 $name 복용일이에요!';
     } else if (difference == 1) {
-      return '🟠 $name 예방접종이 내일이에요.';
-    } else if (difference <= 7) {
-      return '🟡 $name 예방접종이 '
-          '$difference일 남았어요.';
+      return categoryType == 'vaccine'
+          ? '🔔 $name 예방접종이 내일이에요.'
+          : '🔔 $name 복용일이 내일이에요.';
     }
 
-    return '💉 $name 예방접종이 '
-        '$difference일 남았어요.';
+    return categoryType == 'vaccine'
+        ? '💉 $name 예방접종까지 $difference일 남았어요.'
+        : '💉 $name 복용까지 $difference일 남았어요.';
   }
 
   // 예방접종, 약 복용 알림 배경
   Color _getReminderColor(DateTime nextDate) {
-    // final nextDate = vaccination.nextDate!;
     final today = DateTime.now();
 
     final todayOnly = DateTime(today.year, today.month, today.day);
@@ -101,14 +106,12 @@ class _HomeScreenState extends State<HomeScreen> {
     final difference = nextDateOnly.difference(todayOnly).inDays;
 
     if (difference <= 0) {
-      return Colors.red;
-    } else if (difference == 1) {
-      return Colors.orange;
-    } else if (difference <= 7) {
-      return Colors.amber;
+      return Colors.red.shade900;
+    } else if (difference == 1 || difference <= 7) {
+      return Colors.orange.shade900;
     }
 
-    return Colors.blue;
+    return Theme.of(context).primaryColor.withValues(alpha: 0.9);
   }
 
   /* 
@@ -290,8 +293,9 @@ class _HomeScreenState extends State<HomeScreen> {
                                   ),
                                   child: Text(
                                     _getReminderMessage(
-                                      vaccination.vaccineName,
-                                      vaccination.nextDate!,
+                                      name: vaccination.vaccineName,
+                                      nextDate: vaccination.nextDate!,
+                                      categoryType: 'vaccine',
                                     ),
                                     style: TextStyle(
                                       color: alertColor,
@@ -327,8 +331,9 @@ class _HomeScreenState extends State<HomeScreen> {
                                   ),
                                   child: Text(
                                     _getReminderMessage(
-                                      medication.medicationName,
-                                      medication.nextDate!,
+                                      name: medication.medicationName,
+                                      nextDate: medication.nextDate!,
+                                      categoryType: 'medication',
                                     ),
                                     style: TextStyle(
                                       color: alertColor,
