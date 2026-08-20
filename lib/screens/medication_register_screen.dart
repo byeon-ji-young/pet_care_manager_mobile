@@ -4,6 +4,8 @@ import '../database/database_helper.dart';
 
 import '../models/medication.dart';
 
+import '../services/notification_service.dart';
+
 class MedicationRegisterScreen extends StatefulWidget {
   final int petId;
 
@@ -421,14 +423,40 @@ class _MedicationRegisterScreen extends State<MedicationRegisterScreen> {
                           : memoController.text.trim(),
                     );
 
+                    int? medicationId;
+
                     if (widget.medication == null) {
-                      await DatabaseHelper.instance.insertMedication(
-                        medication,
-                      );
+                      medicationId = await DatabaseHelper.instance
+                          .insertMedication(medication);
                     } else {
                       await DatabaseHelper.instance.updateMedication(
                         medication,
                       );
+
+                      medicationId = medication.id;
+                    }
+
+                    // 다음 복용일과 복용 시간이 모두 있는 경우 알림 예약
+                    if (medication.nextDate != null &&
+                        medication.medicationTime != null) {
+                      final scheduledDate = DateTime(
+                        medication.nextDate!.year,
+                        medication.nextDate!.month,
+                        medication.nextDate!.day,
+                        medication.medicationTime!.hour,
+                        medication.medicationTime!.minute,
+                      );
+
+                      try {
+                        await NotificationService.instance.scheduleNotification(
+                          id: medicationId!,
+                          title: '${medication.medicationName} 복용 시간이에요 💊',
+                          body: '반려동물의 약을 챙겨주세요.',
+                          scheduledDate: scheduledDate,
+                        );
+                      } catch (e) {
+                        debugPrint('약 복용 알림 예약 실패: $e');
+                      }
                     }
 
                     if (!context.mounted) {
