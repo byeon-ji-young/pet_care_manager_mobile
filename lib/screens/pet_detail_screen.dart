@@ -847,7 +847,9 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
                             iconBgColor: const Color(0xFFFFF3E0),
                             iconColor: Colors.orange,
                             title: medication.medicationName,
-                            subtitle: medication.memo,
+                            subtitle:
+                                medication.medicationTime?.format(context) ??
+                                '', // ?.는 null이면 뒤의 함수를 실행하지 말라는 의미 / ??는 왼쪽 값이 null이면 오른쪽 값을 사용한다는 뜻
                             onTap: () async {
                               final result = await Navigator.push(
                                 context,

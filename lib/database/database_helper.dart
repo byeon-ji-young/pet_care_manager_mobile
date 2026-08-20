@@ -510,6 +510,9 @@ class DatabaseHelper {
         'pet_id': medication.petId,
         'medication_name': medication.medicationName,
         'medication_date': medication.medicationDate.toIso8601String(),
+        'medication_time': medication.medicationTime != null
+            ? '${medication.medicationTime!.hour.toString().padLeft(2, '0')}:${medication.medicationTime!.minute.toString().padLeft(2, '0')}'
+            : null,
         'next_date': medication.nextDate?.toIso8601String(),
         'memo': medication.memo,
       }, // toMap() 사용 안하고 직접 만든 이유: UPDATE에서는 ID를 수정할 필요가 없으니까 우리가 수정할 컬럼만 명시

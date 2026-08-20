@@ -26,6 +26,7 @@ class _MedicationRegisterScreen extends State<MedicationRegisterScreen> {
   final TextEditingController memoController = TextEditingController();
 
   DateTime medicationDate = DateTime.now();
+  TimeOfDay? medicationTime;
   DateTime? nextDate;
 
   @override
@@ -38,6 +39,7 @@ class _MedicationRegisterScreen extends State<MedicationRegisterScreen> {
       medicationNameController.text = medication.medicationName;
       memoController.text = medication.memo ?? '';
       medicationDate = medication.medicationDate;
+      medicationTime = medication.medicationTime;
       nextDate = medication.nextDate;
     }
   }
@@ -208,7 +210,86 @@ class _MedicationRegisterScreen extends State<MedicationRegisterScreen> {
 
                     const SizedBox(height: 15),
 
-                    // 3. 다음 복용 예정일
+                    // 3.복용 시간
+                    InkWell(
+                      onTap: () async {
+                        final pickedTime = await showTimePicker(
+                          context: context,
+                          initialTime: medicationTime ?? TimeOfDay.now(),
+                        );
+
+                        if (pickedTime != null) {
+                          setState(() {
+                            medicationTime = pickedTime;
+                          });
+                        }
+                      },
+                      borderRadius: BorderRadius.circular(12),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 14,
+                        ),
+                        decoration: BoxDecoration(
+                          border: Border.all(color: Colors.grey.shade700),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.access_time_outlined),
+                            const SizedBox(width: 16),
+                            const Text(
+                              '복용 시간',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            const Spacer(),
+                            if (medicationTime != null) ...[
+                              Text(
+                                medicationTime!.format(context),
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              const SizedBox(width: 6),
+                              GestureDetector(
+                                onTap: () {
+                                  setState(() {
+                                    medicationTime = null;
+                                  });
+                                },
+                                child: const Icon(
+                                  Icons.close,
+                                  size: 16,
+                                  color: Colors.grey,
+                                ),
+                              ),
+                              const SizedBox(width: 3),
+                            ] else ...[
+                              const Text(
+                                '시간 선택 (선택사항)',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  color: Colors.grey,
+                                ),
+                              ),
+                              const SizedBox(width: 4),
+                              const Icon(
+                                Icons.arrow_drop_down,
+                                color: Colors.grey,
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 15),
+
+                    // 4. 다음 복용 예정일
                     InkWell(
                       onTap: () async {
                         final pickedDate = await showDatePicker(
@@ -290,7 +371,7 @@ class _MedicationRegisterScreen extends State<MedicationRegisterScreen> {
 
                     const SizedBox(height: 15),
 
-                    // 4.메모
+                    // 5.메모
                     TextField(
                       controller: memoController,
                       maxLines: 3,
@@ -333,6 +414,7 @@ class _MedicationRegisterScreen extends State<MedicationRegisterScreen> {
                       petId: widget.petId,
                       medicationName: medicationNameController.text.trim(),
                       medicationDate: medicationDate,
+                      medicationTime: medicationTime,
                       nextDate: nextDate,
                       memo: memoController.text.trim().isEmpty
                           ? null
