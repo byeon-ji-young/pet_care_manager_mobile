@@ -94,4 +94,9 @@ class NotificationService {
       androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
     );
   }
+
+  // 예약된 알림 취소
+  Future<void> cancelNotification(int id) async {
+    await _notifications.cancel(id: id);
+  }
 }

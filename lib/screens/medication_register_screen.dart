@@ -89,6 +89,10 @@ class _MedicationRegisterScreen extends State<MedicationRegisterScreen> {
       return;
     }
 
+    // 기존 알림 취소
+    await NotificationService.instance.cancelNotification(medication.id!);
+
+    // DB 기록 삭제
     await DatabaseHelper.instance.deleteMedication(medication.id!);
 
     if (!mounted) {
@@ -429,6 +433,11 @@ class _MedicationRegisterScreen extends State<MedicationRegisterScreen> {
                       medicationId = await DatabaseHelper.instance
                           .insertMedication(medication);
                     } else {
+                      // 기존 알림 취소
+                      await NotificationService.instance.cancelNotification(
+                        medication.id!,
+                      );
+
                       await DatabaseHelper.instance.updateMedication(
                         medication,
                       );
