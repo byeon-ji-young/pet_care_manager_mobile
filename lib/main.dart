@@ -3,6 +3,8 @@ import 'package:google_fonts/google_fonts.dart';
 
 import 'screens/home_screen.dart';
 
+import 'services/notification_service.dart';
+
 // 1. 앱의 시작점 (void main() & runApp)
 /*
   void main(): 스마트폰에서 앱 아이콘을 터치했을 때 가장 먼저 실행되는 함수
@@ -10,6 +12,8 @@ import 'screens/home_screen.dart';
 */
 void main() async {
   WidgetsFlutterBinding.ensureInitialized(); // Flutter 앱이 시작되기 전에 Flutter 엔진과 플러그인을 제대로 초기화
+
+  await NotificationService.instance.initialize();
 
   runApp(const PetCareManagerApp());
 }
@@ -36,13 +40,12 @@ class PetCareManagerApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      debugShowCheckedModeBanner: false, // 앱을 개발할 때 화면 오른쪽 상단에 작게 나오는 빨간색 'DEBUG' 띠를 숨겨줌
+      debugShowCheckedModeBanner:
+          false, // 앱을 개발할 때 화면 오른쪽 상단에 작게 나오는 빨간색 'DEBUG' 띠를 숨겨줌
       title: 'PetCareManager', // 앱 타이틀
 
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: Colors.green,
-        ),
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.green),
         useMaterial3: true, // 구글의 최신 디자인 시스템 Material 3 적용
         textTheme: GoogleFonts.juaTextTheme(), // 화면에 구글-주아체 적용
         //textTheme: GoogleFonts.poorStoryTextTheme()
