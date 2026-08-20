@@ -41,13 +41,11 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
   List<HealthRecord> healthRecords = [];
 
   List<Vaccination> vaccinations = [];
+  List<Vaccination> upcomingVaccinations = [];
 
   List<WeightRecord> weightRecords = [];
 
-  List<Vaccination> upcomingVaccinations = [];
-
   List<Medication> medications = [];
-
   List<Medication> upcomingMedications = [];
 
   DateTime selectedDay = DateTime.now();
@@ -67,8 +65,8 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
       // Future.wait()은 여러 개의 Future 작업을 동시에 실행하고, 모두 끝날 때까지 기다린다
       loadHealthRecords(),
       loadVaccinations(),
-      loadWeightRecords(),
       loadUpcomingVaccinations(),
+      loadWeightRecords(),
       loadMedications(),
       loadUpcomingMedications(),
     ]);
@@ -204,58 +202,48 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
         false; // 다이얼로그 바깥 영역(배경)을 눌러서 닫은 경우 null이 반환되므로 false 처리. 즉, result가 있으면 result, 없으면 false
   }
 
-  // 예방 접종 알림 카드 위젯
-  Widget _buildVaccinationBanner(Vaccination vaccination) {
-    final nextDate = vaccination.nextDate!;
+  // 예방접종, 약 복용 알림 카드 위젯
+  Widget _buildBannerItem({
+    required String title,
+    required DateTime targetDate,
+    required String categoryType, // 'vaccine' 또는 'medication'
+  }) {
     final today = DateTime.now();
     final todayDate = DateTime(today.year, today.month, today.day);
-    final targetDate = DateTime(nextDate.year, nextDate.month, nextDate.day);
-    final difference = targetDate.difference(todayDate).inDays;
+    final tDate = DateTime(targetDate.year, targetDate.month, targetDate.day);
+    final difference = tDate.difference(todayDate).inDays;
 
-    Color bgColor;
-    Color borderColor;
     Color textColor;
     IconData iconData;
     String message;
 
-    // final primaryColor = Theme.of(context).primaryColor;
+    final primaryColor = Theme.of(context).primaryColor;
 
     if (difference == 0) {
-      bgColor = Colors.orange.shade50;
-      borderColor = Colors.orange.shade200;
-      textColor = Colors.orange.shade900;
-      iconData = Icons.notifications_active_rounded;
-      message = '오늘은 ${vaccination.vaccineName} 예방접종 날이에요!';
+      textColor = Colors.red.shade900;
+      iconData = Icons.notifications_active_outlined;
+      message = categoryType == 'vaccine'
+          ? '오늘은 $title 예방접종 날이에요!'
+          : '오늘은 $title 복용일이에요!';
     } else if (difference > 0) {
-      // bgColor = primaryColor.withValues(alpha: 0.08);
-      // borderColor = primaryColor.withValues(alpha: 0.3);
-      // textColor = primaryColor;
-      bgColor = Colors.blue.shade50;
-      borderColor = Colors.blue.shade200;
-      textColor = Colors.blue.shade900;
+      textColor = primaryColor.withValues(alpha: 0.9);
       iconData = Icons.event_available_rounded;
-      message = '${vaccination.vaccineName} 예방접종까지 $difference일 남았어요.';
+      message = categoryType == 'vaccine'
+          ? '$title 예방접종까지 $difference일 남았어요.'
+          : '$title 복용까지 $difference일 남았어요.';
     } else {
-      bgColor = Colors.red.shade50;
-      borderColor = Colors.red.shade200;
       textColor = Colors.red.shade900;
       iconData = Icons.warning_amber_rounded;
-      message =
-          '${vaccination.vaccineName} 예방접종 예정일이 ${difference.abs()}일 지났어요!';
+      message = categoryType == 'vaccine'
+          ? '$title 예방접종 예정일이 ${difference.abs()}일 지났어요!'
+          : '$title 복용 예정일이 ${difference.abs()}일 지났어요!';
     }
 
-    return Container(
-      width: double.infinity,
-      margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: BoxDecoration(
-        color: bgColor,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: borderColor),
-      ),
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
       child: Row(
         children: [
-          Icon(iconData, color: textColor, size: 22),
+          Icon(iconData, color: textColor, size: 20),
           const SizedBox(width: 12),
           Expanded(
             child: Text(
@@ -272,67 +260,84 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
     );
   }
 
-  // 약 복용 알림 카드 위젯
-  Widget _buildMedicationBanner(Medication medication) {
-    final nextDate = medication.nextDate!;
+  // 예방 접종 알림 카드 그룹화
+  Widget _buildVaccinationGroupCard(List<Vaccination> list) {
+    final items = list.take(2).toList();
 
-    final today = DateTime.now();
-    final todayDate = DateTime(today.year, today.month, today.day);
-    final targetDate = DateTime(nextDate.year, nextDate.month, nextDate.day);
-
-    final difference = targetDate.difference(todayDate).inDays;
-
-    Color bgColor;
-    Color borderColor;
-    Color textColor;
-    IconData iconData;
-    String message;
-
-    if (difference == 0) {
-      bgColor = Colors.orange.shade50;
-      borderColor = Colors.orange.shade200;
-      textColor = Colors.orange.shade900;
-      iconData = Icons.notifications_active_rounded;
-      message = '오늘은 ${medication.medicationName} 복용일이에요!';
-    } else if (difference > 0) {
-      bgColor = Colors.blue.shade50;
-      borderColor = Colors.blue.shade200;
-      textColor = Colors.blue.shade900;
-      iconData = Icons.event_available_rounded;
-      message = '${medication.medicationName} 복용까지 $difference일 남았어요.';
-    } else {
-      bgColor = Colors.red.shade50;
-      borderColor = Colors.red.shade200;
-      textColor = Colors.red.shade900;
-      iconData = Icons.warning_amber_rounded;
-      message =
-          '${medication.medicationName} 복용 예정일이 ${difference.abs()}일 지났어요!';
-    }
+    final primaryColor = Theme.of(context).primaryColor;
 
     return Container(
       width: double.infinity,
-      margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: bgColor,
+        color: primaryColor.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: borderColor),
+        border: Border.all(color: primaryColor.withValues(alpha: 0.3)),
       ),
-      child: Row(
-        children: [
-          Icon(iconData, color: textColor, size: 22),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              message,
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-                color: textColor,
+      child: Column(
+        children: List.generate(items.length, (index) {
+          // List.generate: items의 개수만큼 UI 생성
+          final item = items[index];
+
+          return Column(
+            children: [
+              _buildBannerItem(
+                title: item.vaccineName,
+                targetDate: item.nextDate!,
+                categoryType: 'vaccine',
               ),
-            ),
-          ),
-        ],
+              if (index < items.length - 1)
+                Divider(
+                  height: 1,
+                  thickness: 1,
+                  color: primaryColor.withValues(alpha: 0.2),
+                  indent: 16,
+                  endIndent: 16,
+                ),
+            ],
+          );
+        }),
+      ),
+    );
+  }
+
+  // 약 복용 알림 카드 그룹화
+  Widget _buildMedicationGroupCard(List<Medication> list) {
+    final items = list.take(2).toList();
+
+    final primaryColor = Theme.of(context).primaryColor;
+
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: primaryColor.withValues(alpha: 0.05),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: primaryColor.withValues(alpha: 0.3)),
+      ),
+      child: Column(
+        children: List.generate(items.length, (index) {
+          // List.generate: items의 개수만큼 UI 생성
+          final item = items[index];
+
+          return Column(
+            children: [
+              _buildBannerItem(
+                title: item.medicationName,
+                targetDate: item.nextDate!,
+                categoryType: 'medication',
+              ),
+              if (index < items.length - 1)
+                Divider(
+                  height: 1,
+                  thickness: 1,
+                  color: primaryColor.withValues(alpha: 0.2),
+                  indent: 16,
+                  endIndent: 16,
+                ),
+            ],
+          );
+        }),
       ),
     );
   }
@@ -655,29 +660,12 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
               const SizedBox(height: 16),
 
               // 2-1. 예방 접종 알림
-              if (upcomingVaccinations.isNotEmpty) ...[
-                Column(
-                  children: upcomingVaccinations
-                      // .take(2) // 최대 2개만 선택
-                      .take(1) // 최대 1개만 선택
-                      .map(
-                        (vaccine) => _buildVaccinationBanner(vaccine),
-                      ) // 각 데이터를 배너로 변환
-                      .toList(),
-                ),
-              ],
+              if (upcomingVaccinations.isNotEmpty)
+                _buildVaccinationGroupCard(upcomingVaccinations),
 
               // 2-2. 약 복용 알림
-              if (upcomingMedications.isNotEmpty) ...[
-                Column(
-                  children: upcomingMedications
-                      .take(2)
-                      .map((medication) => _buildMedicationBanner(medication))
-                      .toList(),
-                ),
-
-                const SizedBox(height: 8),
-              ],
+              if (upcomingMedications.isNotEmpty)
+                _buildMedicationGroupCard(upcomingMedications),
 
               // 3. 캘린더 카드
               Card(
