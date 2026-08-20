@@ -825,7 +825,50 @@ runApp()
 
 ---
 
-## 13. Core Library Desugaring
+## 13. 시간대(Timezone)와 예약 알림
+
+특정 시간에 알림을 예약하려면 날짜와 시간을 정확하게 처리해야 합니다.
+
+Flutter에서는 `timezone` 패키지를 사용하여 시간대(Timezone)를 관리할 수 있습니다.
+
+### 패키지 설치
+
+터미널에서 다음 명령어를 실행합니다.
+
+```bash
+flutter pub add timezone
+```
+
+`flutter pub add` 명령어를 실행하면 패키지가 `pubspec.yaml`의 `dependencies`에 자동으로 추가되고 필요한 패키지가 설치됩니다.
+
+예:
+
+```yaml
+dependencies:
+  timezone: ^0.11.0
+```
+
+### Timezone이 필요한 이유
+
+휴대폰의 시간과 알림을 예약할 때는 단순한 `DateTime`만 사용하는 것보다 시간대를 명확하게 지정하는 것이 안전합니다.
+
+예를 들어 한국에서 오전 9시에 알림을 예약하려면 한국 시간대에 맞춰 알림 시간을 계산해야 합니다.
+
+```text
+현재 날짜와 시간
+      ↓
+Timezone 적용
+      ↓
+알림이 실행될 날짜와 시간 계산
+      ↓
+알림 예약
+```
+
+`flutter_local_notifications`와 `timezone`을 함께 사용하면 특정 날짜와 시간에 알림을 예약할 수 있습니다.
+
+---
+
+## 14. Core Library Desugaring
 
 `flutter_local_notifications`를 Android에서 사용하면서 다음과 같은 오류가 발생할 수 있습니다.
 
@@ -866,7 +909,7 @@ flutter run
 
 ---
 
-## 14. Git 기본 명령어
+## 15. Git 기본 명령어
 
 ### `git status`
 
@@ -924,7 +967,7 @@ git pull
 
 ---
 
-## 15. 개발하면서 배운 문제 해결
+## 16. 개발하면서 배운 문제 해결
 
 ### `databaseFactory not initialized`
 
