@@ -54,8 +54,8 @@ class NotificationService {
 
     await androidPlugin?.requestNotificationsPermission();
 
-    // 정확한 알람 권한 요청. exactAllowWhileIdle 미사용으로 인한 주석처리
-    // await androidPlugin?.requestExactAlarmsPermission();
+    // 정확한 알람 권한 요청. exactAllowWhileIdle 사용안할거면 주석처리 해야됨
+    await androidPlugin?.requestExactAlarmsPermission();
   }
 
   // 특정 날짜와 시간에 알림 예약
@@ -90,8 +90,7 @@ class NotificationService {
         inexactAllowWhileIdle
         - inexact: 정확하지 않은
       */
-      // androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-      androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
     );
   }
 

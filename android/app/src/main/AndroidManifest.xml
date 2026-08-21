@@ -1,8 +1,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <!-- 알림을 표시할 수 있는 권한 -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
-    <!-- 정확한 시간에 알람을 예약하기 위한 권한 -->
-    <!-- <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM"/> exactAllowWhileIdle 미사용으로 인한 주석처리 -->
+    <!-- 정확한 시간에 알람을 예약하기 위한 권한. exactAllowWhileIdle 사용안할거면 주석처리 해야됨 -->
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM"/>
     <!-- 휴대폰이 재부팅된 것을 앱이 알 수 있게 하는 권한 -->
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
 
