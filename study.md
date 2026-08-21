@@ -30,10 +30,10 @@ flutter devices
 
 예:
 
-- Android Emulator
-- iOS Simulator
-- Windows
-- Chrome
+* Android Emulator
+* iOS Simulator
+* Windows
+* Chrome
 
 ---
 
@@ -92,17 +92,11 @@ flutter pub get
 
 ```text
 pubspec.yaml 수정
-
        ↓
-
 table_calendar 추가
-
        ↓
-
 flutter pub get
-
        ↓
-
 패키지 다운로드 및 적용
 ```
 
@@ -150,10 +144,10 @@ Scaffold(
 
 주로 다음과 같은 화면 구성에 사용합니다.
 
-- AppBar
-- Body
-- FloatingActionButton
-- BottomNavigationBar
+* AppBar
+* Body
+* FloatingActionButton
+* BottomNavigationBar
 
 ---
 
@@ -178,7 +172,6 @@ ListView.builder(
   itemCount: pets.length,
   itemBuilder: (context, index) {
     final pet = pets[index];
-
     return Text(pet.name);
   },
 )
@@ -222,10 +215,10 @@ ListTile(
 
 예:
 
-- 반려동물 목록
-- 선택한 날짜
-- 입력한 데이터
-- DB에서 불러온 데이터
+* 반려동물 목록
+* 선택한 날짜
+* 입력한 데이터
+* DB에서 불러온 데이터
 
 ```dart
 class HomeScreen extends StatefulWidget {
@@ -246,7 +239,6 @@ class HomeScreen extends StatefulWidget {
 @override
 void initState() {
   super.initState();
-
   loadPets();
 }
 ```
@@ -355,7 +347,6 @@ final name = nameController.text;
 @override
 void dispose() {
   nameController.dispose();
-
   super.dispose();
 }
 ```
@@ -534,8 +525,8 @@ subtitle:
 
 여기서:
 
-- `?.` : 값이 null이 아닐 때만 `format()` 실행
-- `??` : 왼쪽 값이 null이면 오른쪽 값 사용
+* `?.` : 값이 null이 아닐 때만 `format()` 실행
+* `??` : 왼쪽 값이 null이면 오른쪽 값 사용
 
 즉, 복용 시간이 있으면 화면에 표시하고 없으면 빈 문자열을 사용합니다.
 
@@ -631,11 +622,10 @@ flutter pub add flutter_local_notifications
 
 `flutter pub add` 명령어를 실행하면 패키지가 `pubspec.yaml`의 `dependencies`에 자동으로 추가되고 필요한 패키지가 설치됩니다.
 
-예:
+현재 프로젝트에서는 다음 버전을 사용합니다.
 
 ```yaml
-dependencies:
-  flutter_local_notifications: ^19.5.0
+flutter_local_notifications: ^22.3.0
 ```
 
 `pubspec.yaml`에 패키지를 직접 추가하거나 의존성을 변경한 경우 다음 명령어를 실행합니다.
@@ -721,10 +711,10 @@ final FlutterLocalNotificationsPlugin _notifications =
 
 이 객체를 통해:
 
-- 알림 초기화
-- 즉시 알림
-- 예약 알림
-- 반복 알림
+* 알림 초기화
+* 즉시 알림
+* 예약 알림
+* 반복 알림
 
 등의 기능을 구현할 수 있습니다.
 
@@ -740,7 +730,7 @@ const androidSettings = AndroidInitializationSettings(
 
 Android에서 알림을 표시할 때 사용할 기본 아이콘을 설정합니다.
 
-`@mipmap/ic_launcher`는 기본 앱 아이콘을 의미합니다.
+`@mipmap/ic_launcher`는 앱의 기본 런처 아이콘을 의미합니다.
 
 ---
 
@@ -801,25 +791,15 @@ void main() async {
 
 ```text
 앱 시작
-
-↓
-
+   ↓
 Flutter 엔진 초기화
-
-↓
-
+   ↓
 NotificationService 초기화
-
-↓
-
+   ↓
 알림 기능 준비
-
-↓
-
+   ↓
 runApp()
-
-↓
-
+   ↓
 앱 화면 실행
 ```
 
@@ -839,14 +819,15 @@ Flutter에서는 `timezone` 패키지를 사용하여 시간대(Timezone)를 관
 flutter pub add timezone
 ```
 
-`flutter pub add` 명령어를 실행하면 패키지가 `pubspec.yaml`의 `dependencies`에 자동으로 추가되고 필요한 패키지가 설치됩니다.
-
-예:
+현재 프로젝트에서는 다음 버전을 사용합니다.
 
 ```yaml
-dependencies:
-  timezone: ^0.11.0
+timezone: ^0.11.1
 ```
+
+`flutter pub add` 명령어를 실행하면 패키지가 `pubspec.yaml`의 `dependencies`에 자동으로 추가되고 필요한 패키지가 설치됩니다.
+
+---
 
 ### Timezone이 필요한 이유
 
@@ -1054,22 +1035,114 @@ Mac에서 VS Code의 GitHub 인증 과정에서 발생할 수 있으며, GitHub 
 
 ---
 
+### 앱 아이콘 변경 후 기존 아이콘이 계속 표시되는 경우
+
+`flutter_launcher_icons`로 아이콘을 변경한 후에도 에뮬레이터에서 기존 아이콘이 보일 수 있습니다.
+
+이 경우 앱을 다시 빌드하거나 필요하면 앱을 삭제한 후 다시 설치하여 확인합니다.
+
+---
+
+## 17. 앱 아이콘 변경
+
+Flutter 앱의 기본 아이콘을 원하는 이미지로 변경하기 위해 `flutter_launcher_icons` 패키지를 사용할 수 있습니다.
+
+### 패키지 설치
+
+터미널에서 다음 명령어를 실행합니다.
+
+```bash
+flutter pub add --dev flutter_launcher_icons
+```
+
+개발 환경에서 앱 아이콘을 생성하기 위한 도구이므로 `dev_dependencies`에 추가합니다.
+
+---
+
+### `pubspec.yaml` 설정
+
+`pubspec.yaml`에 앱 아이콘 설정을 추가합니다.
+
+예:
+
+```yaml
+dev_dependencies:
+  flutter_launcher_icons: ^0.14.4
+```
+
+그리고 `flutter_launcher_icons` 설정을 추가합니다.
+
+```yaml
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/icon/app_icon.png"
+```
+
+`image_path`에는 준비한 앱 아이콘 이미지의 경로를 지정합니다.
+
+---
+
+### 아이콘 생성
+
+설정을 완료한 후 다음 명령어를 실행합니다.
+
+```bash
+dart run flutter_launcher_icons
+```
+
+실행하면 설정된 이미지를 기반으로 Android 및 iOS에서 사용할 수 있는 다양한 크기의 앱 아이콘을 자동으로 생성합니다.
+
+실행 과정:
+
+```text
+앱 아이콘 이미지 준비
+        ↓
+pubspec.yaml에 이미지 경로 설정
+        ↓
+flutter_launcher_icons 설정
+        ↓
+dart run flutter_launcher_icons
+        ↓
+Android / iOS 아이콘 자동 생성
+```
+
+---
+
+### 앱 아이콘과 알림 아이콘
+
+`flutter_local_notifications`의 Android 초기화에서도 다음과 같이 앱 아이콘을 사용할 수 있습니다.
+
+```dart
+const androidSettings = AndroidInitializationSettings(
+  '@mipmap/ic_launcher',
+);
+```
+
+`@mipmap/ic_launcher`는 Android 앱의 기본 런처 아이콘을 참조합니다.
+
+따라서 앱 아이콘을 변경하면 알림 설정에서도 해당 아이콘을 사용할 수 있습니다.
+
+---
+
 ## 📝 앞으로 추가할 내용
 
 개발하면서 새롭게 배우는 내용을 계속 추가합니다.
 
-- [x] `table_calendar` 사용
-- [x] 캘린더에서 날짜 선택하기
-- [x] 날짜별 건강 기록 조회
-- [x] 약 복용 기록 관리
-- [x] `TimeOfDay`를 이용한 복용 시간 관리
-- [x] `flutter_local_notifications` 패키지 설치 및 초기화
-- [ ] 알림 권한 요청
-- [ ] 즉시 알림
-- [ ] 특정 시간 예약 알림
-- [ ] 약 복용 시간 알림
-- [ ] 예방접종 예정 알림
-- [ ] SQLite JOIN
-- [ ] 비동기 처리 (`Future`, `async`, `await`)
-- [ ] 예외 처리 (`try-catch`)
-- [ ] Flutter 화면 디자인 및 레이아웃
+* [x] `table_calendar` 사용
+* [x] 캘린더에서 날짜 선택하기
+* [x] 날짜별 건강 기록 조회
+* [x] 약 복용 기록 관리
+* [x] `TimeOfDay`를 이용한 복용 시간 관리
+* [x] `flutter_local_notifications` 패키지 설치 및 초기화
+* [x] `timezone` 패키지 설치
+* [x] 특정 시간 예약 알림
+* [x] 약 복용 시간 알림
+* [x] `flutter_launcher_icons`를 이용한 앱 아이콘 변경
+* [ ] 알림 권한 요청
+* [ ] 즉시 알림
+* [ ] 예방접종 예정 알림
+* [ ] SQLite JOIN
+* [ ] 비동기 처리 (`Future`, `async`, `await`)
+* [ ] 예외 처리 (`try-catch`)
+* [ ] Flutter 화면 디자인 및 레이아웃
