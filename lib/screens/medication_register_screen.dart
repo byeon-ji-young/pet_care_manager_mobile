@@ -96,7 +96,10 @@ class _MedicationRegisterScreen extends State<MedicationRegisterScreen> {
     }
 
     // 기존 알림 취소
-    await NotificationService.instance.cancelNotification(medication.id!);
+    await NotificationService.instance.cancelMedicationNotification(
+      id: medication.id!,
+      repeatType: medication.repeatType,
+    );
 
     // DB 기록 삭제
     await DatabaseHelper.instance.deleteMedication(medication.id!);
@@ -616,6 +619,8 @@ class _MedicationRegisterScreen extends State<MedicationRegisterScreen> {
                       return;
                     }
 
+                    final oldRepeatType = widget.medication?.repeatType;
+
                     final medication = Medication(
                       id: widget.medication?.id,
                       petId: widget.petId,
@@ -637,9 +642,11 @@ class _MedicationRegisterScreen extends State<MedicationRegisterScreen> {
                           .insertMedication(medication);
                     } else {
                       // 기존 알림 취소
-                      await NotificationService.instance.cancelNotification(
-                        medication.id!,
-                      );
+                      await NotificationService.instance
+                          .cancelMedicationNotification(
+                            id: medication.id!,
+                            repeatType: oldRepeatType!,
+                          );
 
                       await DatabaseHelper.instance.updateMedication(
                         medication,
@@ -648,24 +655,30 @@ class _MedicationRegisterScreen extends State<MedicationRegisterScreen> {
                       medicationId = medication.id;
                     }
 
-                    // 다음 복용일과 복용 시간이 모두 있는 경우 알림 예약
-                    if (medication.nextDate != null &&
-                        medication.medicationTime != null) {
+                    // 복용 시간이 있는 경우 알림 예약
+                    if (medication.medicationTime != null) {
+                      // 다음 복용일이 있으면 다음 복용일부터, 없으면 복용 날짜부터 알림을 시작한다.
+                      final startDate =
+                          medication.nextDate ?? medication.medicationDate;
+
                       final scheduledDate = DateTime(
-                        medication.nextDate!.year,
-                        medication.nextDate!.month,
-                        medication.nextDate!.day,
+                        startDate.year,
+                        startDate.month,
+                        startDate.day,
                         medication.medicationTime!.hour,
                         medication.medicationTime!.minute,
                       );
 
                       try {
-                        await NotificationService.instance.scheduleNotification(
-                          id: medicationId!,
-                          title: '${medication.medicationName} 복용 시간이에요 💊',
-                          body: '반려동물의 약을 챙겨주세요.',
-                          scheduledDate: scheduledDate,
-                        );
+                        await NotificationService.instance
+                            .scheduleMedicationNotification(
+                              id: medicationId!,
+                              title: '${medication.medicationName} 복용 시간이에요 💊',
+                              body: '반려동물의 약을 챙겨주세요.',
+                              scheduledDate: scheduledDate,
+                              repeatType: medication.repeatType,
+                              repeatInterval: medication.repeatInterval,
+                            );
                       } catch (e) {
                         debugPrint('약 복용 알림 예약 실패: $e');
                       }

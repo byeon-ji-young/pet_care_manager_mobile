@@ -58,7 +58,8 @@ class NotificationService {
     await androidPlugin?.requestExactAlarmsPermission();
   }
 
-  // 특정 날짜와 시간에 알림 예약
+  // ================================================ 반복 X ================================================
+  // 약 복용 알림 예약
   Future<void> scheduleNotification({
     required int id,
     required String title,
@@ -98,4 +99,136 @@ class NotificationService {
   Future<void> cancelNotification(int id) async {
     await _notifications.cancel(id: id);
   }
+  // ================================================ 반복 X ================================================
+
+  // ================================================ 반복 O ================================================
+  // 약 복용 알림 예약
+  Future<void> scheduleMedicationNotification({
+    required int id,
+    required String title,
+    required String body,
+    required DateTime scheduledDate,
+    required String repeatType,
+    int? repeatInterval,
+  }) async {
+    // 반복 없음
+    if (repeatType == 'none') {
+      await _schedule(
+        id: id,
+        title: title,
+        body: body,
+        scheduledDate: scheduledDate,
+      );
+
+      return;
+    }
+
+    // 매일
+    if (repeatType == 'daily') {
+      await _schedule(
+        id: id,
+        title: title,
+        body: body,
+        scheduledDate: scheduledDate,
+        matchDateTimeComponents: DateTimeComponents.time,
+      );
+
+      return;
+    }
+
+    // 매주
+    if (repeatType == 'weekly') {
+      await _schedule(
+        id: id,
+        title: title,
+        body: body,
+        scheduledDate: scheduledDate,
+        matchDateTimeComponents: DateTimeComponents.dayOfWeekAndTime,
+      );
+
+      return;
+    }
+
+    // N일마다
+    if (repeatType == 'interval' &&
+        repeatInterval != null &&
+        repeatInterval > 0) {
+      const repeatCount = 30;
+
+      final now = DateTime.now();
+
+      DateTime nextScheduledDate = scheduledDate; // 첫 번째 예약 날짜를 복용 날짜로 설정
+
+      // 과거에 해당하는 반복 날짜를 전부 건너뛰고 가장 가까운 미래 날짜를 찾는 코드
+      while (nextScheduledDate.isBefore(now)) {
+        nextScheduledDate = nextScheduledDate.add(
+          Duration(
+            days: repeatInterval,
+          ), // Duration(days: repeatInterval) = repeatInterval만큼의 일(day)을 나타내는 시간 간격을 만든다
+        );
+      }
+
+      for (int i = 0; i < repeatCount; i++) {
+        await _schedule(
+          id: id * 1000 + i,
+          title: title,
+          body: body,
+          scheduledDate: nextScheduledDate,
+        );
+
+        nextScheduledDate = nextScheduledDate.add(
+          Duration(days: repeatInterval),
+        );
+      }
+    }
+  }
+
+  // 예약 공통 함수
+  Future<void> _schedule({
+    required int id,
+    required String title,
+    required String body,
+    required DateTime scheduledDate,
+    DateTimeComponents? matchDateTimeComponents,
+  }) async {
+    await _notifications.zonedSchedule(
+      id: id,
+      title: title,
+      body: body,
+      scheduledDate: tz.TZDateTime.from(scheduledDate, tz.local),
+      notificationDetails: const NotificationDetails(
+        android: AndroidNotificationDetails(
+          'medication_channel',
+          '약 복용 알림',
+          channelDescription: '반려동물 약 복용 시간 알림',
+          importance: Importance.high,
+          priority: Priority.high,
+        ),
+        iOS: DarwinNotificationDetails(),
+      ),
+      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+      matchDateTimeComponents: matchDateTimeComponents,
+    );
+  }
+
+  // 약 복용 알림 취소
+  Future<void> cancelMedicationNotification({
+    required int id,
+    required String repeatType,
+  }) async {
+    // 일반 / 매일 / 매주
+    if (repeatType != 'interval') {
+      await _notifications.cancel(id: id);
+      return;
+    }
+
+    // N일마다 예약된 알림 30개 취소
+    const repeatCount = 30;
+
+    for (int i = 0; i < repeatCount; i++) {
+      await _notifications.cancel(id: id * 1000 + i);
+    }
+  }
+
+  // ================================================ 반복 O ================================================
 }
