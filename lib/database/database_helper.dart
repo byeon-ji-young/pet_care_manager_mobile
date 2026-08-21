@@ -543,47 +543,105 @@ class DatabaseHelper {
     return db.delete('medications', where: 'id = ?', whereArgs: [id]);
   }
 
-  // 약 복용일 조회
+  // 다가오는 약 복용일 조회
   Future<List<Medication>> getUpcomingMedications(int petId) async {
     final db = await database;
 
-    final today = DateTime.now();
-    final todayOnly = DateTime(today.year, today.month, today.day);
-
     final maps = await db.query(
       'medications',
-      where: 'pet_id = ? AND next_date IS NOT NULL AND next_date >= ?',
-      whereArgs: [petId, todayOnly.toIso8601String()],
-      orderBy: 'next_date ASC',
+      where: 'pet_id = ?',
+      whereArgs: [petId],
     );
 
-    return maps.map((map) {
-      return Medication.fromMap(map);
-    }).toList();
+    final medications = maps
+        .map((map) => Medication.fromMap(map))
+        .map((medication) {
+          final nextMedicationDate = _calculateNextMedicationDate(medication);
+
+          if (nextMedicationDate == null) {
+            return null;
+          }
+
+          // DB의 next_date를 변경하는 것이 아니라 조회할 때 계산한 다음 복용일을 Medication 객체에 넣어준다.
+          return Medication(
+            id: medication.id,
+            petId: medication.petId,
+            medicationName: medication.medicationName,
+            medicationDate: medication.medicationDate,
+            medicationTime: medication.medicationTime,
+            nextDate: nextMedicationDate,
+            repeatType: medication.repeatType,
+            repeatInterval: medication.repeatInterval,
+            memo: medication.memo,
+          );
+        })
+        .whereType<Medication>()
+        .toList();
+
+    // 다음 복용일이 가까운 순으로 정렬
+    medications.sort((a, b) {
+      return a.nextDate!.compareTo(b.nextDate!);
+    });
+
+    return medications;
   }
 
   // 다음 약 복용일 조회
   Future<Medication?> getNextMedication(int petId) async {
-    final db = await database;
+    final medications = await getUpcomingMedications(petId);
 
-    final today = DateTime.now();
-    final todayString =
-        '${today.year.toString().padLeft(4, '0')}-'
-        '${today.month.toString().padLeft(2, '0')}-'
-        '${today.day.toString().padLeft(2, '0')}';
-
-    final maps = await db.query(
-      'medications',
-      where: 'pet_id = ? AND next_date IS NOT NULL and next_date >= ?',
-      whereArgs: [petId, todayString],
-      orderBy: 'next_date ASC',
-      limit: 1,
-    );
-
-    if (maps.isEmpty) {
+    if (medications.isEmpty) {
       return null;
     }
 
-    return Medication.fromMap(maps.first);
+    return medications.first;
+  }
+
+  // 반복 복용 약의 실제 다음 복용일 계산
+  DateTime? _calculateNextMedicationDate(Medication medication) {
+    final today = DateTime.now();
+    final todayOnly = DateTime(today.year, today.month, today.day);
+
+    // 다음 복용일이 지정되어 있는 경우
+    DateTime baseDate = medication.nextDate ?? medication.medicationDate;
+
+    // 반복하지 않는 약
+    if (medication.repeatType == 'none') {
+      if (baseDate.isBefore(todayOnly)) {
+        return null;
+      }
+
+      return baseDate;
+    }
+    // 매일
+    else if (medication.repeatType == 'daily') {
+      while (baseDate.isBefore(todayOnly)) {
+        baseDate = baseDate.add(const Duration(days: 1));
+      }
+
+      return baseDate;
+    }
+    // 매주
+    else if (medication.repeatType == 'weekly') {
+      while (baseDate.isBefore(todayOnly)) {
+        baseDate = baseDate.add(const Duration(days: 7));
+      }
+
+      return baseDate;
+    }
+    // n일 마다
+    if (medication.repeatType == 'interval' &&
+        medication.repeatInterval != null &&
+        medication.repeatInterval! > 0) {
+      final interval = medication.repeatInterval!;
+
+      while (baseDate.isBefore(todayOnly)) {
+        baseDate = baseDate.add(Duration(days: interval));
+      }
+
+      return baseDate;
+    }
+
+    return null;
   }
 }

@@ -122,9 +122,8 @@ class NotificationService {
 
       return;
     }
-
     // 매일
-    if (repeatType == 'daily') {
+    else if (repeatType == 'daily') {
       await _schedule(
         id: id,
         title: title,
@@ -135,9 +134,8 @@ class NotificationService {
 
       return;
     }
-
     // 매주
-    if (repeatType == 'weekly') {
+    else if (repeatType == 'weekly') {
       await _schedule(
         id: id,
         title: title,
@@ -148,9 +146,8 @@ class NotificationService {
 
       return;
     }
-
     // N일마다
-    if (repeatType == 'interval' &&
+    else if (repeatType == 'interval' &&
         repeatInterval != null &&
         repeatInterval > 0) {
       const repeatCount = 30;
