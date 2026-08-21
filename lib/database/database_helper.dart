@@ -78,7 +78,7 @@ class DatabaseHelper {
     */
     return await openDatabase(
       path,
-      version: 2, // DB 구조가 바뀔 때만 올림
+      version: 3, // DB 구조가 바뀔 때만 올림
       onConfigure: (db) async {
         await db.execute('PRAGMA foreign_keys = ON');
       },
@@ -145,6 +145,8 @@ class DatabaseHelper {
             medication_date TEXT NOT NULL,
             medication_time TEXT,
             next_date TEXT,
+            repeat_type TEXT NOT NULL DEFAULT 'none',
+            repeat_interval INTEGER,
             memo TEXT,
             FOREIGN KEY (pet_id) REFERENCES pets(id) ON DELETE CASCADE
           )
@@ -152,10 +154,21 @@ class DatabaseHelper {
       },
 
       onUpgrade: (db, oldVersion, newVersion) async {
-        // 1->2. 약 복용 테이블 - 복용 시간 컬럼 추가
+        // 1->2. 약 복용 테이블에 복용 시간 컬럼 추가
         if (oldVersion < 2) {
           await db.execute(
             'ALTER TABLE medications ADD COLUMN medication_time TEXT',
+          );
+        }
+
+        // 2 → 3. 약 복용 테이블에 반복 복용 관련 컬럼 추가
+        if (oldVersion < 3) {
+          await db.execute(
+            "ALTER TABLE medications ADD COLUMN repeat_type TEXT NOT NULL DEFAULT 'none'",
+          );
+
+          await db.execute(
+            'ALTER TABLE medications ADD COLUMN repeat_interval INTEGER',
           );
         }
       },
@@ -514,6 +527,8 @@ class DatabaseHelper {
             ? '${medication.medicationTime!.hour.toString().padLeft(2, '0')}:${medication.medicationTime!.minute.toString().padLeft(2, '0')}'
             : null,
         'next_date': medication.nextDate?.toIso8601String(),
+        'repeat_type': medication.repeatType,
+        'repeat_interval': medication.repeatInterval,
         'memo': medication.memo,
       }, // toMap() 사용 안하고 직접 만든 이유: UPDATE에서는 ID를 수정할 필요가 없으니까 우리가 수정할 컬럼만 명시
       where: 'id = ?',

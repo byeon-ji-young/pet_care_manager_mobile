@@ -29,7 +29,11 @@ class _MedicationRegisterScreen extends State<MedicationRegisterScreen> {
 
   DateTime medicationDate = DateTime.now();
   TimeOfDay? medicationTime;
+
   DateTime? nextDate;
+
+  String repeatType = 'none';
+  int? repeatInterval;
 
   @override
   void initState() {
@@ -43,6 +47,8 @@ class _MedicationRegisterScreen extends State<MedicationRegisterScreen> {
       medicationDate = medication.medicationDate;
       medicationTime = medication.medicationTime;
       nextDate = medication.nextDate;
+      repeatType = medication.repeatType;
+      repeatInterval = medication.repeatInterval;
     }
   }
 
@@ -169,6 +175,10 @@ class _MedicationRegisterScreen extends State<MedicationRegisterScreen> {
                           lastDate: DateTime.now(),
                         );
 
+                        if (!mounted) {
+                          return;
+                        }
+
                         if (pickedDate != null) {
                           setState(() {
                             medicationDate = pickedDate;
@@ -223,6 +233,10 @@ class _MedicationRegisterScreen extends State<MedicationRegisterScreen> {
                           context: context,
                           initialTime: medicationTime ?? TimeOfDay.now(),
                         );
+
+                        if (!mounted) {
+                          return;
+                        }
 
                         if (pickedTime != null) {
                           setState(() {
@@ -305,6 +319,10 @@ class _MedicationRegisterScreen extends State<MedicationRegisterScreen> {
                           lastDate: DateTime(2100),
                         );
 
+                        if (!mounted) {
+                          return;
+                        }
+
                         if (pickedDate != null) {
                           setState(() {
                             nextDate = pickedDate;
@@ -377,7 +395,190 @@ class _MedicationRegisterScreen extends State<MedicationRegisterScreen> {
 
                     const SizedBox(height: 15),
 
-                    // 5.메모
+                    // 5. 반복복용
+                    InkWell(
+                      onTap: () async {
+                        final selectedType = await showModalBottomSheet<String>(
+                          context: context,
+                          builder: (sheetContext) {
+                            return SafeArea(
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const Padding(
+                                    padding: EdgeInsets.all(20),
+                                    child: Text(
+                                      '반복 복용',
+                                      style: TextStyle(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+
+                                  ListTile(
+                                    title: const Text('안 함'),
+                                    trailing: repeatType == 'none'
+                                        ? const Icon(Icons.check)
+                                        : null,
+                                    onTap: () {
+                                      Navigator.pop(sheetContext, 'none');
+                                    },
+                                  ),
+
+                                  ListTile(
+                                    title: const Text('매일'),
+                                    trailing: repeatType == 'daily'
+                                        ? const Icon(Icons.check)
+                                        : null,
+                                    onTap: () {
+                                      Navigator.pop(sheetContext, 'daily');
+                                    },
+                                  ),
+
+                                  ListTile(
+                                    title: const Text('매주'),
+                                    trailing: repeatType == 'weekly'
+                                        ? const Icon(Icons.check)
+                                        : null,
+                                    onTap: () {
+                                      Navigator.pop(sheetContext, 'weekly');
+                                    },
+                                  ),
+
+                                  ListTile(
+                                    title: const Text('며칠마다'),
+                                    trailing: repeatType == 'interval'
+                                        ? const Icon(Icons.check)
+                                        : null,
+                                    onTap: () {
+                                      Navigator.pop(sheetContext, 'interval');
+                                    },
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
+                        );
+
+                        // 바텀시트가 닫힌 후 State가 아직 살아있는지 확인
+                        if (!mounted) {
+                          return;
+                        }
+
+                        if (selectedType == null) {
+                          return;
+                        }
+
+                        if (selectedType == 'interval') {
+                          final interval = await showDialog<int>(
+                            context: this.context,
+                            builder: (dialogContext) {
+                              final controller = TextEditingController(
+                                text: repeatInterval?.toString() ?? '',
+                              );
+
+                              return AlertDialog(
+                                title: const Text('반복 간격'),
+                                content: TextField(
+                                  controller: controller,
+                                  keyboardType: TextInputType.number,
+                                  decoration: const InputDecoration(
+                                    suffixText: '일마다',
+                                    hintText: '예. 3',
+                                  ),
+                                ),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () =>
+                                        Navigator.pop(dialogContext),
+                                    child: const Text('취소'),
+                                  ),
+                                  TextButton(
+                                    onPressed: () {
+                                      final value = int.tryParse(
+                                        controller.text,
+                                      );
+
+                                      if (value == null || value <= 0) {
+                                        return;
+                                      }
+
+                                      Navigator.pop(dialogContext, value);
+                                    },
+                                    child: const Text('확인'),
+                                  ),
+                                ],
+                              );
+                            },
+                          );
+
+                          if (!mounted) {
+                            return;
+                          }
+
+                          if (interval == null) {
+                            return;
+                          }
+
+                          setState(() {
+                            repeatType = 'interval';
+                            repeatInterval = interval;
+                          });
+                        } else {
+                          setState(() {
+                            repeatType = selectedType;
+                            repeatInterval = null;
+                          });
+                        }
+                      },
+                      borderRadius: BorderRadius.circular(12),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 14,
+                        ),
+                        decoration: BoxDecoration(
+                          border: Border.all(color: Colors.grey.shade700),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.repeat),
+                            const SizedBox(width: 16),
+                            const Text(
+                              '반복 복용',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            const Spacer(),
+                            Text(
+                              switch (repeatType) {
+                                'daily' => '매일',
+                                'weekly' => '매주',
+                                'interval' => '${repeatInterval ?? 0}일마다',
+                                _ => '안 함', // _는 나머지는 전부
+                              },
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(width: 4),
+                            const Icon(
+                              Icons.arrow_drop_down,
+                              color: Colors.grey,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 15),
+
+                    // 6. 메모
                     TextField(
                       controller: memoController,
                       maxLines: 3,
@@ -421,6 +622,8 @@ class _MedicationRegisterScreen extends State<MedicationRegisterScreen> {
                       medicationName: medicationNameController.text.trim(),
                       medicationDate: medicationDate,
                       medicationTime: medicationTime,
+                      repeatType: repeatType,
+                      repeatInterval: repeatInterval,
                       nextDate: nextDate,
                       memo: memoController.text.trim().isEmpty
                           ? null
@@ -468,11 +671,12 @@ class _MedicationRegisterScreen extends State<MedicationRegisterScreen> {
                       }
                     }
 
-                    if (!context.mounted) {
+                    if (!mounted) {
                       return;
                     }
 
-                    Navigator.pop(context, medicationDate);
+                    // Navigator.pop(this.context, medicationDate);
+                    Navigator.of(this.context).pop(medicationDate);
                   },
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,

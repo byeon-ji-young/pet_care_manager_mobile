@@ -7,6 +7,8 @@ class Medication {
   final DateTime medicationDate; // 복용일
   final TimeOfDay? medicationTime; // 복용시간
   final DateTime? nextDate; // 다음 복용 예정일
+  final String repeatType; // 반복 복용 방식
+  final int? repeatInterval; // 반복 간격
   final String? memo; // 메모
 
   Medication({
@@ -16,6 +18,8 @@ class Medication {
     required this.medicationDate,
     this.medicationTime,
     this.nextDate,
+    required this.repeatType,
+    this.repeatInterval,
     this.memo,
   });
 
@@ -38,6 +42,8 @@ class Medication {
       nextDate: map['next_date'] != null
           ? DateTime.parse(map['next_date'] as String)
           : null,
+      repeatType: map['repeat_type'] as String? ?? 'none',
+      repeatInterval: map['repeat_interval'] as int?,
       memo: map['memo'] as String?,
     );
   }
@@ -53,6 +59,8 @@ class Medication {
       'medication_time': medicationTime != null
           ? '${medicationTime!.hour.toString().padLeft(2, '0')}:${medicationTime!.minute.toString().padLeft(2, '0')}'
           : null,
+      'repeat_type': repeatType,
+      'repeat_interval': repeatInterval,
       'memo': memo,
     };
   }
