@@ -1129,20 +1129,21 @@ const androidSettings = AndroidInitializationSettings(
 
 개발하면서 새롭게 배우는 내용을 계속 추가합니다.
 
-* [x] `table_calendar` 사용
-* [x] 캘린더에서 날짜 선택하기
-* [x] 날짜별 건강 기록 조회
-* [x] 약 복용 기록 관리
-* [x] `TimeOfDay`를 이용한 복용 시간 관리
-* [x] `flutter_local_notifications` 패키지 설치 및 초기화
-* [x] `timezone` 패키지 설치
-* [x] 특정 시간 예약 알림
-* [x] 약 복용 시간 알림
-* [x] `flutter_launcher_icons`를 이용한 앱 아이콘 변경
-* [ ] 알림 권한 요청
-* [ ] 즉시 알림
-* [ ] 예방접종 예정 알림
-* [ ] SQLite JOIN
-* [ ] 비동기 처리 (`Future`, `async`, `await`)
-* [ ] 예외 처리 (`try-catch`)
-* [ ] Flutter 화면 디자인 및 레이아웃
+- [x] `table_calendar` 사용
+- [x] 캘린더에서 날짜 선택하기
+- [x] 날짜별 건강 기록 조회
+- [x] 약 복용 기록 관리
+- [x] `TimeOfDay`를 이용한 복용 시간 관리
+- [x] `flutter_local_notifications` 패키지 설치 및 초기화
+- [x] 알림 권한 요청
+- [x] 특정 시간 예약 알림
+- [x] 약 복용 시간 알림
+- [ ] 즉시 알림
+- [ ] 예방접종 예정 알림
+- [ ] SQLite JOIN
+- [ ] 비동기 처리 (`Future`, `async`, `await`)
+- [ ] 예외 처리 (`try-catch`)
+- [ ] Flutter 화면 디자인 및 레이아웃
+- [x] 앱 이름 변경
+- [x] 앱 아이콘 변경
+- [x] `flutter_launcher_icons` 패키지 사용
