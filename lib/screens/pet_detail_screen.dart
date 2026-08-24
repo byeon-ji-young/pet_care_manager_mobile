@@ -17,6 +17,7 @@ import 'health_record_register_screen.dart';
 import 'vaccination_register_screen.dart';
 import 'weight_record_register_screen.dart';
 import 'medication_register_screen.dart';
+import 'medication_history_screen.dart';
 
 class PetDetailScreen extends StatefulWidget {
   final Pet pet;
@@ -482,24 +483,44 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
           const SizedBox(width: 12),
 
           Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  medication.medicationName,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
+            child: InkWell(
+              borderRadius: BorderRadius.circular(8),
+              onTap: () async {
+                if (medication.id == null) return;
+
+                await Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) =>
+                        MedicationHistoryScreen(medication: medication),
                   ),
-                ),
+                );
 
-                const SizedBox(height: 3),
+                // 이력 화면에서 돌아왔을 때 최신 상태 반영
+                await loadTodayMedicationLogs();
+              },
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 4),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      medication.medicationName,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
 
-                Text(
-                  medication.medicationTime?.format(context) ?? '복용 시간 미정',
-                  style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                    const SizedBox(height: 3),
+
+                    Text(
+                      medication.medicationTime?.format(context) ?? '복용 시간 미정',
+                      style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                    ),
+                  ],
                 ),
-              ],
+              ),
             ),
           ),
 
