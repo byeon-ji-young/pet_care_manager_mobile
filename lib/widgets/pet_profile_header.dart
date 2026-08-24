@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 
 import '../models/pet.dart';
 
+import '../utils/date_time_utils.dart';
+
 class PetProfileHeader extends StatelessWidget {
   final Pet pet;
 
@@ -11,7 +13,7 @@ class PetProfileHeader extends StatelessWidget {
 
   // 생년월일로 나이 변환
   String _getAgeText(DateTime birthDate) {
-    final now = DateTime.now();
+    final now = DateTimeUtils.nowKst();
 
     int ageYear = now.year - birthDate.year;
     int ageMonth = now.month - birthDate.month;

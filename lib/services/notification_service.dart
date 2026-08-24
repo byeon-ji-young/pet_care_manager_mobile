@@ -3,6 +3,8 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/data/latest.dart' as tz_data;
 import 'package:timezone/timezone.dart' as tz;
 
+import '../utils/date_time_utils.dart';
+
 class NotificationService {
   NotificationService._(); // private 생성자. 외부에서 객체를 직접 생성하지 못하게 함
 
@@ -152,7 +154,7 @@ class NotificationService {
         repeatInterval > 0) {
       const repeatCount = 30;
 
-      final now = DateTime.now();
+      final now = DateTimeUtils.nowKst();
 
       DateTime nextScheduledDate = scheduledDate; // 첫 번째 예약 날짜를 복용 날짜로 설정
 

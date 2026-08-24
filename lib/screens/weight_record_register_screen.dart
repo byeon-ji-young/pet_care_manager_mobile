@@ -4,6 +4,8 @@ import '../database/database_helper.dart';
 
 import '../models/weight_record.dart';
 
+import '../utils/date_time_utils.dart';
+
 class WeightRecordRegisterScreen extends StatefulWidget {
   final int petId;
   final WeightRecord? record;
@@ -23,7 +25,7 @@ class _WeightRecordRegisterScreen extends State<WeightRecordRegisterScreen> {
   final weightController = TextEditingController();
   final memoController = TextEditingController();
 
-  DateTime selectedDate = DateTime.now();
+  DateTime selectedDate = DateTimeUtils.todayKst();
 
   @override
   void initState() {
@@ -196,7 +198,7 @@ class _WeightRecordRegisterScreen extends State<WeightRecordRegisterScreen> {
                           context: context,
                           initialDate: selectedDate,
                           firstDate: DateTime(2000),
-                          lastDate: DateTime.now(),
+                          lastDate: DateTimeUtils.todayKst(),
                         );
 
                         if (pickedDate != null) {

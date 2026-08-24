@@ -4,6 +4,8 @@ import '../database/database_helper.dart';
 
 import '../models/vaccination.dart';
 
+import '../utils/date_time_utils.dart';
+
 class VaccinationRegisterScreen extends StatefulWidget {
   final int petId;
 
@@ -25,7 +27,7 @@ class _VaccinationRegisterScreen extends State<VaccinationRegisterScreen> {
   final TextEditingController hospitalController = TextEditingController();
   final TextEditingController memoController = TextEditingController();
 
-  DateTime vaccinationDate = DateTime.now();
+  DateTime vaccinationDate = DateTimeUtils.todayKst();
   DateTime? nextDate;
 
   @override
@@ -190,7 +192,7 @@ class _VaccinationRegisterScreen extends State<VaccinationRegisterScreen> {
                           context: context,
                           initialDate: vaccinationDate,
                           firstDate: DateTime(2000),
-                          lastDate: DateTime.now(),
+                          lastDate: DateTimeUtils.todayKst(),
                         );
 
                         if (pickedDate != null) {

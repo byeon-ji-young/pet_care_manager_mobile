@@ -8,6 +8,8 @@ import '../models/pet.dart';
 
 import '../database/database_helper.dart';
 
+import '../utils/date_time_utils.dart';
+
 class PetRegisterScreen extends StatefulWidget {
   // StatefulWidget: 사용자가 화면을 입력할 때 화면의 상태가 계속 바뀌기 때문에 사용
   final Pet? pet;
@@ -74,11 +76,13 @@ class _PetRegisterScreenState extends State<PetRegisterScreen> {
   */
   // Future<>는 비동기 함수
   Future<void> selectBirthDate() async {
+    final today = DateTimeUtils.todayKst();
+
     final DateTime? pickedDate = await showDatePicker(
       context: context,
-      initialDate: DateTime.now(),
+      initialDate: selectedBirthDate ?? today,
       firstDate: DateTime(2000),
-      lastDate: DateTime.now(),
+      lastDate: today,
     );
 
     if (pickedDate != null) {
@@ -117,7 +121,7 @@ class _PetRegisterScreenState extends State<PetRegisterScreen> {
         await getApplicationDocumentsDirectory(); // getApplicationDocumentsDirectory: 앱 전용 문서 저장 공간의 경로를 가져오는 함수
 
     final fileName =
-        '${DateTime.now().millisecondsSinceEpoch}_${selectedImage!.name}';
+        '${DateTimeUtils.nowKst().millisecondsSinceEpoch}_${selectedImage!.name}';
 
     final savedImage = await File(
       selectedImage!.path,

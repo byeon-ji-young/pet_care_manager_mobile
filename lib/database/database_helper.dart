@@ -9,6 +9,8 @@ import '../models/weight_record.dart';
 import '../models/medication.dart';
 import '../models/medication_log.dart';
 
+import '../utils/date_time_utils.dart';
+
 class DatabaseHelper {
   /*
     싱글톤 패턴
@@ -434,13 +436,13 @@ class DatabaseHelper {
   Future<List<Vaccination>> getUpcomingVaccinations(int petId) async {
     final db = await database;
 
-    final today = DateTime.now();
-    final todayOnly = DateTime(today.year, today.month, today.day);
+    final today = DateTimeUtils.todayKst();
+    // final todayOnly = DateTime(today.year, today.month, today.day);
 
     final maps = await db.query(
       'vaccinations',
       where: 'pet_id = ? AND next_date IS NOT NULL AND next_date >= ?',
-      whereArgs: [petId, todayOnly.toIso8601String()],
+      whereArgs: [petId, today.toIso8601String()],
       orderBy: 'next_date ASC',
     );
 
@@ -453,7 +455,7 @@ class DatabaseHelper {
   Future<Vaccination?> getNextVaccination(int petId) async {
     final db = await database;
 
-    final today = DateTime.now();
+    final today = DateTimeUtils.todayKst();
     final todayString =
         '${today.year.toString().padLeft(4, '0')}-'
         '${today.month.toString().padLeft(2, '0')}-'
@@ -628,15 +630,15 @@ class DatabaseHelper {
 
   // 반복 복용 약의 실제 다음 복용일 계산
   DateTime? _calculateNextMedicationDate(Medication medication) {
-    final today = DateTime.now();
-    final todayOnly = DateTime(today.year, today.month, today.day);
+    final today = DateTimeUtils.todayKst();
+    // final todayOnly = DateTime(today.year, today.month, today.day);
 
     // 다음 복용일이 지정되어 있는 경우
     DateTime baseDate = medication.nextDate ?? medication.medicationDate;
 
     // 반복하지 않는 약
     if (medication.repeatType == 'none') {
-      if (baseDate.isBefore(todayOnly)) {
+      if (baseDate.isBefore(today)) {
         return null;
       }
 
@@ -644,7 +646,7 @@ class DatabaseHelper {
     }
     // 매일
     else if (medication.repeatType == 'daily') {
-      while (baseDate.isBefore(todayOnly)) {
+      while (baseDate.isBefore(today)) {
         baseDate = baseDate.add(const Duration(days: 1));
       }
 
@@ -652,7 +654,7 @@ class DatabaseHelper {
     }
     // 매주
     else if (medication.repeatType == 'weekly') {
-      while (baseDate.isBefore(todayOnly)) {
+      while (baseDate.isBefore(today)) {
         baseDate = baseDate.add(const Duration(days: 7));
       }
 
@@ -664,7 +666,7 @@ class DatabaseHelper {
         medication.repeatInterval! > 0) {
       final interval = medication.repeatInterval!;
 
-      while (baseDate.isBefore(todayOnly)) {
+      while (baseDate.isBefore(today)) {
         baseDate = baseDate.add(Duration(days: interval));
       }
 
@@ -678,8 +680,8 @@ class DatabaseHelper {
   Future<List<Medication>> getTodayMedications(int petId) async {
     final medications = await getMedicationsByPetId(petId);
 
-    final today = DateTime.now();
-    final todayOnly = DateTime(today.year, today.month, today.day);
+    final today = DateTimeUtils.todayKst();
+    // final todayOnly = DateTime(today.year, today.month, today.day);
 
     return medications.where((medication) {
       // 복용 시작일
@@ -690,7 +692,7 @@ class DatabaseHelper {
       );
 
       // 아직 복용 시작일이 되지 않았다면 제외
-      if (todayOnly.isBefore(medicationDate)) {
+      if (today.isBefore(medicationDate)) {
         return false;
       }
       // 1. 반복 없음
@@ -705,7 +707,7 @@ class DatabaseHelper {
           medication.nextDate!.day,
         );
 
-        return nextDate == todayOnly;
+        return nextDate == today;
       }
       // 2. 매일
       else if (medication.repeatType == 'daily') {
@@ -713,13 +715,13 @@ class DatabaseHelper {
       }
       // 3. 매주
       else if (medication.repeatType == 'weekly') {
-        return medicationDate.weekday == todayOnly.weekday;
+        return medicationDate.weekday == today.weekday;
       }
       // 4. N일마다
       else if (medication.repeatType == 'interval' &&
           medication.repeatInterval != null &&
           medication.repeatInterval! > 0) {
-        final difference = todayOnly.difference(medicationDate).inDays;
+        final difference = today.difference(medicationDate).inDays;
 
         return difference % medication.repeatInterval! == 0;
       }
@@ -812,7 +814,7 @@ class DatabaseHelper {
         medicationDate.month,
         medicationDate.day,
       ),
-      completedAt: DateTime.now(),
+      completedAt: DateTimeUtils.nowKst(),
     );
 
     return await insertMedicationLog(log);
@@ -822,10 +824,10 @@ class DatabaseHelper {
   Future<bool> isMedicationTakenToday(int medicationId) async {
     final db = await database;
 
-    final today = DateTime.now();
-    final todayOnly = DateTime(today.year, today.month, today.day);
+    final today = DateTimeUtils.todayKst();
+    // final todayOnly = DateTime(today.year, today.month, today.day);
 
-    final tomorrow = todayOnly.add(const Duration(days: 1));
+    final tomorrow = today.add(const Duration(days: 1));
 
     final result = await db.query(
       'medication_logs',
@@ -836,7 +838,7 @@ class DatabaseHelper {
       ''',
       whereArgs: [
         medicationId,
-        todayOnly.toIso8601String(),
+        today.toIso8601String(),
         tomorrow.toIso8601String(),
       ],
       limit: 1,

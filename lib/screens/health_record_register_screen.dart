@@ -4,6 +4,8 @@ import '../database/database_helper.dart';
 
 import '../models/health_record.dart';
 
+import '../utils/date_time_utils.dart';
+
 class HealthRecordRegisterScreen extends StatefulWidget {
   final int petId;
   final HealthRecord? record; // record == null → 신규 등록 / record != null → 수정
@@ -26,7 +28,7 @@ class _HealthRecordRegisterScreenState
   final TextEditingController descriptionController = TextEditingController();
   final TextEditingController costController = TextEditingController();
 
-  DateTime selectedDate = DateTime.now();
+  DateTime selectedDate = DateTimeUtils.todayKst();
 
   @override
   void initState() {
@@ -240,7 +242,7 @@ class _HealthRecordRegisterScreenState
                           context: context,
                           initialDate: selectedDate,
                           firstDate: DateTime(2000),
-                          lastDate: DateTime.now(),
+                          lastDate: DateTimeUtils.todayKst(),
                         );
 
                         if (pickedDate != null) {

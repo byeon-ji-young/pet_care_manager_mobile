@@ -19,6 +19,8 @@ import 'weight_record_register_screen.dart';
 import 'medication_register_screen.dart';
 import 'medication_history_screen.dart';
 
+import '../utils/date_time_utils.dart';
+
 class PetDetailScreen extends StatefulWidget {
   final Pet pet;
 
@@ -53,8 +55,8 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
   // Set을 사용하는 이유는 복용 완료한 약의 ID만 중복 없이 가지고 있기 때문
   Set<int> completedMedicationIds = {};
 
-  DateTime selectedDay = DateTime.now();
-  DateTime focusedDay = DateTime.now();
+  DateTime selectedDay = DateTimeUtils.todayKst();
+  DateTime focusedDay = DateTimeUtils.todayKst();
 
   @override
   void initState() {
@@ -248,7 +250,7 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
     required DateTime targetDate,
     required String categoryType, // 'vaccine' 또는 'medication'
   }) {
-    final today = DateTime.now();
+    final today = DateTimeUtils.todayKst();
     final todayDate = DateTime(today.year, today.month, today.day);
     final tDate = DateTime(targetDate.year, targetDate.month, targetDate.day);
     final difference = tDate.difference(todayDate).inDays;
@@ -547,7 +549,7 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
                         await DatabaseHelper.instance.completeMedication(
                           medicationId: medication.id!,
                           petId: widget.pet.id!,
-                          medicationDate: DateTime.now(),
+                          medicationDate: DateTimeUtils.nowKst(),
                         );
 
                         await loadTodayMedicationLogs();

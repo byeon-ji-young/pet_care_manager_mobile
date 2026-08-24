@@ -11,6 +11,8 @@ import '../database/database_helper.dart';
 import '../models/pet.dart';
 import '../models/vaccination.dart';
 
+import '../utils/date_time_utils.dart';
+
 class HomeScreen extends StatefulWidget {
   // StatelessWidget: 사용자에 동작에 의해 화면 자체의 데이터(상태)가 바로 바뀌지 않는 정적인 화면을 의미
   const HomeScreen({super.key}); // 플러터가 위젯을 효율적으로 관리할 수 있도록 돕는 생성자 선언
@@ -70,7 +72,7 @@ class _HomeScreenState extends State<HomeScreen> {
     required DateTime nextDate,
     required String categoryType,
   }) {
-    final today = DateTime.now();
+    final today = DateTimeUtils.todayKst();
 
     final todayOnly = DateTime(today.year, today.month, today.day);
     final nextDateOnly = DateTime(nextDate.year, nextDate.month, nextDate.day);
@@ -98,7 +100,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   // 예방접종, 약 복용 알림 배경
   Color _getReminderColor(DateTime nextDate) {
-    final today = DateTime.now();
+    final today = DateTimeUtils.todayKst();
 
     final todayOnly = DateTime(today.year, today.month, today.day);
     final nextDateOnly = DateTime(nextDate.year, nextDate.month, nextDate.day);
@@ -383,7 +385,7 @@ class _PetHomeProfileHeader extends StatelessWidget {
 
   // 생년월일로 나이 변환
   String _getAgeText(DateTime birthDate) {
-    final now = DateTime.now();
+    final now = DateTimeUtils.todayKst();
 
     int ageYear = now.year - birthDate.year;
     int ageMonth = now.month - birthDate.month;

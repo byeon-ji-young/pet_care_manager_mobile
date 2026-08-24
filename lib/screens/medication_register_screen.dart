@@ -6,6 +6,8 @@ import '../models/medication.dart';
 
 import '../services/notification_service.dart';
 
+import '../utils/date_time_utils.dart';
+
 class MedicationRegisterScreen extends StatefulWidget {
   final int petId;
 
@@ -27,7 +29,7 @@ class _MedicationRegisterScreen extends State<MedicationRegisterScreen> {
 
   final TextEditingController memoController = TextEditingController();
 
-  DateTime medicationDate = DateTime.now();
+  DateTime medicationDate = DateTimeUtils.todayKst();
   TimeOfDay? medicationTime;
 
   DateTime? nextDate;
@@ -175,7 +177,7 @@ class _MedicationRegisterScreen extends State<MedicationRegisterScreen> {
                           context: context,
                           initialDate: medicationDate,
                           firstDate: DateTime(2000),
-                          lastDate: DateTime.now(),
+                          lastDate: DateTimeUtils.todayKst(),
                         );
 
                         if (!mounted) {
@@ -232,9 +234,13 @@ class _MedicationRegisterScreen extends State<MedicationRegisterScreen> {
                     // 3.복용 시간
                     InkWell(
                       onTap: () async {
+                        final now = DateTimeUtils.nowKst();
+
                         final pickedTime = await showTimePicker(
                           context: context,
-                          initialTime: medicationTime ?? TimeOfDay.now(),
+                          initialTime:
+                              medicationTime ??
+                              TimeOfDay(hour: now.hour, minute: now.minute),
                         );
 
                         if (!mounted) {

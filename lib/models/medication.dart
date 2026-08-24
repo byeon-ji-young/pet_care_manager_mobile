@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../utils/date_time_utils.dart';
+
 class Medication {
   final int? id; // DB에서 생성되는 약 기록 ID
   final int petId; // 어떤 반려동물의 약인지
@@ -72,9 +74,7 @@ class Medication {
       return 'noTime';
     }
 
-    // final now = DateTime.now();
-    // 한국시간으로 변경
-    final now = DateTime.now().toUtc().add(const Duration(hours: 9));
+    final now = DateTimeUtils.nowKst();
     final today = DateTime(now.year, now.month, now.day);
 
     DateTime scheduleDate;
