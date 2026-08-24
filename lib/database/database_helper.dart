@@ -644,4 +644,58 @@ class DatabaseHelper {
 
     return null;
   }
+
+  // 오늘 복용해야 하는 약 조회
+  Future<List<Medication>> getTodayMedications(int petId) async {
+    final medications = await getMedicationsByPetId(petId);
+
+    final today = DateTime.now();
+    final todayOnly = DateTime(today.year, today.month, today.day);
+
+    return medications.where((medication) {
+      // 복용 시작일
+      final medicationDate = DateTime(
+        medication.medicationDate.year,
+        medication.medicationDate.month,
+        medication.medicationDate.day,
+      );
+
+      // 아직 복용 시작일이 되지 않았다면 제외
+      if (todayOnly.isBefore(medicationDate)) {
+        return false;
+      }
+      // 1. 반복 없음
+      else if (medication.repeatType == 'none') {
+        if (medication.nextDate == null) {
+          return false;
+        }
+
+        final nextDate = DateTime(
+          medication.nextDate!.year,
+          medication.nextDate!.month,
+          medication.nextDate!.day,
+        );
+
+        return nextDate == todayOnly;
+      }
+      // 2. 매일
+      else if (medication.repeatType == 'daily') {
+        return true;
+      }
+      // 3. 매주
+      else if (medication.repeatType == 'weekly') {
+        return medicationDate.weekday == todayOnly.weekday;
+      }
+      // 4. N일마다
+      else if (medication.repeatType == 'interval' &&
+          medication.repeatInterval != null &&
+          medication.repeatInterval! > 0) {
+        final difference = todayOnly.difference(medicationDate).inDays;
+
+        return difference % medication.repeatInterval! == 0;
+      }
+
+      return false;
+    }).toList();
+  }
 }

@@ -47,6 +47,7 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
 
   List<Medication> medications = [];
   List<Medication> upcomingMedications = [];
+  List<Medication> todayMedications = [];
 
   DateTime selectedDay = DateTime.now();
   DateTime focusedDay = DateTime.now();
@@ -69,6 +70,7 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
       loadWeightRecords(),
       loadMedications(),
       loadUpcomingMedications(),
+      loadTodayMedications(),
     ]);
   }
 
@@ -130,6 +132,16 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
     if (!mounted) return;
 
     setState(() => upcomingMedications = upcomings);
+  }
+
+  Future<void> loadTodayMedications() async {
+    final result = await DatabaseHelper.instance.getTodayMedications(
+      widget.pet.id!,
+    );
+
+    if (!mounted) return;
+
+    setState(() => todayMedications = result);
   }
 
   // 반려동물 삭제
@@ -338,6 +350,64 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
             ],
           );
         }),
+      ),
+    );
+  }
+
+  // 오늘 복용해야 하는 약 카드
+  Widget _buildTodayMedicationCard(List<Medication> list) {
+    final primaryColor = Theme.of(context).primaryColor;
+
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.orange.withValues(alpha: 0.05),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.orange.withValues(alpha: 0.3)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.medication_outlined, color: Colors.orange),
+              const SizedBox(width: 8),
+              const Text(
+                '오늘 복용할 약',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              ),
+              const Spacer(),
+              Text(
+                '${list.length}개',
+                style: TextStyle(
+                  color: primaryColor,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 12),
+
+          ...list.map(
+            (medication) => ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: const CircleAvatar(
+                backgroundColor: Color(0xFFFFF3E0),
+                child: Icon(Icons.medication_outlined, color: Colors.orange),
+              ),
+              title: Text(
+                medication.medicationName,
+                style: const TextStyle(fontWeight: FontWeight.w600),
+              ),
+              subtitle: medication.medicationTime != null
+                  ? Text(medication.medicationTime!.format(context))
+                  : const Text('복용 시간 미지정'),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -581,6 +651,8 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
                       });
 
                       await loadMedications();
+                      await loadUpcomingMedications();
+                      await loadTodayMedications();
                     }
                   },
                 ),
@@ -659,11 +731,15 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
 
               const SizedBox(height: 16),
 
-              // 2-1. 예방 접종 알림
+              // 2-1. 오늘 복용할 약
+              if (todayMedications.isNotEmpty)
+                _buildTodayMedicationCard(todayMedications),
+
+              // 2-2. 예방 접종 알림
               if (upcomingVaccinations.isNotEmpty)
                 _buildVaccinationGroupCard(upcomingVaccinations),
 
-              // 2-2. 약 복용 알림
+              // 2-3. 약 복용 알림
               if (upcomingMedications.isNotEmpty)
                 _buildMedicationGroupCard(upcomingMedications),
 
@@ -949,6 +1025,7 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
 
                                 await loadMedications();
                                 await loadUpcomingMedications();
+                                await loadTodayMedications();
                               }
                             },
                           );
