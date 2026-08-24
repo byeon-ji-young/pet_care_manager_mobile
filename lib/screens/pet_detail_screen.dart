@@ -354,57 +354,114 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
     );
   }
 
-  // 오늘 복용해야 하는 약 카드
+  // 오늘 복용할 약 카드
   Widget _buildTodayMedicationCard(List<Medication> list) {
-    final primaryColor = Theme.of(context).primaryColor;
+    // final primaryColor = Theme.of(context).primaryColor;
 
     return Container(
       width: double.infinity,
       margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.orange.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: Colors.orange.withValues(alpha: 0.3)),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              const Icon(Icons.medication_outlined, color: Colors.orange),
-              const SizedBox(width: 8),
-              const Text(
-                '오늘 복용할 약',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-              ),
-              const Spacer(),
-              Text(
-                '${list.length}개',
-                style: TextStyle(
-                  color: primaryColor,
-                  fontWeight: FontWeight.bold,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(
+                  Icons.medication_outlined,
+                  color: Colors.orange.shade700,
+                  size: 20,
                 ),
-              ),
-            ],
+                const SizedBox(width: 8),
+                const Text(
+                  '오늘 복용할 약',
+                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 12),
+
+            ...list.map((medication) {
+              return _buildTodayMedicationItem(medication);
+            }),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // 오늘 복용할 약 하나
+  Widget _buildTodayMedicationItem(Medication medication) {
+    IconData icon;
+    Color color;
+    String statusText;
+
+    switch (medication.scheduleStatus) {
+      case 'passed':
+        icon = Icons.notifications_active_outlined;
+        color = Colors.redAccent;
+        statusText = '복용 시간이 지났어요';
+        break;
+
+      case 'upcoming':
+        icon = Icons.schedule_outlined;
+        color = Colors.blue;
+        statusText = '복용 예정';
+        break;
+
+      default:
+        icon = Icons.access_time_outlined;
+        color = Colors.grey;
+        statusText = '복용 시간 미정';
+    }
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Row(
+        children: [
+          CircleAvatar(
+            radius: 18,
+            backgroundColor: color.withValues(alpha: 0.1),
+            child: Icon(icon, color: color, size: 20),
           ),
 
-          const SizedBox(height: 12),
+          const SizedBox(width: 12),
 
-          ...list.map(
-            (medication) => ListTile(
-              contentPadding: EdgeInsets.zero,
-              leading: const CircleAvatar(
-                backgroundColor: Color(0xFFFFF3E0),
-                child: Icon(Icons.medication_outlined, color: Colors.orange),
-              ),
-              title: Text(
-                medication.medicationName,
-                style: const TextStyle(fontWeight: FontWeight.w600),
-              ),
-              subtitle: medication.medicationTime != null
-                  ? Text(medication.medicationTime!.format(context))
-                  : const Text('복용 시간 미지정'),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  medication.medicationName,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+
+                const SizedBox(height: 3),
+
+                Text(
+                  medication.medicationTime?.format(context) ?? '복용 시간 미정',
+                  style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                ),
+              ],
+            ),
+          ),
+
+          Text(
+            statusText,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: color,
             ),
           ),
         ],
