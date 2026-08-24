@@ -7,6 +7,7 @@ import '../models/health_record.dart';
 import '../models/vaccination.dart';
 import '../models/weight_record.dart';
 import '../models/medication.dart';
+import '../models/medication_log.dart';
 
 class DatabaseHelper {
   /*
@@ -78,7 +79,7 @@ class DatabaseHelper {
     */
     return await openDatabase(
       path,
-      version: 3, // DB 구조가 바뀔 때만 올림
+      version: 4, // DB 구조가 바뀔 때만 올림
       onConfigure: (db) async {
         await db.execute('PRAGMA foreign_keys = ON');
       },
@@ -151,6 +152,19 @@ class DatabaseHelper {
             FOREIGN KEY (pet_id) REFERENCES pets(id) ON DELETE CASCADE
           )
         ''');
+
+        // medication_logs
+        await db.execute('''
+          CREATE TABLE medication_logs (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            medication_id INTEGER NOT NULL,
+            pet_id INTEGER NOT NULL,
+            medication_date TEXT NOT NULL,
+            completed_at TEXT,
+            FOREIGN KEY (medication_id) REFERENCES medications(id) ON DELETE CASCADE,
+            FOREIGN KEY (pet_id) REFERENCES pets(id) ON DELETE CASCADE
+          )
+        ''');
       },
 
       onUpgrade: (db, oldVersion, newVersion) async {
@@ -170,6 +184,21 @@ class DatabaseHelper {
           await db.execute(
             'ALTER TABLE medications ADD COLUMN repeat_interval INTEGER',
           );
+        }
+
+        // 3 → 4. 약 복용 이력 테이블 추가
+        if (oldVersion < 4) {
+          await db.execute('''
+            CREATE TABLE medication_logs (
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
+              medication_id INTEGER NOT NULL,
+              pet_id INTEGER NOT NULL,
+              medication_date TEXT NOT NULL,
+              completed_at TEXT,
+              FOREIGN KEY (medication_id) REFERENCES medications(id) ON DELETE CASCADE,
+              FOREIGN KEY (pet_id) REFERENCES pets(id) ON DELETE CASCADE
+            )
+          ''');
         }
       },
     );
@@ -697,5 +726,122 @@ class DatabaseHelper {
 
       return false;
     }).toList();
+  }
+
+  // ========================================================= medication_logs =========================================================
+  // 복용 완료 기록 추가
+  Future<int> insertMedicationLog(MedicationLog log) async {
+    final db = await database;
+
+    return db.insert(
+      'medication_logs',
+      log.toMap(),
+      conflictAlgorithm:
+          ConflictAlgorithm.replace, // 충돌이 발생하면 기존 데이터를 새 데이터로 교체
+    );
+  }
+
+  // 특정 약의 복용 이력 조회
+  Future<List<MedicationLog>> getMedicationLog(int medicationId) async {
+    final db = await database;
+
+    final maps = await db.query(
+      'medication_logs',
+      where: 'medication_id = ?',
+      whereArgs: [medicationId],
+      orderBy: 'medication_date DESC',
+    );
+
+    return maps.map((map) => MedicationLog.fromMap(map)).toList();
+  }
+
+  // 특정 날짜의 복용 완료 여부 조회
+  Future<MedicationLog?> getMedicationLogByDate(
+    int medicationId,
+    DateTime date,
+  ) async {
+    final db = await database;
+
+    final dateOnly = DateTime(date.year, date.month, date.day);
+
+    final nextDay = dateOnly.add(const Duration(days: 1));
+
+    final maps = await db.query(
+      'medication_logs',
+      where: '''
+        medication_id = ?
+        AND medication_date >= ?
+        AND medication_date < ?
+      ''',
+      whereArgs: [
+        medicationId,
+        dateOnly.toIso8601String(),
+        nextDay.toIso8601String(),
+      ],
+      limit: 1,
+    );
+
+    if (maps.isEmpty) {
+      return null;
+    }
+
+    return MedicationLog.fromMap(maps.first);
+  }
+
+  // 특정 약을 특정 날짜에 복용 완료 처리
+  Future<int> completeMedication({
+    required int medicationId,
+    required int petId,
+    required DateTime medicationDate,
+  }) async {
+    final existingLog = await getMedicationLogByDate(
+      medicationId,
+      medicationDate,
+    );
+
+    // 이미 복용 완료 기록이 있다면 중복 저장하지 않음
+    if (existingLog != null && existingLog.isCompleted) {
+      return existingLog.id ?? 0;
+    }
+
+    final log = MedicationLog(
+      medicationId: medicationId,
+      petId: petId,
+      medicationDate: DateTime(
+        medicationDate.year,
+        medicationDate.month,
+        medicationDate.day,
+      ),
+      completedAt: DateTime.now(),
+    );
+
+    return await insertMedicationLog(log);
+  }
+
+  // 오늘 해당 약을 복용했는지 확인
+  Future<bool> isMedicationTakenToday(int medicationId) async {
+    final db = await database;
+
+    final today = DateTime.now();
+    final todayOnly = DateTime(today.year, today.month, today.day);
+
+    final tomorrow = todayOnly.add(const Duration(days: 1));
+
+    final result = await db.query(
+      'medication_logs',
+      where: '''
+        medication_id = ?
+        AND medication_date >= ?
+        AND medication_date < ?
+      ''',
+      whereArgs: [
+        medicationId,
+        todayOnly.toIso8601String(),
+        tomorrow.toIso8601String(),
+      ],
+      limit: 1,
+    );
+
+    return result.isNotEmpty;
   }
 }

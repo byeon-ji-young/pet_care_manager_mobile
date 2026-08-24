@@ -72,68 +72,70 @@ class Medication {
       return 'noTime';
     }
 
-    final now = DateTime.now();
+    // final now = DateTime.now();
+    // 한국시간으로 변경
+    final now = DateTime.now().toUtc().add(const Duration(hours: 9));
     final today = DateTime(now.year, now.month, now.day);
-    final startDate = DateTime(
-      medicationDate.year,
-      medicationDate.month,
-      medicationDate.day,
-    );
 
-    // 아직 복용 시작일이 되지 않은 경우
-    if (today.isBefore(startDate)) {
-      return 'upcoming';
-    }
+    DateTime scheduleDate;
 
-    // 오늘 실제 복용해야 하는 날인지 확인
-    bool isTodayMedicationDay = false;
-
-    // 1. 반복 없음
+    // 반복 없음
     if (repeatType == 'none') {
       if (nextDate == null) {
         return 'noTime';
       }
 
-      final targetDate = DateTime(
-        nextDate!.year,
-        nextDate!.month,
-        nextDate!.day,
+      scheduleDate = DateTime(nextDate!.year, nextDate!.month, nextDate!.day);
+    }
+    // 매일
+    else if (repeatType == 'daily') {
+      scheduleDate = today;
+    }
+    // 매주
+    else if (repeatType == 'weekly') {
+      final startDate = DateTime(
+        medicationDate.year,
+        medicationDate.month,
+        medicationDate.day,
       );
 
-      isTodayMedicationDay = targetDate == today;
+      final difference = today.difference(startDate).inDays;
+
+      if (difference < 0 || startDate.weekday != today.weekday) {
+        return 'upcoming';
+      }
+
+      scheduleDate = today;
     }
-    // 2. 매일
-    else if (repeatType == 'daily') {
-      isTodayMedicationDay = true;
-    }
-    // 3. 매주
-    else if (repeatType == 'weekly') {
-      isTodayMedicationDay = startDate.weekday == today.weekday;
-    }
-    // 4. N일마다
+    // N일마다
     else if (repeatType == 'interval' &&
         repeatInterval != null &&
         repeatInterval! > 0) {
+      final startDate = DateTime(
+        medicationDate.year,
+        medicationDate.month,
+        medicationDate.day,
+      );
+
       final difference = today.difference(startDate).inDays;
 
-      isTodayMedicationDay = difference % repeatInterval! == 0;
+      if (difference < 0 || difference % repeatInterval! != 0) {
+        return 'upcoming';
+      }
+
+      scheduleDate = today;
+    } else {
+      return 'noTime';
     }
 
-    // 오늘 복용하는 날이 아니면 다음 복용을 기다리는 상태
-    if (!isTodayMedicationDay) {
-      return 'upcoming';
-    }
-
-    // 오늘 복용해야 하는 시간
     final scheduleDateTime = DateTime(
-      today.year,
-      today.month,
-      today.day,
+      scheduleDate.year,
+      scheduleDate.month,
+      scheduleDate.day,
       medicationTime!.hour,
       medicationTime!.minute,
     );
 
-    // 오늘 복용 시간 전/후 판단
     if (scheduleDateTime.isBefore(now)) {
       return 'passed';
     }

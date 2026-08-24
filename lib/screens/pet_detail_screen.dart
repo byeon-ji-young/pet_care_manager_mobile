@@ -49,6 +49,9 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
   List<Medication> upcomingMedications = [];
   List<Medication> todayMedications = [];
 
+  // Set을 사용하는 이유는 복용 완료한 약의 ID만 중복 없이 가지고 있기 때문
+  Set<int> completedMedicationIds = {};
+
   DateTime selectedDay = DateTime.now();
   DateTime focusedDay = DateTime.now();
 
@@ -72,6 +75,8 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
       loadUpcomingMedications(),
       loadTodayMedications(),
     ]);
+
+    await loadTodayMedicationLogs();
   }
 
   Future<void> loadHealthRecords() async {
@@ -142,6 +147,28 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
     if (!mounted) return;
 
     setState(() => todayMedications = result);
+  }
+
+  Future<void> loadTodayMedicationLogs() async {
+    final completedIds = <int>{};
+
+    for (final medication in todayMedications) {
+      if (medication.id == null) continue;
+
+      final isTaken = await DatabaseHelper.instance.isMedicationTakenToday(
+        medication.id!,
+      );
+
+      if (isTaken) {
+        completedIds.add(medication.id!);
+      }
+    }
+
+    if (!mounted) return;
+
+    setState(() {
+      completedMedicationIds = completedIds;
+    });
   }
 
   // 반려동물 삭제
@@ -388,9 +415,11 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
 
             const SizedBox(height: 12),
 
-            ...list.map((medication) {
-              return _buildTodayMedicationItem(medication);
-            }),
+            ...list.map(
+              (medication) {
+                return _buildTodayMedicationItem(medication);
+              }, // ...은 spread operator(스프레드 연산자). 즉, map()의 결과를 하나의 리스트 안에 펼쳐 넣는다는 뜻
+            ),
           ],
         ),
       ),
@@ -399,27 +428,45 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
 
   // 오늘 복용할 약 하나
   Widget _buildTodayMedicationItem(Medication medication) {
+    debugPrint(
+      '----------> '
+      '${medication.medicationName} '
+      'medicationDate=${medication.medicationDate} '
+      'nextDate=${medication.nextDate} '
+      'medicationTime=${medication.medicationTime} '
+      'status=${medication.scheduleStatus}',
+    );
+
+    final isCompleted =
+        medication.id != null && completedMedicationIds.contains(medication.id);
+
     IconData icon;
     Color color;
     String statusText;
 
-    switch (medication.scheduleStatus) {
-      case 'passed':
-        icon = Icons.notifications_active_outlined;
-        color = Colors.redAccent;
-        statusText = '복용 시간이 지났어요';
-        break;
+    if (isCompleted) {
+      icon = Icons.check_circle;
+      color = Colors.green;
+      statusText = '복용 완료';
+    } else {
+      switch (medication.scheduleStatus) {
+        case 'passed':
+          icon = Icons.notifications_active_outlined;
+          color = Colors.redAccent;
+          statusText = '복용 시간이 지났어요';
+          break;
 
-      case 'upcoming':
-        icon = Icons.schedule_outlined;
-        color = Colors.blue;
-        statusText = '복용 예정';
-        break;
+        case 'upcoming':
+          icon = Icons.schedule_outlined;
+          color = Colors.blue;
+          statusText = '복용 예정';
+          break;
 
-      default:
-        icon = Icons.access_time_outlined;
-        color = Colors.grey;
-        statusText = '복용 시간 미정';
+        default:
+          icon = Icons.access_time_outlined;
+          color = Colors.grey;
+          statusText = '복용 시간 미정';
+      }
     }
 
     return Padding(
@@ -456,13 +503,44 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
             ),
           ),
 
-          Text(
-            statusText,
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-              color: color,
-            ),
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                statusText,
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: color,
+                ),
+              ),
+
+              const SizedBox(width: 6),
+
+              IconButton(
+                onPressed: isCompleted
+                    ? null
+                    : () async {
+                        if (medication.id == null) return;
+
+                        await DatabaseHelper.instance.completeMedication(
+                          medicationId: medication.id!,
+                          petId: widget.pet.id!,
+                          medicationDate: DateTime.now(),
+                        );
+
+                        await loadTodayMedicationLogs();
+                      },
+                icon: Icon(
+                  isCompleted ? Icons.check_circle : Icons.check_circle_outline,
+                  size: 22,
+                ),
+                color: isCompleted ? Colors.green : Colors.grey,
+                tooltip: isCompleted ? '복용 완료' : '복용 완료 처리',
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
+              ),
+            ],
           ),
         ],
       ),
