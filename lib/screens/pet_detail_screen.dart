@@ -59,7 +59,7 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
   DateTime focusedDay = DateTimeUtils.todayKst();
 
   // 기록 화면에서 현재 선택한 탭
-  // 0 = 전체, 1 = 건강, 2 = 예방접종, 3 = 약, 4 = 몸무게
+  // 0 = 전체, 1 = 건강, 2 = 예방접종, 3 = 약, 4 = 체중
   int selectedRecordTab = 0;
 
   @override
@@ -647,7 +647,7 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
       // 약
       case 3:
         return _getMedicationsForDay(day);
-      // 몸무게
+      // 체중
       case 4:
         return _getWeightRecordsForDay(day);
       default:
@@ -781,7 +781,7 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
       }
     }
 
-    // 전체, 몸무게
+    // 전체, 체중
     if (selectedRecordTab == 0 || selectedRecordTab == 4) {
       final records = _getWeightRecordsForDay(day);
 
@@ -1022,7 +1022,7 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
   Widget _buildRecordTabs() {
     final primaryColor = Theme.of(context).primaryColor;
 
-    const tabs = ['전체', '건강', '예방접종', '약', '몸무게'];
+    const tabs = ['전체', '건강', '예방접종', '약', '체중'];
 
     return SizedBox(
       height: 48,
@@ -1077,6 +1077,23 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
         }),
       ),
     );
+  }
+
+  String _getEmptyRecordMessage() {
+    switch (selectedRecordTab) {
+      case 0:
+        return '이 날짜에 등록된 기록이 없습니다.';
+      case 1:
+        return '이 날짜에 등록된 건강 기록이 없습니다.';
+      case 2:
+        return '이 날짜에 등록된 예방접종 기록이 없습니다.';
+      case 3:
+        return '이 날짜에 등록된 약 복용 기록이 없습니다.';
+      case 4:
+        return '이 날짜에 등록된 체중 기록이 없습니다.';
+      default:
+        return '이 날짜에 등록된 기록이 없습니다.';
+    }
   }
 
   @override
@@ -1283,23 +1300,25 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
                               Container(
                                 width: double.infinity,
                                 padding: const EdgeInsets.symmetric(
-                                  vertical: 24,
+                                  vertical: 28,
                                 ),
                                 child: Column(
                                   children: [
-                                    Icon(
-                                      Icons.event_available_outlined,
-                                      size: 32,
-                                      color: Colors.grey[400],
+                                    const Text(
+                                      '아직 기록이 없어요.',
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w600,
+                                      ),
                                     ),
 
-                                    const SizedBox(height: 8),
+                                    const SizedBox(height: 5),
 
                                     Text(
-                                      '선택한 날짜에 등록된 기록이 없습니다.',
+                                      _getEmptyRecordMessage(),
                                       style: TextStyle(
-                                        color: Colors.grey[600],
-                                        fontSize: 14,
+                                        color: Colors.grey[500],
+                                        fontSize: 12,
                                       ),
                                     ),
                                   ],
@@ -1315,9 +1334,7 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
                 ),
               ),
 
-              const SizedBox(height: 16),
-
-              const SizedBox(height: 16),
+              const SizedBox(height: 10),
 
               // 5. 체중 변화 그래프 섹션
               /*
