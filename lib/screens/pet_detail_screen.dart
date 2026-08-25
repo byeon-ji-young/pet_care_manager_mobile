@@ -1155,7 +1155,7 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
               if (upcomingMedications.isNotEmpty)
                 _buildMedicationGroupCard(upcomingMedications),
 
-              // 3. 캘린더 카드
+              // 3. 건강 기록 카드 (+캘린더)
               Card(
                 elevation: 0,
                 shape: RoundedRectangleBorder(
@@ -1167,17 +1167,44 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Padding(
-                        padding: EdgeInsets.only(left: 8, top: 4, bottom: 8),
-                        child: Text(
-                          '🗓️ 건강 기록',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
+                      // 건강 기록 제목 + 기록 추가 버튼
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Padding(
+                            padding: EdgeInsets.only(
+                              left: 8,
+                              top: 4,
+                              bottom: 8,
+                            ),
+                            child: Text(
+                              '🗓️ 건강 기록',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
                           ),
-                        ),
+
+                          ElevatedButton.icon(
+                            onPressed: _showAddRecordBottomSheet,
+                            icon: const Icon(Icons.add, size: 18),
+                            label: const Text('기록 추가'),
+                            style: ElevatedButton.styleFrom(
+                              elevation: 0,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 14,
+                                vertical: 8,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
 
+                      // 캘린더
                       TableCalendar(
                         focusedDay: focusedDay,
                         firstDay: DateTime(2000),
@@ -1188,20 +1215,19 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
                           titleCentered: true,
                           titleTextFormatter: (date, locale) =>
                               '${date.year}년 ${date.month}월',
-                          titleTextStyle: TextStyle(
+                          titleTextStyle: const TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
                         calendarStyle: CalendarStyle(
+                          // 오늘 날짜의 "배경/모양"
                           todayDecoration: const BoxDecoration(
-                            // 오늘 날짜의 "배경/모양"
-                            color: Colors
-                                .transparent, // transparent: 투명한 색. 즉, 배경을 없애는 것
+                            color: Colors.transparent,
                             shape: BoxShape.circle,
                           ),
+                          // 오늘 날짜의 "글자"
                           todayTextStyle: const TextStyle(
-                            // 오늘 날짜의 "글자"
                             color: Colors.black,
                             fontWeight: FontWeight.bold,
                           ),
@@ -1229,92 +1255,67 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
                         },
                         calendarFormat: CalendarFormat.month,
                       ),
+
+                      // 캘린더와 기록 영역 구분
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 4),
+                        child: Divider(height: 24, color: Colors.grey.shade200),
+                      ),
+
+                      // 선택한 날짜 기록
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(
+                          4,
+                          0,
+                          4,
+                          4,
+                        ), // L → T → R → B
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // 기록 탭
+                            _buildRecordTabs(),
+
+                            const SizedBox(height: 12),
+
+                            // 선택된 탭의 기록
+                            if (filteredRecords.isEmpty)
+                              Container(
+                                width: double.infinity,
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 24,
+                                ),
+                                child: Column(
+                                  children: [
+                                    Icon(
+                                      Icons.event_available_outlined,
+                                      size: 32,
+                                      color: Colors.grey[400],
+                                    ),
+
+                                    const SizedBox(height: 8),
+
+                                    Text(
+                                      '선택한 날짜에 등록된 기록이 없습니다.',
+                                      style: TextStyle(
+                                        color: Colors.grey[600],
+                                        fontSize: 14,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              )
+                            else
+                              ..._buildSelectedRecordCards(selectedDay, pet),
+                          ],
+                        ),
+                      ),
                     ],
                   ),
                 ),
               ),
 
               const SizedBox(height: 16),
-
-              // 4. 선택한 날짜 기록 상세 카드
-              Card(
-                elevation: 0,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                  side: BorderSide(color: Colors.grey.shade200),
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            '${selectedDay.year}.'
-                            '${selectedDay.month.toString().padLeft(2, '0')}.'
-                            '${selectedDay.day.toString().padLeft(2, '0')}',
-                            style: const TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          ElevatedButton.icon(
-                            onPressed: _showAddRecordBottomSheet,
-                            icon: const Icon(Icons.add, size: 18),
-                            label: const Text('기록 추가'),
-                            style: ElevatedButton.styleFrom(
-                              elevation: 0,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(20),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-
-                      // 기록 탭
-                      _buildRecordTabs(),
-
-                      const SizedBox(height: 12),
-
-                      // 선택된 탭의 기록
-                      if (filteredRecords.isEmpty)
-                        Container(
-                          width: double.infinity,
-                          padding: const EdgeInsets.symmetric(vertical: 24),
-                          decoration: BoxDecoration(
-                            // color: Colors.grey[100],
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Column(
-                            children: [
-                              Icon(
-                                Icons.event_available_outlined,
-                                size: 32,
-                                color: Colors.grey[400],
-                              ),
-
-                              const SizedBox(height: 8),
-
-                              Text(
-                                '선택한 날짜에 등록된 기록이 없습니다.',
-                                style: TextStyle(
-                                  color: Colors.grey[600],
-                                  fontSize: 14,
-                                ),
-                              ),
-                            ],
-                          ),
-                        )
-                      else ...[
-                        ..._buildSelectedRecordCards(selectedDay, pet),
-                      ],
-                    ],
-                  ),
-                ),
-              ),
 
               const SizedBox(height: 16),
 
