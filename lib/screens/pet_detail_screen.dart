@@ -58,6 +58,10 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
   DateTime selectedDay = DateTimeUtils.todayKst();
   DateTime focusedDay = DateTimeUtils.todayKst();
 
+  // 기록 화면에서 현재 선택한 탭
+  // 0 = 전체, 1 = 건강, 2 = 예방접종, 3 = 약, 4 = 몸무게
+  int selectedRecordTab = 0;
+
   @override
   void initState() {
     super.initState();
@@ -623,6 +627,201 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
         .toList();
   }
 
+  // 선택한 탭에 해당하는 기록만 가져오기
+  List<dynamic> _getFilteredRecordsForSelectedTab(DateTime day) {
+    switch (selectedRecordTab) {
+      // 전체
+      case 0:
+        return [
+          ..._getHealthRecordsForDay(day),
+          ..._getVaccinationsForDay(day),
+          ..._getMedicationsForDay(day),
+          ..._getWeightRecordsForDay(day),
+        ];
+      // 건강
+      case 1:
+        return _getHealthRecordsForDay(day);
+      // 예방접종
+      case 2:
+        return _getVaccinationsForDay(day);
+      // 약
+      case 3:
+        return _getMedicationsForDay(day);
+      // 몸무게
+      case 4:
+        return _getWeightRecordsForDay(day);
+      default:
+        return [];
+    }
+  }
+
+  // 선택한 날짜의 기록 카드 출력
+  List<Widget> _buildSelectedRecordCards(DateTime day, Pet pet) {
+    final widgets = <Widget>[];
+
+    // 전체, 건강
+    if (selectedRecordTab == 0 || selectedRecordTab == 1) {
+      final records = _getHealthRecordsForDay(day);
+
+      for (final record in records) {
+        widgets.add(
+          _SelectedRecordCard(
+            icon: Icons.local_hospital_outlined,
+            iconBgColor: const Color(0xFFE3F2FD),
+            iconColor: Colors.blue,
+            title: record.title,
+            subtitle: record.hospital,
+            onTap: () async {
+              final result = await Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => HealthRecordRegisterScreen(
+                    petId: pet.id!,
+                    record: record,
+                  ),
+                ),
+              );
+
+              if (result != null && mounted) {
+                if (result is DateTime) {
+                  setState(() {
+                    selectedDay = result;
+                    focusedDay = result;
+                  });
+                }
+
+                await loadHealthRecords();
+              }
+            },
+          ),
+        );
+      }
+    }
+
+    // 전체, 예방접종
+    if (selectedRecordTab == 0 || selectedRecordTab == 2) {
+      final vaccinations = _getVaccinationsForDay(day);
+
+      for (final vaccination in vaccinations) {
+        widgets.add(
+          _SelectedRecordCard(
+            icon: Icons.vaccines_outlined,
+            iconBgColor: const Color(0xFFE8F5E9),
+            iconColor: Colors.green,
+            title: vaccination.vaccineName,
+            subtitle: vaccination.hospital,
+            onTap: () async {
+              final result = await Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => VaccinationRegisterScreen(
+                    petId: pet.id!,
+                    vaccination: vaccination,
+                  ),
+                ),
+              );
+
+              if (result != null && mounted) {
+                if (result is DateTime) {
+                  setState(() {
+                    selectedDay = result;
+                    focusedDay = result;
+                  });
+                }
+
+                await loadVaccinations();
+                await loadUpcomingVaccinations();
+              }
+            },
+          ),
+        );
+      }
+    }
+
+    // 전체, 약 복용
+    if (selectedRecordTab == 0 || selectedRecordTab == 3) {
+      final medications = _getMedicationsForDay(day);
+
+      for (final medication in medications) {
+        widgets.add(
+          _SelectedRecordCard(
+            icon: Icons.medication_outlined,
+            iconBgColor: const Color(0xFFFFF3E0),
+            iconColor: Colors.orange,
+            title: medication.medicationName,
+            subtitle:
+                medication.medicationTime?.format(context) ??
+                '', // ?.는 null이면 뒤의 함수를 실행하지 말라는 의미 / ??는 왼쪽 값이 null이면 오른쪽 값을 사용한다는 뜻
+            onTap: () async {
+              final result = await Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => MedicationRegisterScreen(
+                    petId: pet.id!,
+                    medication: medication,
+                  ),
+                ),
+              );
+
+              if (result != null && mounted) {
+                if (result is DateTime) {
+                  setState(() {
+                    selectedDay = result;
+                    focusedDay = result;
+                  });
+                }
+
+                await loadMedications();
+                await loadUpcomingMedications();
+                await loadTodayMedications();
+              }
+            },
+          ),
+        );
+      }
+    }
+
+    // 전체, 몸무게
+    if (selectedRecordTab == 0 || selectedRecordTab == 4) {
+      final records = _getWeightRecordsForDay(day);
+
+      for (final record in records) {
+        widgets.add(
+          _SelectedRecordCard(
+            icon: Icons.monitor_weight_outlined,
+            iconBgColor: const Color(0xFFF3E5F5),
+            iconColor: Colors.purple,
+            title: '${record.weight} kg',
+            onTap: () async {
+              final result = await Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => WeightRecordRegisterScreen(
+                    petId: pet.id!,
+                    record: record,
+                  ),
+                ),
+              );
+
+              if (result != null && mounted) {
+                if (result is DateTime) {
+                  setState(() {
+                    selectedDay = result;
+                    focusedDay = result;
+                  });
+                }
+
+                await loadWeightRecords();
+              }
+            },
+          ),
+        );
+      }
+    }
+
+    return widgets;
+  }
+
   // 기록 추가 버튼 바텀 시트
   /*
   void _showAddRecordBottomSheet() {} 여기의 context는 상세화면의 context
@@ -819,15 +1018,56 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
     );
   }
 
+  // 기록 종류 선택 탭
+  Widget _buildRecordTabs() {
+    const tabs = ['전체', '건강', '예방접종', '약', '몸무게'];
+
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        children: List.generate(tabs.length, (index) {
+          final isSelected = selectedRecordTab == index;
+
+          return Padding(
+            padding: const EdgeInsets.only(right: 7),
+            child: ChoiceChip(
+              label: Text(tabs[index]),
+              selected: isSelected,
+              onSelected: (_) {
+                // _는 Dart에서 흔히 사용하지 않을 값을 나타내는 이름으로 사용. 즉, 사용하지 않는 매개변수
+                setState(() {
+                  selectedRecordTab = index;
+                });
+              },
+              selectedColor: Theme.of(
+                context,
+              ).primaryColor.withValues(alpha: 0.15),
+              labelStyle: TextStyle(
+                color: isSelected
+                    ? Theme.of(context).primaryColor
+                    : Colors.grey[700],
+                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+              ),
+              side: BorderSide(
+                color: isSelected
+                    ? Theme.of(context).primaryColor
+                    : Colors.grey.shade300,
+              ),
+              backgroundColor: Colors.white,
+              showCheckmark: false,
+            ),
+          );
+        }),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     // build()는 _PetDetailScreenState 안에 존재. State에서 부모 StatefulWidget의 값을 가져오려면 ~ 으로r 써야함. 즉 pet -> pet 작성해야 됨
     final pet = currentPet!;
 
-    final selectedHealthRecords = _getHealthRecordsForDay(selectedDay);
-    final selectedVaccinations = _getVaccinationsForDay(selectedDay);
-    final selectedWeightRecords = _getWeightRecordsForDay(selectedDay);
-    final selectedMedications = _getMedicationsForDay(selectedDay);
+    final filteredRecords = _getFilteredRecordsForSelectedTab(selectedDay);
 
     return Scaffold(
       // backgroundColor: Colors.green[10],
@@ -1017,12 +1257,11 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
                         ],
                       ),
 
+                      _buildRecordTabs(),
+
                       const SizedBox(height: 12),
 
-                      if (selectedHealthRecords.isEmpty &&
-                          selectedVaccinations.isEmpty &&
-                          selectedWeightRecords.isEmpty &&
-                          selectedMedications.isEmpty)
+                      if (filteredRecords.isEmpty)
                         Container(
                           width: double.infinity,
                           padding: const EdgeInsets.symmetric(vertical: 24),
@@ -1051,142 +1290,7 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
                           ),
                         )
                       else ...[
-                        // 병원 기록
-                        ...selectedHealthRecords.map((record) {
-                          return _SelectedRecordCard(
-                            icon: Icons.local_hospital_outlined,
-                            iconBgColor: const Color(0xFFE3F2FD),
-                            iconColor: Colors.blue,
-                            title: record.title,
-                            subtitle: record.hospital,
-                            onTap: () async {
-                              final result = await Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) =>
-                                      HealthRecordRegisterScreen(
-                                        petId: pet.id!,
-                                        record: record,
-                                      ),
-                                ),
-                              );
-
-                              if (result != null && mounted) {
-                                if (result is DateTime) {
-                                  setState(() {
-                                    selectedDay = result;
-                                    focusedDay = result;
-                                  });
-                                }
-
-                                await loadHealthRecords();
-                              }
-                            },
-                          );
-                        }),
-                        // 예방접종 기록
-                        ...selectedVaccinations.map((vaccination) {
-                          return _SelectedRecordCard(
-                            icon: Icons.vaccines_outlined,
-                            iconBgColor: const Color(0xFFE8F5E9),
-                            iconColor: Colors.green,
-                            title: vaccination.vaccineName,
-                            subtitle: vaccination.hospital,
-                            onTap: () async {
-                              final result = await Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) =>
-                                      VaccinationRegisterScreen(
-                                        petId: pet.id!,
-                                        vaccination: vaccination,
-                                      ),
-                                ),
-                              );
-
-                              if (result != null && mounted) {
-                                if (result is DateTime) {
-                                  setState(() {
-                                    selectedDay = result;
-                                    focusedDay = result;
-                                  });
-                                }
-
-                                await loadVaccinations();
-                                await loadUpcomingVaccinations();
-                              }
-                            },
-                          );
-                        }),
-                        // 체중 기록
-                        ...selectedWeightRecords.map((record) {
-                          return _SelectedRecordCard(
-                            icon: Icons.monitor_weight_outlined,
-                            iconBgColor: const Color(0xFFF3E5F5),
-                            iconColor: Colors.purple,
-                            title: '${record.weight} kg',
-                            onTap: () async {
-                              final result = await Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) =>
-                                      WeightRecordRegisterScreen(
-                                        petId: pet.id!,
-                                        record: record,
-                                      ),
-                                ),
-                              );
-
-                              if (result != null && mounted) {
-                                if (result is DateTime) {
-                                  setState(() {
-                                    selectedDay = result;
-                                    focusedDay = result;
-                                  });
-                                }
-
-                                await loadWeightRecords();
-                              }
-                            },
-                          );
-                        }),
-                        // 약 복용 기록
-                        ...selectedMedications.map((medication) {
-                          return _SelectedRecordCard(
-                            icon: Icons.medication_outlined,
-                            iconBgColor: const Color(0xFFFFF3E0),
-                            iconColor: Colors.orange,
-                            title: medication.medicationName,
-                            subtitle:
-                                medication.medicationTime?.format(context) ??
-                                '', // ?.는 null이면 뒤의 함수를 실행하지 말라는 의미 / ??는 왼쪽 값이 null이면 오른쪽 값을 사용한다는 뜻
-                            onTap: () async {
-                              final result = await Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) =>
-                                      MedicationRegisterScreen(
-                                        petId: pet.id!,
-                                        medication: medication,
-                                      ),
-                                ),
-                              );
-
-                              if (result != null && mounted) {
-                                if (result is DateTime) {
-                                  setState(() {
-                                    selectedDay = result;
-                                    focusedDay = result;
-                                  });
-                                }
-
-                                await loadMedications();
-                                await loadUpcomingMedications();
-                                await loadTodayMedications();
-                              }
-                            },
-                          );
-                        }),
+                        ..._buildSelectedRecordCards(selectedDay, pet),
                       ],
                     ],
                   ),
