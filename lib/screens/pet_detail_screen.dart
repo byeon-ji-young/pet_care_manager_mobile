@@ -1151,7 +1151,7 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
         physics: const BouncingScrollPhysics(),
         // physics: 스크롤의 물리 효과 설정. BouncingScrollPhysics(): 스크롤을 끝까지 밀었을 대 살짝 튕기는 효과 / ClampingScrollPhysics(): 튕기지 않고 멈추는 느낌
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 36),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
