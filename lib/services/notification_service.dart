@@ -60,7 +60,8 @@ class NotificationService {
     await androidPlugin?.requestExactAlarmsPermission();
   }
 
-  // ================================================ 반복 X ================================================
+  // ============================================= 약 =============================================
+  // -------------------------------------------- 반복 X --------------------------------------------
   // 약 복용 알림 예약
   Future<void> scheduleNotification({
     required int id,
@@ -101,9 +102,9 @@ class NotificationService {
   Future<void> cancelNotification(int id) async {
     await _notifications.cancel(id: id);
   }
-  // ================================================ 반복 X ================================================
+  // -------------------------------------------- 반복 X --------------------------------------------
 
-  // ================================================ 반복 O ================================================
+  // -------------------------------------------- 반복 O --------------------------------------------
   // 약 복용 알림 예약
   Future<void> scheduleMedicationNotification({
     required int id,
@@ -229,5 +230,40 @@ class NotificationService {
     }
   }
 
-  // ================================================ 반복 O ================================================
+  // -------------------------------------------- 반복 O --------------------------------------------
+
+  // ============================================= 예방접종 =============================================
+  // -------------------------------------------- 반복 O --------------------------------------------
+  // 예방접종 알림 예약
+  Future<void> scheduleVaccinationNotification({
+    required int id,
+    required String title,
+    required String body,
+    required DateTime scheduledDate,
+  }) async {
+    await _notifications.zonedSchedule(
+      id: id,
+      title: title,
+      body: body,
+      scheduledDate: tz.TZDateTime.from(scheduledDate, tz.local),
+      notificationDetails: const NotificationDetails(
+        android: AndroidNotificationDetails(
+          'vaccination_channel',
+          '예방접종 알림',
+          channelDescription: '반려동물 예방접종 예정일 알림',
+          importance: Importance.high,
+          priority: Priority.high,
+        ),
+        iOS: DarwinNotificationDetails(),
+      ),
+      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+    );
+  }
+
+  // 예방접종 알림 취소
+  Future<void> cancelVaccinationNotification(int id) async {
+    await _notifications.cancel(id: id);
+  }
+
+  // -------------------------------------------- 반복 O --------------------------------------------
 }

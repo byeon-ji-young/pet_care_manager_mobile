@@ -4,6 +4,8 @@ import '../database/database_helper.dart';
 
 import '../models/vaccination.dart';
 
+import '../services/notification_service.dart';
+
 import '../utils/date_time_utils.dart';
 
 class VaccinationRegisterScreen extends StatefulWidget {
@@ -91,6 +93,12 @@ class _VaccinationRegisterScreen extends State<VaccinationRegisterScreen> {
       return;
     }
 
+    // 기존 예방접종 알림 취소
+    await NotificationService.instance.cancelVaccinationNotification(
+      vaccination.id!,
+    );
+
+    // DB 기록 삭제
     await DatabaseHelper.instance.deleteVaccination(vaccination.id!);
 
     if (!mounted) {
@@ -390,14 +398,52 @@ class _VaccinationRegisterScreen extends State<VaccinationRegisterScreen> {
                           : memoController.text.trim(),
                     );
 
+                    int? vaccinationId;
+
                     if (widget.vaccination == null) {
-                      await DatabaseHelper.instance.insertVaccination(
-                        vaccination,
-                      );
+                      // 신규 등록
+                      vaccinationId = await DatabaseHelper.instance
+                          .insertVaccination(vaccination);
                     } else {
+                      // 기존 알림 취소
+                      await NotificationService.instance
+                          .cancelVaccinationNotification(
+                            widget.vaccination!.id!,
+                          );
+
+                      // 기존 기록 수정
                       await DatabaseHelper.instance.updateVaccination(
                         vaccination,
                       );
+
+                      // 수정은 기존 ID 그대로 사용
+                      vaccinationId = vaccination.id;
+                    }
+
+                    // 다음 접종일이 있는 경우 알림 예약
+                    if (vaccination.nextDate != null && vaccinationId != null) {
+                      final nextDate = vaccination.nextDate!;
+
+                      // 예방접종일 오전 9시에 알림
+                      final scheduledDate = DateTime(
+                        nextDate.year,
+                        nextDate.month,
+                        nextDate.day,
+                        9,
+                        0,
+                      );
+
+                      try {
+                        await NotificationService.instance
+                            .scheduleVaccinationNotification(
+                              id: vaccinationId,
+                              title: '💉 예방접종 예정이에요',
+                              body: '${vaccination.vaccineName} 예방접종 예정일이에요.',
+                              scheduledDate: scheduledDate,
+                            );
+                      } catch (e) {
+                        debugPrint('예방접종 알림 예약 실패: $e');
+                      }
                     }
 
                     if (!context.mounted) {
