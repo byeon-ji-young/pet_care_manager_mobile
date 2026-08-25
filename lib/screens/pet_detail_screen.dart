@@ -386,15 +386,16 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
 
   // 오늘 복용할 약 카드
   Widget _buildTodayMedicationCard(List<Medication> list) {
-    // final primaryColor = Theme.of(context).primaryColor;
+    final primaryColor = Theme.of(context).primaryColor;
 
     return Container(
       width: double.infinity,
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: Colors.orange.withValues(alpha: 0.05),
+        color: Colors.white,
+        // color: Colors.orange.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.orange.withValues(alpha: 0.3)),
+        border: Border.all(color: primaryColor, width: 2.0),
       ),
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -403,11 +404,7 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
           children: [
             Row(
               children: [
-                Icon(
-                  Icons.medication_outlined,
-                  color: Colors.orange.shade700,
-                  size: 20,
-                ),
+                Icon(Icons.medication_outlined, color: primaryColor, size: 20),
                 const SizedBox(width: 8),
                 const Text(
                   '오늘 복용할 약',
@@ -416,7 +413,7 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
               ],
             ),
 
-            const SizedBox(height: 12),
+            const SizedBox(height: 10),
 
             ...list.map(
               (medication) {
@@ -473,7 +470,7 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
     }
 
     return Padding(
-      padding: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.only(top: 5),
       child: Row(
         children: [
           CircleAvatar(
@@ -928,10 +925,12 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
                         focusedDay: focusedDay,
                         firstDay: DateTime(2000),
                         lastDay: DateTime(2100),
-                        headerStyle: const HeaderStyle(
+                        headerStyle: HeaderStyle(
                           formatButtonVisible:
                               false, // 달력 헤더에 있는 Format 버튼을 숨기기
                           titleCentered: true,
+                          titleTextFormatter: (date, locale) =>
+                              '${date.year}년 ${date.month}월',
                           titleTextStyle: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
