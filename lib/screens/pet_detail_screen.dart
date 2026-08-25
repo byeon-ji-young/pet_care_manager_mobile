@@ -1400,45 +1400,70 @@ class _SelectedRecordCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      elevation: 0,
+    return Container(
       margin: const EdgeInsets.only(bottom: 8),
-      shape: RoundedRectangleBorder(
+      decoration: BoxDecoration(
+        color: const Color(0xFFF9FAFB),
         borderRadius: BorderRadius.circular(14),
-        side: BorderSide(color: Colors.grey.shade300),
+        border: Border.all(color: Colors.grey.shade200),
       ),
-      child: ListTile(
+      child: InkWell(
         onTap: onTap,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
-        // leading: Container(
-        //   width: 40,
-        //   height: 40,
-        //   decoration: BoxDecoration(
-        //     color: iconBgColor,
-        //     borderRadius: BorderRadius.circular(10),
-        //   ),
-        //   child: Icon(icon, color: iconColor, size: 22),
-        // ),
-        leading: CircleAvatar(
-          backgroundColor: iconBgColor,
-          child: Icon(icon, color: iconColor, size: 22),
+        borderRadius: BorderRadius.circular(14),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
+          child: Row(
+            children: [
+              // 아이콘
+              Container(
+                width: 42,
+                height: 42,
+                decoration: BoxDecoration(
+                  color: iconBgColor,
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(icon, color: iconColor, size: 21),
+              ),
+
+              const SizedBox(width: 12),
+
+              // 기록 내용
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+
+                    if (subtitle != null && subtitle!.isNotEmpty) ...[
+                      const SizedBox(height: 4),
+
+                      Text(
+                        subtitle!,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+
+              const SizedBox(width: 8),
+
+              // 이동 아이콘
+              if (onTap != null)
+                Icon(Icons.chevron_right, color: Colors.grey[400], size: 20),
+            ],
+          ),
         ),
-
-        title: Text(
-          title,
-          style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
-        ),
-
-        subtitle: subtitle != null && subtitle!.isNotEmpty
-            ? Text(
-                subtitle!,
-                style: TextStyle(fontSize: 13, color: Colors.grey[600]),
-              )
-            : null,
-
-        trailing: onTap != null
-            ? const Icon(Icons.chevron_right, color: Colors.grey, size: 20)
-            : null,
       ),
     );
   }
