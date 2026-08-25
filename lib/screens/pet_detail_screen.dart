@@ -1020,41 +1020,58 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
 
   // 기록 종류 선택 탭
   Widget _buildRecordTabs() {
+    final primaryColor = Theme.of(context).primaryColor;
+
     const tabs = ['전체', '건강', '예방접종', '약', '몸무게'];
 
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
+    return SizedBox(
+      height: 48,
       child: Row(
         children: List.generate(tabs.length, (index) {
           final isSelected = selectedRecordTab == index;
 
-          return Padding(
-            padding: const EdgeInsets.only(right: 7),
-            child: ChoiceChip(
-              label: Text(tabs[index]),
-              selected: isSelected,
-              onSelected: (_) {
-                // _는 Dart에서 흔히 사용하지 않을 값을 나타내는 이름으로 사용. 즉, 사용하지 않는 매개변수
+          return Expanded(
+            child: GestureDetector(
+              // GestureDetector: 탭을 터치할 수 있게 만드는 부분
+              onTap: () {
                 setState(() {
                   selectedRecordTab = index;
                 });
               },
-              selectedColor: Theme.of(
-                context,
-              ).primaryColor.withValues(alpha: 0.15),
-              labelStyle: TextStyle(
-                color: isSelected
-                    ? Theme.of(context).primaryColor
-                    : Colors.grey[700],
-                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.end, // 탭 안의 내용을 세로 방향으로 배치
+                children: [
+                  Expanded(
+                    child: Center(
+                      child: Text(
+                        tabs[index],
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: isSelected
+                              ? FontWeight.bold
+                              : FontWeight.w500,
+                          color: isSelected ? primaryColor : Colors.grey[600],
+                        ),
+                      ),
+                    ),
+                  ),
+
+                  AnimatedContainer(
+                    duration: const Duration(
+                      milliseconds: 200,
+                    ), // 값이 변경될 때 200ms 동안 애니메이션 효과
+                    curve: Curves.easeOut,
+                    width: isSelected ? 28 : 0,
+                    height: 3,
+                    decoration: BoxDecoration(
+                      color: primaryColor,
+                      borderRadius: BorderRadius.circular(3),
+                    ),
+                  ),
+                ],
               ),
-              side: BorderSide(
-                color: isSelected
-                    ? Theme.of(context).primaryColor
-                    : Colors.grey.shade300,
-              ),
-              backgroundColor: Colors.white,
-              showCheckmark: false,
             ),
           );
         }),
@@ -1257,10 +1274,12 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
                         ],
                       ),
 
+                      // 기록 탭
                       _buildRecordTabs(),
 
                       const SizedBox(height: 12),
 
+                      // 선택된 탭의 기록
                       if (filteredRecords.isEmpty)
                         Container(
                           width: double.infinity,
