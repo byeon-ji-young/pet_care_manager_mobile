@@ -397,9 +397,11 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
         color: Colors.white,
-        // color: Colors.orange.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: primaryColor, width: 2.0),
+        border: Border.all(
+          color: primaryColor.withValues(alpha: 0.35),
+          // width: 1,
+        ),
       ),
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -410,9 +412,31 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
               children: [
                 Icon(Icons.medication_outlined, color: primaryColor, size: 20),
                 const SizedBox(width: 8),
+
                 const Text(
                   '오늘 복용할 약',
                   style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+                ),
+
+                const SizedBox(width: 6),
+
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 7,
+                    vertical: 2,
+                  ),
+                  decoration: BoxDecoration(
+                    color: primaryColor.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Text(
+                    '${list.length}',
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.bold,
+                      color: primaryColor,
+                    ),
+                  ),
                 ),
               ],
             ),
@@ -474,7 +498,7 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
     }
 
     return Padding(
-      padding: const EdgeInsets.only(top: 5),
+      padding: const EdgeInsets.only(top: 5, bottom: 2),
       child: Row(
         children: [
           CircleAvatar(
