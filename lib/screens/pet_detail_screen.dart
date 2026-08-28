@@ -253,6 +253,7 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
     required String title,
     required DateTime targetDate,
     required String categoryType, // 'vaccine' 또는 'medication'
+    VoidCallback? onTap,
   }) {
     final today = DateTimeUtils.todayKst();
     final todayDate = DateTime(today.year, today.month, today.day);
@@ -287,21 +288,27 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
-      child: Row(
-        children: [
-          Icon(iconData, color: textColor, size: 20),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              message,
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-                color: textColor,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(8),
+        child: Row(
+          children: [
+            Icon(iconData, color: textColor, size: 20),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                message,
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: textColor,
+                ),
               ),
             ),
-          ),
-        ],
+            if (onTap != null)
+              Icon(Icons.chevron_right, color: Colors.grey[400], size: 20),
+          ],
+        ),
       ),
     );
   }
@@ -331,6 +338,29 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
                 title: item.vaccineName,
                 targetDate: item.nextDate!,
                 categoryType: 'vaccine',
+                onTap: () async {
+                  final result = await Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => VaccinationRegisterScreen(
+                        petId: widget.pet.id!,
+                        vaccination: item,
+                      ),
+                    ),
+                  );
+
+                  if (result != null && mounted) {
+                    if (result is DateTime) {
+                      setState(() {
+                        selectedDay = result;
+                        focusedDay = result;
+                      });
+                    }
+
+                    await loadVaccinations();
+                    await loadUpcomingVaccinations();
+                  }
+                },
               ),
               if (index < items.length - 1)
                 Divider(
@@ -372,6 +402,30 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
                 title: item.medicationName,
                 targetDate: item.nextDate!,
                 categoryType: 'medication',
+                onTap: () async {
+                  final result = await Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => MedicationRegisterScreen(
+                        petId: widget.pet.id!,
+                        medication: item,
+                      ),
+                    ),
+                  );
+
+                  if (result != null && mounted) {
+                    if (result is DateTime) {
+                      setState(() {
+                        selectedDay = result;
+                        focusedDay = result;
+                      });
+                    }
+
+                    await loadMedications();
+                    await loadUpcomingMedications();
+                    await loadTodayMedications();
+                  }
+                },
               ),
               if (index < items.length - 1)
                 Divider(
