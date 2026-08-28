@@ -1849,3 +1849,122 @@ const androidSettings = AndroidInitializationSettings(
 * [x] 앱 아이콘 변경
 * [x] `flutter_launcher_icons` 패키지 사용
 * [ ] Flutter 화면 디자인 및 레이아웃 심화
+
+---
+
+### `flutter analyze`
+
+Flutter 프로젝트의 Dart 코드를 정적으로 분석하여 **코드에 문제가 있는지 검사**합니다.
+
+```bash
+flutter analyze
+```
+
+실행하면 프로젝트 전체의 Dart 코드를 검사하여 다음과 같은 문제를 찾아줍니다.
+
+* 문법 오류
+* 타입 오류
+* 존재하지 않는 변수나 메서드 사용
+* 사용하지 않는 import
+* 사용하지 않는 변수
+* Flutter/Dart에서 권장하지 않는 코드
+* 기타 정적 분석 경고 및 오류
+
+예:
+
+```text
+Analyzing pet_care_manager_mobile...
+
+No issues found!
+```
+
+`No issues found!`가 나오면 현재 프로젝트에서 Flutter analyzer가 발견한 문제가 없다는 의미입니다.
+
+---
+
+### `flutter analyze`의 장점
+
+앱을 직접 실행하지 않아도 코드의 문제를 미리 확인할 수 있습니다.
+
+```text
+코드 작성
+   ↓
+flutter analyze
+   ↓
+오류 / 경고 확인
+   ↓
+코드 수정
+   ↓
+flutter run
+```
+
+특히 Git에 커밋하기 전에 실행하면 **실행하기 전 코드의 문제를 미리 확인**할 수 있습니다.
+
+예를 들어:
+
+```bash
+flutter analyze
+```
+
+실행 후 문제가 없다면:
+
+```bash
+git status
+git add .
+git commit -m "feat: 약 복용 기능 추가"
+git push
+```
+
+처럼 작업을 진행할 수 있습니다.
+
+---
+
+### `flutter analyze`와 `flutter run`의 차이
+
+두 명령어는 목적이 다릅니다.
+
+| 명령어               | 목적                 |
+| ----------------- | ------------------ |
+| `flutter analyze` | 코드에 문제가 있는지 검사     |
+| `flutter run`     | 실제 기기/에뮬레이터에서 앱 실행 |
+
+따라서 앱을 실행하기 전에:
+
+```bash
+flutter analyze
+```
+
+로 코드를 검사하고,
+
+문제가 없다면:
+
+```bash
+flutter run
+```
+
+으로 실제 앱을 실행하는 방식으로 사용할 수 있습니다.
+
+---
+
+### 분석 결과의 종류
+
+Flutter analyzer는 문제의 심각도에 따라 오류나 경고 등을 표시할 수 있습니다.
+
+예:
+
+```text
+error
+warning
+info
+```
+
+`error`
+→ 코드가 정상적으로 분석/컴파일되는 것을 막을 수 있는 심각한 문제
+
+`warning`
+→ 잠재적인 문제나 권장되지 않는 코드
+
+`info`
+→ 코드 스타일이나 개선을 위한 안내
+
+따라서 단순히 오류가 발생했는지만 보는 것이 아니라 **어떤 종류의 문제가 발생했는지도 함께 확인하는 것이 중요합니다.**
