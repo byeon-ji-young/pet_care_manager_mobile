@@ -476,6 +476,39 @@ class DatabaseHelper {
     return Vaccination.fromMap(maps.first);
   }
 
+  // 오늘 예정된 예방접종 조회
+  Future<List<Vaccination>> getTodayVaccinations(int petId) async {
+    final db = await database;
+
+    final today = DateTimeUtils.todayKst();
+
+    final todayString =
+        '${today.year.toString().padLeft(4, '0')}-'
+        '${today.month.toString().padLeft(2, '0')}-'
+        '${today.day.toString().padLeft(2, '0')}';
+
+    final tomorrow = today.add(const Duration(days: 1));
+
+    final tomorrowString =
+        '${tomorrow.year.toString().padLeft(4, '0')}-'
+        '${tomorrow.month.toString().padLeft(2, '0')}-'
+        '${tomorrow.day.toString().padLeft(2, '0')}';
+
+    final maps = await db.query(
+      'vaccinations',
+      where: '''
+      pet_id = ?
+      AND next_date IS NOT NULL
+      AND next_date >= ?
+      AND next_date < ?
+    ''',
+      whereArgs: [petId, todayString, tomorrowString],
+      orderBy: 'next_date ASC',
+    );
+
+    return maps.map((map) => Vaccination.fromMap(map)).toList();
+  }
+
   // ========================================================= weight_records =========================================================
   // 체중 등록
   Future<int> insertWeightRecord(WeightRecord record) async {

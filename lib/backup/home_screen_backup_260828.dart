@@ -3,8 +3,8 @@ import 'dart:io';
 import 'package:flutter/material.dart'; // 플루터 제공 디자인 라이브러리
 import 'package:pet_care_manager_mobile/models/medication.dart';
 
-import 'pet_register_screen.dart';
-import 'pet_detail_screen.dart';
+import '../screens/pet_register_screen.dart';
+import '../screens/pet_detail_screen.dart';
 
 import '../database/database_helper.dart';
 
@@ -13,19 +13,21 @@ import '../models/vaccination.dart';
 
 import '../utils/date_time_utils.dart';
 
-class HomeScreen extends StatefulWidget {
+class HomeScreenBackup260828 extends StatefulWidget {
   // StatelessWidget: 사용자에 동작에 의해 화면 자체의 데이터(상태)가 바로 바뀌지 않는 정적인 화면을 의미
-  const HomeScreen({super.key}); // 플러터가 위젯을 효율적으로 관리할 수 있도록 돕는 생성자 선언
+  const HomeScreenBackup260828({
+    super.key,
+  }); // 플러터가 위젯을 효율적으로 관리할 수 있도록 돕는 생성자 선언
 
   @override
-  State<HomeScreen> createState() => _HomeScreenState();
+  State<HomeScreenBackup260828> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _HomeScreenState extends State<HomeScreenBackup260828> {
   List<Pet> pets = [];
 
-  Map<int, List<Vaccination>> todayVaccinations = {};
-  Map<int, List<Medication>> todayMedications = {};
+  Map<int, Vaccination?> nextVaccinations = {};
+  Map<int, Medication?> nextMedications = {};
 
   @override
   void initState() {
@@ -38,19 +40,21 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> loadPets() async {
     final loadedPets = await DatabaseHelper.instance.getPets();
 
-    final Map<int, List<Vaccination>> loadedTodayVaccinations = {};
-    final Map<int, List<Medication>> loadedTodayMedications = {};
+    final Map<int, Vaccination?> loadedNextVaccinations = {};
+    final Map<int, Medication?> loadedNextMedications = {};
 
     for (final pet in loadedPets) {
-      final todayVaccinations = await DatabaseHelper.instance
-          .getTodayVaccinations(pet.id!);
+      final nextVaccination = await DatabaseHelper.instance.getNextVaccination(
+        pet.id!,
+      );
 
-      loadedTodayVaccinations[pet.id!] = todayVaccinations;
+      loadedNextVaccinations[pet.id!] = nextVaccination;
 
-      final todayMedications = await DatabaseHelper.instance
-          .getTodayMedications(pet.id!);
+      final nextMedication = await DatabaseHelper.instance.getNextMedication(
+        pet.id!,
+      );
 
-      loadedTodayMedications[pet.id!] = todayMedications;
+      loadedNextMedications[pet.id!] = nextMedication;
     }
 
     if (!mounted) {
@@ -59,9 +63,59 @@ class _HomeScreenState extends State<HomeScreen> {
 
     setState(() {
       pets = loadedPets;
-      todayVaccinations = loadedTodayVaccinations;
-      todayMedications = loadedTodayMedications;
+      nextVaccinations = loadedNextVaccinations;
+      nextMedications = loadedNextMedications;
     });
+  }
+
+  // 예방접종, 약 복용 알림 메세지
+  String _getReminderMessage({
+    required String name,
+    required DateTime nextDate,
+    required String categoryType,
+  }) {
+    final today = DateTimeUtils.todayKst();
+
+    final todayOnly = DateTime(today.year, today.month, today.day);
+    final nextDateOnly = DateTime(nextDate.year, nextDate.month, nextDate.day);
+
+    final difference = nextDateOnly.difference(todayOnly).inDays;
+
+    if (difference < 0) {
+      return categoryType == 'vaccine'
+          ? '🔔 $name 예방접종 예정일이 ${difference.abs()}일 지났어요.'
+          : '🔔 $name 복용 예정일이 ${difference.abs()}일 지났어요.';
+    } else if (difference == 0) {
+      return categoryType == 'vaccine'
+          ? '🔔 오늘은 $name 예방접종 날이에요!'
+          : '🔔 오늘은 $name 복용일이에요!';
+    } else if (difference == 1) {
+      return categoryType == 'vaccine'
+          ? '🔔 $name 예방접종이 내일이에요.'
+          : '🔔 $name 복용일이 내일이에요.';
+    }
+
+    return categoryType == 'vaccine'
+        ? '💉 $name 예방접종까지 $difference일 남았어요.'
+        : '💉 $name 복용까지 $difference일 남았어요.';
+  }
+
+  // 예방접종, 약 복용 알림 배경
+  Color _getReminderColor(DateTime nextDate) {
+    final today = DateTimeUtils.todayKst();
+
+    final todayOnly = DateTime(today.year, today.month, today.day);
+    final nextDateOnly = DateTime(nextDate.year, nextDate.month, nextDate.day);
+
+    final difference = nextDateOnly.difference(todayOnly).inDays;
+
+    if (difference <= 0) {
+      return Colors.red.shade900;
+    } else if (difference == 1 || difference <= 7) {
+      return Colors.orange.shade900;
+    }
+
+    return Theme.of(context).primaryColor.withValues(alpha: 0.9);
   }
 
   /* 
@@ -220,22 +274,81 @@ class _HomeScreenState extends State<HomeScreen> {
                             ],
                           ),
 
-                          const SizedBox(height: 15),
+                          // 예방접종 알림
+                          if (nextVaccinations[pet.id] != null) ...[
+                            const SizedBox(height: 15),
 
-                          const Align(
-                            alignment: Alignment.centerLeft,
-                            child: Text(
-                              '오늘의 건강 관리',
-                              style: TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.bold,
-                              ),
+                            Builder(
+                              builder: (context) {
+                                final vaccination = nextVaccinations[pet.id]!;
+                                final alertColor = _getReminderColor(
+                                  vaccination.nextDate!,
+                                );
+
+                                return Container(
+                                  width: double.infinity,
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 14,
+                                    vertical: 10,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: alertColor.withValues(alpha: 0.08),
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  child: Text(
+                                    _getReminderMessage(
+                                      name: vaccination.vaccineName,
+                                      nextDate: vaccination.nextDate!,
+                                      categoryType: 'vaccine',
+                                    ),
+                                    style: TextStyle(
+                                      color: alertColor,
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                );
+                              },
                             ),
-                          ),
+                          ],
 
-                          const SizedBox(height: 8),
+                          // 약 복용 알림
+                          if (nextMedications[pet.id!] != null) ...[
+                            const SizedBox(height: 5),
 
-                          ..._buildTodayHealthTasks(pet),
+                            Builder(
+                              builder: (context) {
+                                final medication = nextMedications[pet.id]!;
+                                final alertColor = _getReminderColor(
+                                  medication.nextDate!,
+                                );
+
+                                return Container(
+                                  width: double.infinity,
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 14,
+                                    vertical: 10,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: alertColor.withValues(alpha: 0.08),
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  child: Text(
+                                    _getReminderMessage(
+                                      name: medication.medicationName,
+                                      nextDate: medication.nextDate!,
+                                      categoryType: 'medication',
+                                    ),
+                                    style: TextStyle(
+                                      color: alertColor,
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                          ],
                         ],
                       ),
                     ),
@@ -261,89 +374,6 @@ class _HomeScreenState extends State<HomeScreen> {
               child: Icon(Icons.add, color: Theme.of(context).primaryColor),
             )
           : null,
-    );
-  }
-
-  List<Widget> _buildTodayHealthTasks(Pet pet) {
-    final vaccinations = todayVaccinations[pet.id] ?? [];
-    final medications = todayMedications[pet.id] ?? [];
-
-    if (vaccinations.isEmpty && medications.isEmpty) {
-      return [
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-          decoration: BoxDecoration(
-            color: Colors.grey.withValues(alpha: 0.08),
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: Text(
-            '🐾 오늘 예정된 건강 관리가 없어요.',
-            style: TextStyle(
-              fontSize: 13,
-              color: Colors.grey[700],
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ),
-      ];
-    }
-
-    return [
-      ...medications.map((medication) => _buildTodayMedicationItem(medication)),
-      ...vaccinations.map(
-        (vaccination) => _buildTodayVaccinationItem(vaccination),
-      ),
-    ];
-  }
-
-  Widget _buildTodayMedicationItem(Medication medication) {
-    return Container(
-      width: double.infinity,
-      margin: const EdgeInsets.only(bottom: 5),
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-      decoration: BoxDecoration(
-        color: Theme.of(context).primaryColor.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: Row(
-        children: [
-          const Text('💊', style: TextStyle(fontSize: 17)),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(
-              medication.medicationTime != null
-                  ? '${medication.medicationTime!.format(context)} ${medication.medicationName}'
-                  : medication.medicationName,
-              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildTodayVaccinationItem(Vaccination vaccination) {
-    return Container(
-      width: double.infinity,
-      margin: const EdgeInsets.only(bottom: 5),
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-      decoration: BoxDecoration(
-        color: Colors.orange.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: Row(
-        children: [
-          const Text('💉', style: TextStyle(fontSize: 17)),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(
-              '${vaccination.vaccineName} 예방접종 예정',
-              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
-            ),
-          ),
-        ],
-      ),
     );
   }
 }
