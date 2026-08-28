@@ -26,6 +26,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Map<int, List<Vaccination>> todayVaccinations = {};
   Map<int, List<Medication>> todayMedications = {};
+  Map<int, Set<int>> completedMedicationIds = {};
 
   @override
   void initState() {
@@ -40,6 +41,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
     final Map<int, List<Vaccination>> loadedTodayVaccinations = {};
     final Map<int, List<Medication>> loadedTodayMedications = {};
+    final Map<int, Set<int>> loadedCompletedMedicationIds = {};
 
     for (final pet in loadedPets) {
       final todayVaccinations = await DatabaseHelper.instance
@@ -51,6 +53,24 @@ class _HomeScreenState extends State<HomeScreen> {
           .getTodayMedications(pet.id!);
 
       loadedTodayMedications[pet.id!] = todayMedications;
+
+      final completedIds = <int>{};
+
+      for (final medication in todayMedications) {
+        if (medication.id == null) {
+          continue;
+        }
+
+        final isTaken = await DatabaseHelper.instance.isMedicationTakenToday(
+          medication.id!,
+        );
+
+        if (isTaken) {
+          completedIds.add(medication.id!);
+        }
+      }
+
+      loadedCompletedMedicationIds[pet.id!] = completedIds;
     }
 
     if (!mounted) {
@@ -61,6 +81,7 @@ class _HomeScreenState extends State<HomeScreen> {
       pets = loadedPets;
       todayVaccinations = loadedTodayVaccinations;
       todayMedications = loadedTodayMedications;
+      completedMedicationIds = loadedCompletedMedicationIds;
     });
   }
 
@@ -220,7 +241,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             ],
                           ),
 
-                          const SizedBox(height: 15),
+                          const SizedBox(height: 20),
 
                           const Align(
                             alignment: Alignment.centerLeft,
@@ -290,14 +311,20 @@ class _HomeScreenState extends State<HomeScreen> {
     }
 
     return [
-      ...medications.map((medication) => _buildTodayMedicationItem(medication)),
+      ...medications.map(
+        (medication) => _buildTodayMedicationItem(pet, medication),
+      ),
       ...vaccinations.map(
         (vaccination) => _buildTodayVaccinationItem(vaccination),
       ),
     ];
   }
 
-  Widget _buildTodayMedicationItem(Medication medication) {
+  Widget _buildTodayMedicationItem(Pet pet, Medication medication) {
+    final isCompleted =
+        medication.id != null &&
+        (completedMedicationIds[pet.id] ?? {}).contains(medication.id);
+
     return Container(
       width: double.infinity,
       margin: const EdgeInsets.only(bottom: 5),
@@ -309,13 +336,57 @@ class _HomeScreenState extends State<HomeScreen> {
       child: Row(
         children: [
           const Text('💊', style: TextStyle(fontSize: 17)),
+
           const SizedBox(width: 8),
+
           Expanded(
             child: Text(
               medication.medicationTime != null
                   ? '${medication.medicationTime!.format(context)} ${medication.medicationName}'
                   : medication.medicationName,
-              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                // color: isCompleted ? Colors.grey : Colors.black87,
+                // decoration: isCompleted ? TextDecoration.lineThrough : null,
+              ),
+            ),
+          ),
+
+          const SizedBox(width: 8),
+
+          GestureDetector(
+            onTap: () async {
+              if (medication.id == null) return;
+
+              try {
+                if (isCompleted) {
+                  await DatabaseHelper.instance.cancelMedicationToday(
+                    medication.id!,
+                  );
+                } else {
+                  await DatabaseHelper.instance.completeMedication(
+                    medicationId: medication.id!,
+                    petId: pet.id!,
+                    medicationDate: DateTimeUtils.nowKst(),
+                  );
+                }
+
+                await loadPets();
+              } catch (e) {
+                debugPrint('복용 상태 변경 실패: $e');
+
+                if (!mounted) return;
+
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('복용 상태를 변경하지 못했어요.')),
+                );
+              }
+            },
+            child: Icon(
+              isCompleted ? Icons.check_circle : Icons.check_circle_outline,
+              color: isCompleted ? Colors.green : Colors.grey,
+              size: 20,
             ),
           ),
         ],
