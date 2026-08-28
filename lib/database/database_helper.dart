@@ -860,18 +860,26 @@ class DatabaseHelper {
     final today = DateTimeUtils.todayKst();
     final tomorrow = today.add(const Duration(days: 1));
 
-    return await db.delete(
-      'medication_logs',
-      where: '''
+    try {
+      // throw Exception('예외처리 테스트');
+
+      return await db.delete(
+        'medication_logs',
+        where: '''
         medication_id = ? 
         AND medication_date >= ? 
         AND medication_date < ? 
       ''',
-      whereArgs: [
-        medicationId,
-        today.toIso8601String(),
-        tomorrow.toIso8601String(),
-      ],
-    );
+        whereArgs: [
+          medicationId,
+          today.toIso8601String(),
+          tomorrow.toIso8601String(),
+        ],
+      );
+    } catch (e) {
+      debugPrint('오늘 복용 완료 취소 실패: $e');
+
+      rethrow;
+    }
   }
 }
