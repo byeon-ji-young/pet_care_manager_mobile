@@ -1034,44 +1034,6 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
 
                 ListTile(
                   leading: const CircleAvatar(
-                    backgroundColor: Color(0xFFF3E5F5),
-                    child: Icon(
-                      Icons.monitor_weight_outlined,
-                      color: Colors.purple,
-                    ),
-                  ),
-                  title: const Text('체중기록'),
-                  trailing: const Icon(Icons.chevron_right, color: Colors.grey),
-                  onTap: () async {
-                    Navigator.pop(context);
-
-                    final result = await Navigator.push(
-                      parentContext,
-                      MaterialPageRoute(
-                        builder: (context) =>
-                            WeightRecordRegisterScreen(petId: petId),
-                      ),
-                    );
-
-                    // if (result == true) await loadWeightRecords();
-
-                    if (result is DateTime) {
-                      if (!mounted) {
-                        return;
-                      }
-
-                      setState(() {
-                        selectedDay = result;
-                        focusedDay = result;
-                      });
-
-                      await loadWeightRecords();
-                    }
-                  },
-                ),
-
-                ListTile(
-                  leading: const CircleAvatar(
                     backgroundColor: Color(0xFFFFF3E0),
                     child: Icon(
                       Icons.medication_outlined,
@@ -1104,6 +1066,44 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
                       await loadMedications();
                       await loadUpcomingMedications();
                       await loadTodayMedications();
+                    }
+                  },
+                ),
+
+                ListTile(
+                  leading: const CircleAvatar(
+                    backgroundColor: Color(0xFFF3E5F5),
+                    child: Icon(
+                      Icons.monitor_weight_outlined,
+                      color: Colors.purple,
+                    ),
+                  ),
+                  title: const Text('체중기록'),
+                  trailing: const Icon(Icons.chevron_right, color: Colors.grey),
+                  onTap: () async {
+                    Navigator.pop(context);
+
+                    final result = await Navigator.push(
+                      parentContext,
+                      MaterialPageRoute(
+                        builder: (context) =>
+                            WeightRecordRegisterScreen(petId: petId),
+                      ),
+                    );
+
+                    // if (result == true) await loadWeightRecords();
+
+                    if (result is DateTime) {
+                      if (!mounted) {
+                        return;
+                      }
+
+                      setState(() {
+                        selectedDay = result;
+                        focusedDay = result;
+                      });
+
+                      await loadWeightRecords();
                     }
                   },
                 ),
