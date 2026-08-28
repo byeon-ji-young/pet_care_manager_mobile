@@ -1827,7 +1827,7 @@ const androidSettings = AndroidInitializationSettings(
 * [x] Timezone 적용
 * [x] 정확한 알람 권한
 * [ ] 즉시 알림
-* [ ] 예방접종 예정 알림
+* [x] 예방접종 예정 알림
 
 ### Android
 
