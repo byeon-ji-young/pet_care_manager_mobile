@@ -620,25 +620,32 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
               const SizedBox(width: 6),
 
               IconButton(
-                onPressed: isCompleted
-                    ? null
-                    : () async {
-                        if (medication.id == null) return;
+                onPressed: () async {
+                  if (medication.id == null) return;
 
-                        await DatabaseHelper.instance.completeMedication(
-                          medicationId: medication.id!,
-                          petId: widget.pet.id!,
-                          medicationDate: DateTimeUtils.nowKst(),
-                        );
+                  if (isCompleted) {
+                    // 복용 완료 취소
+                    await DatabaseHelper.instance.cancelMedicationToday(
+                      medication.id!,
+                    );
+                  } else {
+                    // 복용 완료 처리
+                    await DatabaseHelper.instance.completeMedication(
+                      medicationId: medication.id!,
+                      petId: widget.pet.id!,
+                      medicationDate: DateTimeUtils.nowKst(),
+                    );
+                  }
 
-                        await loadTodayMedicationLogs();
-                      },
+                  // 변경된 복용 상태 다시 불러오기
+                  await loadTodayMedicationLogs();
+                },
                 icon: Icon(
                   isCompleted ? Icons.check_circle : Icons.check_circle_outline,
                   size: 22,
                 ),
                 color: isCompleted ? Colors.green : Colors.grey,
-                tooltip: isCompleted ? '복용 완료' : '복용 완료 처리',
+                tooltip: isCompleted ? '복용 완료 취소' : '복용 완료 처리',
                 padding: EdgeInsets.zero,
                 constraints: const BoxConstraints(),
               ),

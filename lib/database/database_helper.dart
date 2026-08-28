@@ -846,4 +846,26 @@ class DatabaseHelper {
 
     return result.isNotEmpty;
   }
+
+  // 오늘 해당 약의 복용 완료 기록 취소
+  Future<int> cancelMedicationToday(int medicationId) async {
+    final db = await database;
+
+    final today = DateTimeUtils.todayKst();
+    final tomorrow = today.add(const Duration(days: 1));
+
+    return await db.delete(
+      'medication_logs',
+      where: '''
+        medication_id = ? 
+        AND medication_date >= ? 
+        AND medication_date < ? 
+      ''',
+      whereArgs: [
+        medicationId,
+        today.toIso8601String(),
+        tomorrow.toIso8601String(),
+      ],
+    );
+  }
 }
