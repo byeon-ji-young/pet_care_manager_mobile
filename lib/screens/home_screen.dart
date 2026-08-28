@@ -96,11 +96,14 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        toolbarHeight: 70,
         // title: const Text('🐾 PetCareManager'),
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisAlignment: MainAxisAlignment.center,
           children: const [
+            SizedBox(height: 10),
+
             Row(
               children: [
                 Icon(Icons.pets),
