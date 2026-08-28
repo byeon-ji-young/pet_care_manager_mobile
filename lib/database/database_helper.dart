@@ -408,24 +408,34 @@ class DatabaseHelper {
   Future<int> completeHealthRecord(int id) async {
     final db = await database;
 
-    return await db.update(
-      'health_records',
-      {'status': 'completed'},
-      where: 'id = ?',
-      whereArgs: [id],
-    );
+    try {
+      return await db.update(
+        'health_records',
+        {'status': 'completed'},
+        where: 'id = ?',
+        whereArgs: [id],
+      );
+    } catch (e) {
+      debugPrint('병원 방문 완료 처리 실패: $e');
+      rethrow;
+    }
   }
 
   // 병원 방문 완료 취소
   Future<int> cancelHealthRecord(int id) async {
     final db = await database;
 
-    return await db.update(
-      'health_records',
-      {'status': 'scheduled'},
-      where: 'id = ?',
-      whereArgs: [id],
-    );
+    try {
+      return await db.update(
+        'health_records',
+        {'status': 'scheduled'},
+        where: 'id = ?',
+        whereArgs: [id],
+      );
+    } catch (e) {
+      debugPrint('병원 방문 완료 취소 실패: $e');
+      rethrow;
+    }
   }
 
   // ========================================================= vaccination =========================================================

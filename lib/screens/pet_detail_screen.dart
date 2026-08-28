@@ -795,6 +795,31 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
                 await loadHealthRecords();
               }
             },
+            onStatusTap: () async {
+              if (record.id == null) return;
+
+              try {
+                if (record.status == 'completed') {
+                  await DatabaseHelper.instance.cancelHealthRecord(record.id!);
+                } else {
+                  await DatabaseHelper.instance.completeHealthRecord(
+                    record.id!,
+                  );
+                }
+
+                if (!mounted) return;
+
+                await loadHealthRecords();
+              } catch (e) {
+                debugPrint('병원 방문 상태 변경 실패: $e');
+
+                if (!mounted) return;
+
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('진료 상태를 변경하지 못했어요.')),
+                );
+              }
+            },
           ),
         );
       }
@@ -1509,6 +1534,7 @@ class _SelectedRecordCard extends StatelessWidget {
   final String? subtitle;
   final String? status;
   final VoidCallback? onTap;
+  final VoidCallback? onStatusTap;
 
   const _SelectedRecordCard({
     required this.icon,
@@ -1518,6 +1544,7 @@ class _SelectedRecordCard extends StatelessWidget {
     this.subtitle,
     this.status,
     this.onTap,
+    this.onStatusTap,
   });
 
   @override
@@ -1621,7 +1648,25 @@ class _SelectedRecordCard extends StatelessWidget {
                   ),
                 ),
 
-              const SizedBox(width: 4),
+              const SizedBox(width: 6),
+
+              // 상태 변경 버튼
+              if (onStatusTap != null)
+                IconButton(
+                  onPressed: onStatusTap,
+                  icon: Icon(
+                    status == 'completed'
+                        ? Icons.check_circle
+                        : Icons.check_circle_outline,
+                  ),
+                  color: status == 'completed' ? Colors.green : Colors.grey,
+                  iconSize: 22,
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
+                  tooltip: status == 'completed' ? '완료 취소' : '진료 완료',
+                ),
+
+              const SizedBox(width: 8),
 
               // 이동 아이콘
               if (onTap != null)
