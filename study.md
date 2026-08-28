@@ -1802,7 +1802,7 @@ const androidSettings = AndroidInitializationSettings(
 * [x] `Future`
 * [x] `async`
 * [x] `await`
-* [ ] 예외 처리 (`try-catch`)
+* [x] 예외 처리 (`try-catch`)
 
 ### SQLite
 

@@ -623,17 +623,29 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
                 onPressed: () async {
                   if (medication.id == null) return;
 
-                  if (isCompleted) {
-                    // 복용 완료 취소
-                    await DatabaseHelper.instance.cancelMedicationToday(
-                      medication.id!,
-                    );
-                  } else {
-                    // 복용 완료 처리
-                    await DatabaseHelper.instance.completeMedication(
-                      medicationId: medication.id!,
-                      petId: widget.pet.id!,
-                      medicationDate: DateTimeUtils.nowKst(),
+                  try {
+                    if (isCompleted) {
+                      // 복용 완료 취소
+                      await DatabaseHelper.instance.cancelMedicationToday(
+                        medication.id!,
+                      );
+                    } else {
+                      // 복용 완료 처리
+                      await DatabaseHelper.instance.completeMedication(
+                        medicationId: medication.id!,
+                        petId: widget.pet.id!,
+                        medicationDate: DateTimeUtils.nowKst(),
+                      );
+                    }
+                  } catch (e) {
+                    debugPrint('복용 상태 변경 실패: $e');
+
+                    if (!mounted) {
+                      return;
+                    }
+
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('복용 상태를 변경하지 못했어요.')),
                     );
                   }
 

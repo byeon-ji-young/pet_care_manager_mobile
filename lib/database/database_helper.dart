@@ -1,6 +1,6 @@
 import 'package:path/path.dart';
-
 import 'package:sqflite/sqflite.dart';
+import 'package:flutter/foundation.dart';
 
 import '../models/pet.dart';
 import '../models/health_record.dart';
@@ -735,12 +735,18 @@ class DatabaseHelper {
   Future<int> insertMedicationLog(MedicationLog log) async {
     final db = await database;
 
-    return db.insert(
-      'medication_logs',
-      log.toMap(),
-      conflictAlgorithm:
-          ConflictAlgorithm.replace, // 충돌이 발생하면 기존 데이터를 새 데이터로 교체
-    );
+    try {
+      return await db.insert(
+        'medication_logs',
+        log.toMap(),
+        conflictAlgorithm:
+            ConflictAlgorithm.replace, // 충돌이 발생하면 기존 데이터를 새 데이터로 교체
+      );
+    } catch (e) {
+      debugPrint('복용 완료 기록 저장 실패: $e');
+
+      rethrow; // 오류를 여기서 발견했지만 내가 처리하지 않고 호출한 쪽으로 다시 전달함
+    }
   }
 
   // 특정 약의 복용 이력 조회
