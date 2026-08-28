@@ -29,6 +29,7 @@ class _HealthRecordRegisterScreenState
   final TextEditingController costController = TextEditingController();
 
   DateTime selectedDate = DateTimeUtils.todayKst();
+  TimeOfDay? selectedTime;
 
   @override
   void initState() {
@@ -44,6 +45,7 @@ class _HealthRecordRegisterScreenState
       costController.text = record.cost?.toString() ?? '';
 
       selectedDate = record.date;
+      selectedTime = record.time;
     }
   }
 
@@ -126,7 +128,7 @@ class _HealthRecordRegisterScreenState
                     Row(
                       children: [
                         Text(
-                          isEditing ? '병원 진료 내역 수정' : '새로운 병원 기록',
+                          isEditing ? '병원 진료 내역 수정' : '새 병원 기록',
                           style: const TextStyle(
                             fontSize: 22,
                             fontWeight: FontWeight.bold,
@@ -209,24 +211,7 @@ class _HealthRecordRegisterScreenState
 
                     const SizedBox(height: 15),
 
-                    // 4. 진료비 입력창
-                    TextField(
-                      controller: costController,
-                      keyboardType: TextInputType.number,
-                      decoration: InputDecoration(
-                        labelText: '진료비',
-                        hintText: '0',
-                        suffixText: '원',
-                        prefixIcon: const Icon(Icons.payments_outlined),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                    ),
-
-                    const SizedBox(height: 15),
-
-                    // 5. 방문 날짜 선택
+                    // 4. 방문 날짜 선택
                     /*
                     InkWell: 터치했을 때 물결처럼 퍼지는 클릭 효과를 만들어주는 위젯
 
@@ -292,6 +277,83 @@ class _HealthRecordRegisterScreenState
                         ),
                       ),
                     ),
+
+                    const SizedBox(height: 15),
+
+                    // 5. 방문 시간 선택
+                    InkWell(
+                      onTap: () async {
+                        final pickedTime = await showTimePicker(
+                          context: context,
+                          initialTime: selectedTime ?? TimeOfDay.now(),
+                        );
+
+                        if (pickedTime != null) {
+                          setState(() {
+                            selectedTime = pickedTime;
+                          });
+                        }
+                      },
+                      borderRadius: BorderRadius.circular(12),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 14,
+                        ),
+                        decoration: BoxDecoration(
+                          border: Border.all(color: Colors.grey.shade700),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.access_time_outlined),
+                            const SizedBox(width: 16),
+                            const Text(
+                              '방문 시간',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            const Spacer(),
+                            Text(
+                              selectedTime == null
+                                  ? '시간 선택'
+                                  : selectedTime!.format(context),
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: selectedTime == null
+                                    ? Colors.grey
+                                    : null,
+                              ),
+                            ),
+                            const SizedBox(width: 4),
+                            const Icon(
+                              Icons.arrow_drop_down,
+                              color: Colors.grey,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 15),
+
+                    // 6. 진료비 입력창
+                    TextField(
+                      controller: costController,
+                      keyboardType: TextInputType.number,
+                      decoration: InputDecoration(
+                        labelText: '진료비',
+                        hintText: '0',
+                        suffixText: '원',
+                        prefixIcon: const Icon(Icons.payments_outlined),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -316,6 +378,7 @@ class _HealthRecordRegisterScreenState
                       id: widget.record?.id,
                       petId: widget.petId,
                       date: selectedDate,
+                      time: selectedTime,
                       hospital: hospitalController.text.trim().isEmpty
                           ? null
                           : hospitalController.text.trim(),
@@ -326,12 +389,33 @@ class _HealthRecordRegisterScreenState
                       cost: int.tryParse(
                         costController.text.trim(),
                       ), // tryParse: 비어있으면 null
+                      status:
+                          widget.record?.status ??
+                          'completed', // 신규 등록: completed, 수정: 기존 status
                     );
 
-                    if (widget.record == null) {
-                      await DatabaseHelper.instance.insertHealthRecord(record);
-                    } else {
-                      await DatabaseHelper.instance.updateHealthRecord(record);
+                    try {
+                      if (widget.record == null) {
+                        await DatabaseHelper.instance.insertHealthRecord(
+                          record,
+                        );
+                      } else {
+                        await DatabaseHelper.instance.updateHealthRecord(
+                          record,
+                        );
+                      }
+                    } catch (e) {
+                      debugPrint('병원 기록 저장 실패: $e');
+
+                      if (!context.mounted) {
+                        return;
+                      }
+
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('병원 기록을 저장하지 못했어요.')),
+                      );
+
+                      return;
                     }
 
                     if (!context.mounted) {

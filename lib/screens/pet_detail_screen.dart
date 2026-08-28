@@ -767,7 +767,12 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
             iconBgColor: const Color(0xFFE3F2FD),
             iconColor: Colors.blue,
             title: record.title,
-            subtitle: record.hospital,
+            subtitle: [
+              if (record.hospital != null && record.hospital!.isNotEmpty)
+                record.hospital!,
+              if (record.time != null) record.time!.format(context),
+            ].join(' · '),
+            status: record.status,
             onTap: () async {
               final result = await Navigator.push(
                 context,
@@ -1502,6 +1507,7 @@ class _SelectedRecordCard extends StatelessWidget {
   final Color iconColor;
   final String title;
   final String? subtitle;
+  final String? status;
   final VoidCallback? onTap;
 
   const _SelectedRecordCard({
@@ -1510,11 +1516,32 @@ class _SelectedRecordCard extends StatelessWidget {
     this.iconColor = Colors.black87,
     required this.title,
     this.subtitle,
+    this.status,
     this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
+    String? statusText;
+    Color? statusColor;
+
+    switch (status) {
+      case 'completed':
+        statusText = '완료';
+        statusColor = Colors.green;
+        break;
+
+      case 'scheduled':
+        statusText = '예정';
+        statusColor = Colors.blue;
+        break;
+
+      case 'cancelled':
+        statusText = '취소';
+        statusColor = Colors.redAccent;
+        break;
+    }
+
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       decoration: BoxDecoration(
@@ -1572,6 +1599,29 @@ class _SelectedRecordCard extends StatelessWidget {
               ),
 
               const SizedBox(width: 8),
+
+              // 상태
+              if (statusText != null)
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: statusColor!.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    statusText,
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.bold,
+                      color: statusColor,
+                    ),
+                  ),
+                ),
+
+              const SizedBox(width: 4),
 
               // 이동 아이콘
               if (onTap != null)

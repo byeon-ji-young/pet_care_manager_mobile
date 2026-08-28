@@ -81,7 +81,7 @@ class DatabaseHelper {
     */
     return await openDatabase(
       path,
-      version: 4, // DB 구조가 바뀔 때만 올림
+      version: 6, // DB 구조가 바뀔 때만 올림
       onConfigure: (db) async {
         await db.execute('PRAGMA foreign_keys = ON');
       },
@@ -105,10 +105,12 @@ class DatabaseHelper {
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             pet_id INTEGER NOT NULL,
             date TEXT NOT NULL,
+            time TEXT,
             hospital TEXT,
             title TEXT NOT NULL,
             description TEXT,
             cost INTEGER,
+            status TEXT NOT NULL DEFAULT 'scheduled',
             FOREIGN KEY (pet_id) REFERENCES pets(id) ON DELETE CASCADE
           )
         ''');
@@ -201,6 +203,18 @@ class DatabaseHelper {
               FOREIGN KEY (pet_id) REFERENCES pets(id) ON DELETE CASCADE
             )
           ''');
+        }
+
+        // 4 → 5. 병원 기록 테이블에 병원 방문 시간 컬럼 추가
+        if (oldVersion < 5) {
+          await db.execute('ALTER TABLE health_records ADD COLUMN time TEXT');
+        }
+
+        // 5 → 6. 병원 기록 테이블에 상태 컬럼 추가
+        if (oldVersion < 6) {
+          await db.execute(
+            "ALTER TABLE health_records ADD COLUMN status TEXT NOT NULL DEFAULT 'scheduled'",
+          );
         }
       },
     );
@@ -320,14 +334,13 @@ class DatabaseHelper {
   Future<int> insertHealthRecord(HealthRecord record) async {
     final db = await database;
 
-    return await db.insert('health_records', {
-      'pet_id': record.petId,
-      'date': record.date.toIso8601String(),
-      'hospital': record.hospital,
-      'title': record.title,
-      'description': record.description,
-      'cost': record.cost,
-    });
+    try {
+      return await db.insert('health_records', record.toMap());
+    } catch (e) {
+      debugPrint('건강 기록 저장 실패: $e');
+
+      rethrow; // 오류를 여기서 발견했지만 내가 처리하지 않고 호출한 쪽으로 다시 전달함
+    }
   }
 
   // 반려동물별 동물기록 조회
@@ -338,9 +351,10 @@ class DatabaseHelper {
       'health_records',
       where: 'pet_id = ?',
       whereArgs: [petId],
-      orderBy: 'date DESC',
+      orderBy: 'date DESC, time DESC',
     );
 
+    /*
     return List.generate(
       // List.generate(개수, 함수): 정해진 개수만큼 리스트 만들어주는 함수
       maps.length,
@@ -356,6 +370,9 @@ class DatabaseHelper {
         );
       },
     );
+    */
+
+    return maps.map((map) => HealthRecord.fromMap(map)).toList();
   }
 
   // 병원기록 삭제
@@ -374,6 +391,9 @@ class DatabaseHelper {
       {
         'pet_id': record.petId,
         'date': record.date.toIso8601String(),
+        'time': record.time != null
+            ? '${record.time!.hour.toString().padLeft(2, '0')}:${record.time!.minute.toString().padLeft(2, '0')}'
+            : null,
         'hospital': record.hospital,
         'title': record.title,
         'description': record.description,
@@ -381,6 +401,30 @@ class DatabaseHelper {
       },
       where: 'id = ?',
       whereArgs: [record.id],
+    );
+  }
+
+  // 병원 방문 완료 처리
+  Future<int> completeHealthRecord(int id) async {
+    final db = await database;
+
+    return await db.update(
+      'health_records',
+      {'status': 'completed'},
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  }
+
+  // 병원 방문 완료 취소
+  Future<int> cancelHealthRecord(int id) async {
+    final db = await database;
+
+    return await db.update(
+      'health_records',
+      {'status': 'scheduled'},
+      where: 'id = ?',
+      whereArgs: [id],
     );
   }
 
