@@ -1356,8 +1356,6 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
                 if (updatedPet != null) {
                   setState(() => currentPet = updatedPet);
                 }
-
-                Navigator.pop(context, true);
               }
             },
           ),
