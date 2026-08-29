@@ -326,17 +326,72 @@ class _HomeScreenState extends State<HomeScreen> {
       ];
     }
 
-    return [
-      ...healthRecords.map(
-        (healthRecord) => _buildTodayHealthRecordItem(healthRecord),
-      ),
-      ...medications.map(
-        (medication) => _buildTodayMedicationItem(pet, medication),
-      ),
-      ...vaccinations.map(
-        (vaccination) => _buildTodayVaccinationItem(pet, vaccination),
-      ),
-    ];
+    // 오늘의 건강 관리 항목을 하나의 리스트로 합침
+    final tasks = <Map<String, dynamic>>[];
+
+    // 병원 기록
+    for (final healthRecord in healthRecords) {
+      tasks.add({
+        'time': healthRecord.time,
+        'widget': _buildTodayHealthRecordItem(healthRecord),
+      });
+    }
+
+    // 복약
+    for (final medication in medications) {
+      tasks.add({
+        'time': medication.medicationTime,
+        'widget': _buildTodayMedicationItem(pet, medication),
+      });
+    }
+
+    // 예방접종
+    for (final vaccination in vaccinations) {
+      tasks.add({
+        'time': null,
+        'widget': _buildTodayVaccinationItem(pet, vaccination),
+      });
+    }
+
+    // 시간순 정렬
+    tasks.sort((a, b) {
+      final aTime = a['time'] as TimeOfDay?;
+      final bTime = b['time'] as TimeOfDay?;
+
+      // 시간이 없는 항목은 마지막으로
+      if (aTime == null && bTime == null) {
+        return 0;
+      }
+
+      if (aTime == null) {
+        return 1; // a를 b보다 뒤쪽에 둬라
+      }
+
+      if (bTime == null) {
+        return -1; // a를 b보다 앞쪽에 둬라
+      }
+
+      /*
+      sort()
+      return 음수; -> a가 앞
+      return 0; -> 순서 유지
+      return 양수; -> b가 앞(a가 뒤)
+      */
+
+      final aMinutes = aTime.hour * 60 + aTime.minute;
+      final bMinutes = bTime.hour * 60 + bTime.minute;
+
+      return aMinutes.compareTo(bMinutes); // a가 b보다 빠른 시간이면 앞에 놓음
+    });
+
+    return tasks.map<Widget>((task) => task['widget'] as Widget).toList();
+    /*
+    - map(): 리스트의 각 항목을 하나씩 다른 값으로 변환하는 함수
+    - map<Widget>: map의 결과가 Widget 타입이라는 것을 지정
+    - =>: 짧은 return
+    - as Widget: 꺼낸 값의 타입을 Widget으로 확정
+      우리가 Map<String, dynamic> 이거로 만들었는데, dynamic은 여기에 뭐가 들어올지 모른다는 뜻. 그래서 as Widget을 적어서 Widget이 맞다고 하는 것
+    */
   }
 
   Widget _buildTodayHealthRecordItem(HealthRecord record) {
