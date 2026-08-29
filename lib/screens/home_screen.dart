@@ -5,6 +5,8 @@ import 'package:pet_care_manager_mobile/models/medication.dart';
 
 import 'pet_register_screen.dart';
 import 'pet_detail_screen.dart';
+import 'health_record_register_screen.dart';
+import 'vaccination_register_screen.dart';
 
 import '../database/database_helper.dart';
 
@@ -332,7 +334,7 @@ class _HomeScreenState extends State<HomeScreen> {
         (medication) => _buildTodayMedicationItem(pet, medication),
       ),
       ...vaccinations.map(
-        (vaccination) => _buildTodayVaccinationItem(vaccination),
+        (vaccination) => _buildTodayVaccinationItem(pet, vaccination),
       ),
     ];
   }
@@ -340,38 +342,57 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildTodayHealthRecordItem(HealthRecord record) {
     final isCompleted = record.status == 'completed';
 
-    final timeText = record.time != null ? record.time!.format(context) : null;
+    final timeText = record.time?.format(context);
 
     return Container(
       width: double.infinity,
       margin: const EdgeInsets.only(bottom: 5),
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
         color: Colors.blue.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(10),
       ),
-      child: Row(
-        children: [
-          const Text('🏥', style: TextStyle(fontSize: 17)),
-
-          const SizedBox(width: 8),
-
-          Expanded(
-            child: Text(
-              timeText != null
-                  ? '$timeText ${record.title} ${isCompleted ? '방문 완료' : '방문 예정'}'
-                  : '${record.title} ${isCompleted ? '방문 완료' : '방문 예정'}',
-              style: TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-                // color: isCompleted ? Colors.grey[600] : Colors.black87,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(10),
+        onTap: () async {
+          await Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => HealthRecordRegisterScreen(
+                petId: record.petId,
+                record: record,
               ),
             ),
-          ),
+          );
 
-          if (isCompleted)
-            const Icon(Icons.check_circle, color: Colors.green, size: 19),
-        ],
+          await loadPets();
+        },
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+          child: Row(
+            children: [
+              const Text('🏥', style: TextStyle(fontSize: 17)),
+
+              const SizedBox(width: 8),
+
+              Expanded(
+                child: Text(
+                  timeText != null
+                      ? '$timeText ${record.title} ${isCompleted ? '방문 완료' : '방문 예정'}'
+                      : '${record.title} ${isCompleted ? '방문 완료' : '방문 예정'}',
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    // color: isCompleted ? Colors.grey[600] : Colors.black87,
+                  ),
+                ),
+              ),
+
+              // if (isCompleted)
+              //   const Icon(Icons.check_circle, color: Colors.green, size: 19),
+              Icon(Icons.chevron_right, color: Colors.grey[400], size: 20),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -450,26 +471,53 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildTodayVaccinationItem(Vaccination vaccination) {
+  Widget _buildTodayVaccinationItem(Pet pet, Vaccination vaccination) {
     return Container(
       width: double.infinity,
       margin: const EdgeInsets.only(bottom: 5),
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
         color: Colors.orange.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(10),
       ),
-      child: Row(
-        children: [
-          const Text('💉', style: TextStyle(fontSize: 17)),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(
-              '${vaccination.vaccineName} 예방접종 예정',
-              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(10),
+        onTap: () async {
+          await Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => VaccinationRegisterScreen(
+                petId: pet.id!,
+                vaccination: vaccination,
+              ),
             ),
+          );
+
+          await loadPets();
+        },
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+          child: Row(
+            children: [
+              const Text('💉', style: TextStyle(fontSize: 17)),
+
+              const SizedBox(width: 8),
+
+              Expanded(
+                child: Text(
+                  '${vaccination.vaccineName} 예방접종 예정',
+                  style: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+
+              const SizedBox(width: 8),
+
+              Icon(Icons.chevron_right, color: Colors.grey[400], size: 20),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
