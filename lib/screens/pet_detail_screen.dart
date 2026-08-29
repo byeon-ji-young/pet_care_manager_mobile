@@ -42,6 +42,7 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
   Pet? currentPet;
 
   List<HealthRecord> healthRecords = [];
+  List<HealthRecord> upcomingHealthRecords = [];
 
   List<Vaccination> vaccinations = [];
   List<Vaccination> upcomingVaccinations = [];
@@ -75,6 +76,7 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
     await Future.wait([
       // Future.wait()은 여러 개의 Future 작업을 동시에 실행하고, 모두 끝날 때까지 기다린다
       loadHealthRecords(),
+      loadUpcomingHealthRecords(),
       loadVaccinations(),
       loadUpcomingVaccinations(),
       loadWeightRecords(),
@@ -94,6 +96,16 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
     if (!mounted) return;
 
     setState(() => healthRecords = records);
+  }
+
+  Future<void> loadUpcomingHealthRecords() async {
+    final upcomings = await DatabaseHelper.instance.getUpcomingHealthRecords(
+      widget.pet.id!,
+    );
+
+    if (!mounted) return;
+
+    setState(() => upcomingHealthRecords = upcomings);
   }
 
   Future<void> loadVaccinations() async {
@@ -252,7 +264,7 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
   Widget _buildBannerItem({
     required String title,
     required DateTime targetDate,
-    required String categoryType, // 'vaccine' 또는 'medication'
+    required String categoryType, // 'hospital', 'vaccine', 'medication'
     VoidCallback? onTap,
   }) {
     final today = DateTimeUtils.todayKst();
@@ -269,21 +281,36 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
     if (difference == 0) {
       textColor = Colors.red.shade900;
       iconData = Icons.notifications_active_outlined;
-      message = categoryType == 'vaccine'
-          ? '오늘은 $title 예방접종 날이에요!'
-          : '오늘은 $title 복용일이에요!';
+
+      if (categoryType == 'vaccine') {
+        message = '오늘은 $title 예방접종 날이에요!';
+      } else if (categoryType == 'medication') {
+        message = '오늘은 $title 복용일이에요!';
+      } else {
+        message = '오늘은 $title 병원 방문일이에요!';
+      }
     } else if (difference > 0) {
       textColor = primaryColor.withValues(alpha: 0.9);
       iconData = Icons.event_available_rounded;
-      message = categoryType == 'vaccine'
-          ? '$title 예방접종까지 $difference일 남았어요.'
-          : '$title 복용까지 $difference일 남았어요.';
+
+      if (categoryType == 'vaccine') {
+        message = '$title 예방접종까지 $difference일 남았어요.';
+      } else if (categoryType == 'medication') {
+        message = '$title 복용까지 $difference일 남았어요.';
+      } else {
+        message = '$title 병원 방문까지 $difference일 남았어요.';
+      }
     } else {
       textColor = Colors.red.shade900;
       iconData = Icons.warning_amber_rounded;
-      message = categoryType == 'vaccine'
-          ? '$title 예방접종 예정일이 ${difference.abs()}일 지났어요!'
-          : '$title 복용 예정일이 ${difference.abs()}일 지났어요!';
+
+      if (categoryType == 'vaccine') {
+        message = '$title 예방접종 예정일이 ${difference.abs()}일 지났어요!';
+      } else if (categoryType == 'medication') {
+        message = '$title 복용 예정일이 ${difference.abs()}일 지났어요!';
+      } else {
+        message = '$title 병원 방문 예정일이 ${difference.abs()}일 지났어요!';
+      }
     }
 
     return Padding(
@@ -309,6 +336,70 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
               Icon(Icons.chevron_right, color: Colors.grey[400], size: 20),
           ],
         ),
+      ),
+    );
+  }
+
+  // 병원 방문 알림 카드 그룹화
+  Widget _buildHealthRecordGroupCard(List<HealthRecord> list) {
+    final items = list.take(2).toList();
+
+    final primaryColor = Theme.of(context).primaryColor;
+
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: primaryColor.withValues(alpha: 0.05),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: primaryColor.withValues(alpha: 0.3)),
+      ),
+      child: Column(
+        children: List.generate(items.length, (index) {
+          final item = items[index];
+
+          return Column(
+            children: [
+              _buildBannerItem(
+                title: item.title,
+                targetDate: item.date,
+                categoryType: 'hospital',
+                onTap: () async {
+                  final result = await Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => HealthRecordRegisterScreen(
+                        petId: widget.pet.id!,
+                        record: item,
+                      ),
+                    ),
+                  );
+
+                  if (result != null && mounted) {
+                    if (result is DateTime) {
+                      setState(() {
+                        selectedDay = result;
+                        focusedDay = result;
+                      });
+                    }
+
+                    await loadHealthRecords();
+                    await loadUpcomingHealthRecords();
+                  }
+                },
+              ),
+
+              if (index < items.length - 1)
+                Divider(
+                  height: 1,
+                  thickness: 1,
+                  color: primaryColor.withValues(alpha: 0.2),
+                  indent: 16,
+                  endIndent: 16,
+                ),
+            ],
+          );
+        }),
       ),
     );
   }
@@ -793,6 +884,7 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
                 }
 
                 await loadHealthRecords();
+                await loadUpcomingHealthRecords();
               }
             },
             onStatusTap: () async {
@@ -810,6 +902,7 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
                 if (!mounted) return;
 
                 await loadHealthRecords();
+                await loadUpcomingHealthRecords();
               } catch (e) {
                 debugPrint('병원 방문 상태 변경 실패: $e');
 
@@ -1024,6 +1117,7 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
                       });
 
                       await loadHealthRecords();
+                      await loadUpcomingHealthRecords();
                     }
                   },
                 ),
@@ -1291,11 +1385,15 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
               if (todayMedications.isNotEmpty)
                 _buildTodayMedicationCard(todayMedications),
 
-              // 2-2. 예방 접종 알림
+              // 2-2. 병원 방문 알림
+              if (upcomingHealthRecords.isNotEmpty)
+                _buildHealthRecordGroupCard(upcomingHealthRecords),
+
+              // 2-3. 예방 접종 알림
               if (upcomingVaccinations.isNotEmpty)
                 _buildVaccinationGroupCard(upcomingVaccinations),
 
-              // 2-3. 약 복용 알림
+              // 2-4. 약 복용 알림
               if (upcomingMedications.isNotEmpty)
                 _buildMedicationGroupCard(upcomingMedications),
 

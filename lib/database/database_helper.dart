@@ -438,6 +438,22 @@ class DatabaseHelper {
     }
   }
 
+  // 병원 방문 예정 기록 조회
+  Future<List<HealthRecord>> getUpcomingHealthRecords(int petId) async {
+    final db = await database;
+
+    final today = DateTimeUtils.todayKst();
+
+    final maps = await db.query(
+      'health_records',
+      where: 'pet_id = ? AND status = ? AND date >= ?',
+      whereArgs: [petId, 'scheduled', today.toIso8601String()],
+      orderBy: 'date ASC, time ASC',
+    );
+
+    return maps.map((map) => HealthRecord.fromMap(map)).toList();
+  }
+
   // ========================================================= vaccination =========================================================
   // 예방접종 등록
   Future<int> insertVaccination(Vaccination vaccination) async {
