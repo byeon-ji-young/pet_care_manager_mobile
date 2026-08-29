@@ -138,66 +138,7 @@ class _HealthRecordRegisterScreenState
                           ),
                         ),
 
-                        if (isEditing) ...[
-                          ElevatedButton.icon(
-                            onPressed: () async {
-                              final record = widget.record!;
-
-                              try {
-                                if (record.status == 'completed') {
-                                  await DatabaseHelper.instance
-                                      .cancelHealthRecord(record.id!);
-                                } else {
-                                  await DatabaseHelper.instance
-                                      .completeHealthRecord(record.id!);
-                                }
-                              } catch (e) {
-                                debugPrint('병원 방문 상태 변경 실패: $e');
-
-                                if (!mounted) return;
-
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text('방문 상태를 변경하지 못했어요.'),
-                                  ),
-                                );
-
-                                return;
-                              }
-
-                              if (!mounted) return;
-
-                              Navigator.pop(context, true);
-                            },
-                            icon: Icon(
-                              isCompleted
-                                  ? Icons.undo_outlined
-                                  : Icons.check_circle_outline,
-                              size: 16,
-                            ),
-                            label: Text(
-                              isCompleted ? '완료 취소' : '방문 완료',
-                              style: const TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            style: ElevatedButton.styleFrom(
-                              elevation: 0,
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 10,
-                                vertical: 7,
-                              ),
-                              minimumSize: Size.zero,
-                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(20),
-                              ),
-                            ),
-                          ),
-
-                          const SizedBox(width: 4),
-
+                        if (isEditing)
                           IconButton(
                             onPressed: _deleteRecord,
                             padding: EdgeInsets.zero,
@@ -209,7 +150,6 @@ class _HealthRecordRegisterScreenState
                             ),
                             tooltip: '기록 삭제',
                           ),
-                        ],
                       ],
                     ),
 
@@ -414,62 +354,73 @@ class _HealthRecordRegisterScreenState
                         ),
                       ),
                     ),
+
+                    // 방문 완료 상태 변경 버튼
+                    if (isEditing) ...[
+                      const SizedBox(height: 12),
+
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: TextButton.icon(
+                          onPressed: () async {
+                            final record = widget.record!;
+
+                            try {
+                              if (record.status == 'completed') {
+                                await DatabaseHelper.instance
+                                    .cancelHealthRecord(record.id!);
+                              } else {
+                                await DatabaseHelper.instance
+                                    .completeHealthRecord(record.id!);
+                              }
+                            } catch (e) {
+                              debugPrint('병원 방문 상태 변경 실패: $e');
+
+                              if (!context.mounted) return;
+
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('방문 상태를 변경하지 못했어요.'),
+                                ),
+                              );
+
+                              return;
+                            }
+
+                            if (!context.mounted) return;
+
+                            Navigator.pop(context, true);
+                          },
+                          icon: Icon(
+                            widget.record!.status == 'completed'
+                                ? Icons.undo_outlined
+                                : Icons.check_circle_outline,
+                            size: 18,
+                          ),
+                          label: Text(
+                            widget.record!.status == 'completed'
+                                ? '완료 취소'
+                                : '방문 완료',
+                            style: const TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          style: TextButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 6,
+                            ),
+                            minimumSize: Size.zero,
+                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          ),
+                        ),
+                      ),
+                    ],
                   ],
                 ),
               ),
             ),
-
-            // 방문 완료 상태 변경 버튼
-            if (isEditing) ...[
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: SizedBox(
-                  width: double.infinity,
-                  height: 46,
-                  child: OutlinedButton.icon(
-                    onPressed: () async {
-                      final record = widget.record!;
-
-                      try {
-                        if (record.status == 'completed') {
-                          // 방문 완료 취소
-                          await DatabaseHelper.instance.cancelHealthRecord(
-                            record.id!,
-                          );
-                        } else {
-                          // 방문 완료 처리
-                          await DatabaseHelper.instance.completeHealthRecord(
-                            record.id!,
-                          );
-                        }
-                      } catch (e) {
-                        debugPrint('병원 방문 상태 변경 실패: $e');
-
-                        if (!context.mounted) return;
-
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('방문 상태를 변경하지 못했어요.')),
-                        );
-
-                        return;
-                      }
-
-                      if (!context.mounted) return;
-
-                      Navigator.pop(context, true);
-                    },
-                    icon: Icon(
-                      isCompleted
-                          ? Icons.undo_outlined
-                          : Icons.check_circle_outline,
-                    ),
-                    label: Text(isCompleted ? '방문 완료 취소' : '방문 완료 처리'),
-                  ),
-                ),
-              ),
-
-              const SizedBox(height: 10),
-            ],
 
             // 저장 버튼
             Padding(
