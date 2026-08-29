@@ -366,7 +366,7 @@ class _HealthRecordRegisterScreenState
                             final record = widget.record!;
 
                             try {
-                              if (record.status == 'completed') {
+                              if (isCompleted) {
                                 await DatabaseHelper.instance
                                     .cancelHealthRecord(record.id!);
                               } else {
@@ -392,15 +392,13 @@ class _HealthRecordRegisterScreenState
                             Navigator.pop(context, true);
                           },
                           icon: Icon(
-                            widget.record!.status == 'completed'
+                            isCompleted
                                 ? Icons.undo_outlined
                                 : Icons.check_circle_outline,
                             size: 18,
                           ),
                           label: Text(
-                            widget.record!.status == 'completed'
-                                ? '완료 취소'
-                                : '방문 완료',
+                            isCompleted ? '완료 취소' : '방문 완료',
                             style: const TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.bold,
