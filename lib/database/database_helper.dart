@@ -454,6 +454,33 @@ class DatabaseHelper {
     return maps.map((map) => HealthRecord.fromMap(map)).toList();
   }
 
+  // 오늘 병원 기록 조회
+  Future<List<HealthRecord>> getTodayHealthRecords(int petId) async {
+    final db = await database;
+
+    final today = DateTimeUtils.todayKst();
+    final tomorrow = today.add(const Duration(days: 1));
+
+    final maps = await db.query(
+      'health_records',
+      where: '''
+        pet_id = ?
+        AND date >= ?
+        AND date < ?
+        AND status != ?
+      ''',
+      whereArgs: [
+        petId,
+        today.toIso8601String(),
+        tomorrow.toIso8601String(),
+        'cancelled',
+      ],
+      orderBy: 'time ASC',
+    );
+
+    return maps.map((map) => HealthRecord.fromMap(map)).toList();
+  }
+
   // ========================================================= vaccination =========================================================
   // 예방접종 등록
   Future<int> insertVaccination(Vaccination vaccination) async {

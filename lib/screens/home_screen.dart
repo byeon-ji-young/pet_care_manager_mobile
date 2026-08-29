@@ -10,6 +10,7 @@ import '../database/database_helper.dart';
 
 import '../models/pet.dart';
 import '../models/vaccination.dart';
+import '../models/health_record.dart';
 
 import '../utils/date_time_utils.dart';
 
@@ -24,6 +25,7 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   List<Pet> pets = [];
 
+  Map<int, List<HealthRecord>> todayHealthRecords = {};
   Map<int, List<Vaccination>> todayVaccinations = {};
   Map<int, List<Medication>> todayMedications = {};
   Map<int, Set<int>> completedMedicationIds = {};
@@ -39,11 +41,17 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> loadPets() async {
     final loadedPets = await DatabaseHelper.instance.getPets();
 
+    final Map<int, List<HealthRecord>> loadedTodayHealthRecords = {};
     final Map<int, List<Vaccination>> loadedTodayVaccinations = {};
     final Map<int, List<Medication>> loadedTodayMedications = {};
     final Map<int, Set<int>> loadedCompletedMedicationIds = {};
 
     for (final pet in loadedPets) {
+      final todayHealthRecords = await DatabaseHelper.instance
+          .getTodayHealthRecords(pet.id!);
+
+      loadedTodayHealthRecords[pet.id!] = todayHealthRecords;
+
       final todayVaccinations = await DatabaseHelper.instance
           .getTodayVaccinations(pet.id!);
 
@@ -79,6 +87,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
     setState(() {
       pets = loadedPets;
+
+      todayHealthRecords = loadedTodayHealthRecords;
       todayVaccinations = loadedTodayVaccinations;
       todayMedications = loadedTodayMedications;
       completedMedicationIds = loadedCompletedMedicationIds;
@@ -244,7 +254,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             ],
                           ),
 
-                          const SizedBox(height: 20),
+                          const SizedBox(height: 24),
 
                           const Align(
                             alignment: Alignment.centerLeft,
@@ -289,10 +299,11 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   List<Widget> _buildTodayHealthTasks(Pet pet) {
+    final healthRecords = todayHealthRecords[pet.id] ?? [];
     final vaccinations = todayVaccinations[pet.id] ?? [];
     final medications = todayMedications[pet.id] ?? [];
 
-    if (vaccinations.isEmpty && medications.isEmpty) {
+    if (healthRecords.isEmpty && vaccinations.isEmpty && medications.isEmpty) {
       return [
         Container(
           width: double.infinity,
@@ -314,6 +325,9 @@ class _HomeScreenState extends State<HomeScreen> {
     }
 
     return [
+      ...healthRecords.map(
+        (healthRecord) => _buildTodayHealthRecordItem(healthRecord),
+      ),
       ...medications.map(
         (medication) => _buildTodayMedicationItem(pet, medication),
       ),
@@ -321,6 +335,45 @@ class _HomeScreenState extends State<HomeScreen> {
         (vaccination) => _buildTodayVaccinationItem(vaccination),
       ),
     ];
+  }
+
+  Widget _buildTodayHealthRecordItem(HealthRecord record) {
+    final isCompleted = record.status == 'completed';
+
+    final timeText = record.time != null ? record.time!.format(context) : null;
+
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.only(bottom: 5),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      decoration: BoxDecoration(
+        color: Colors.blue.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Row(
+        children: [
+          const Text('🏥', style: TextStyle(fontSize: 17)),
+
+          const SizedBox(width: 8),
+
+          Expanded(
+            child: Text(
+              timeText != null
+                  ? '$timeText ${record.title} ${isCompleted ? '방문 완료' : '방문 예정'}'
+                  : '${record.title} ${isCompleted ? '방문 완료' : '방문 예정'}',
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                // color: isCompleted ? Colors.grey[600] : Colors.black87,
+              ),
+            ),
+          ),
+
+          if (isCompleted)
+            const Icon(Icons.check_circle, color: Colors.green, size: 19),
+        ],
+      ),
+    );
   }
 
   Widget _buildTodayMedicationItem(Pet pet, Medication medication) {
