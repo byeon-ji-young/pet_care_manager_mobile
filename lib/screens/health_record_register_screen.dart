@@ -227,7 +227,8 @@ class _HealthRecordRegisterScreenState
                           context: context,
                           initialDate: selectedDate,
                           firstDate: DateTime(2000),
-                          lastDate: DateTimeUtils.todayKst(),
+                          // lastDate: DateTimeUtils.todayKst(),
+                          lastDate: DateTime(2100),
                         );
 
                         if (pickedDate != null) {
@@ -435,6 +436,20 @@ class _HealthRecordRegisterScreenState
                       return;
                     }
 
+                    final now = DateTimeUtils.nowKst();
+
+                    final selectedDateTime = DateTime(
+                      selectedDate.year,
+                      selectedDate.month,
+                      selectedDate.day,
+                      selectedTime?.hour ?? 23,
+                      selectedTime?.minute ?? 59,
+                    );
+
+                    final defaultStatus = selectedDateTime.isAfter(now)
+                        ? 'scheduled'
+                        : 'completed';
+
                     final record = HealthRecord(
                       id: widget.record?.id,
                       petId: widget.petId,
@@ -450,9 +465,7 @@ class _HealthRecordRegisterScreenState
                       cost: int.tryParse(
                         costController.text.trim(),
                       ), // tryParse: 비어있으면 null
-                      status:
-                          widget.record?.status ??
-                          'completed', // 신규 등록: completed, 수정: 기존 status
+                      status: widget.record?.status ?? defaultStatus,
                     );
 
                     try {
