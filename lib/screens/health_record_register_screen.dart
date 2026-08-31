@@ -108,7 +108,6 @@ class _HealthRecordRegisterScreenState
   @override
   Widget build(BuildContext context) {
     final isEditing = widget.record != null;
-    final isCompleted = widget.record?.status == 'completed';
 
     return Scaffold(
       appBar: AppBar(
@@ -355,67 +354,6 @@ class _HealthRecordRegisterScreenState
                         ),
                       ),
                     ),
-
-                    // 방문 완료 상태 변경 버튼
-                    if (isEditing) ...[
-                      const SizedBox(height: 12),
-
-                      Align(
-                        alignment: Alignment.centerRight,
-                        child: TextButton.icon(
-                          onPressed: () async {
-                            final record = widget.record!;
-
-                            try {
-                              if (isCompleted) {
-                                await DatabaseHelper.instance
-                                    .cancelHealthRecord(record.id!);
-                              } else {
-                                await DatabaseHelper.instance
-                                    .completeHealthRecord(record.id!);
-                              }
-                            } catch (e) {
-                              debugPrint('병원 방문 상태 변경 실패: $e');
-
-                              if (!context.mounted) return;
-
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text('방문 상태를 변경하지 못했어요.'),
-                                ),
-                              );
-
-                              return;
-                            }
-
-                            if (!context.mounted) return;
-
-                            Navigator.pop(context, true);
-                          },
-                          icon: Icon(
-                            isCompleted
-                                ? Icons.undo_outlined
-                                : Icons.check_circle_outline,
-                            size: 18,
-                          ),
-                          label: Text(
-                            isCompleted ? '완료 취소' : '방문 완료',
-                            style: const TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          style: TextButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 6,
-                            ),
-                            minimumSize: Size.zero,
-                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                          ),
-                        ),
-                      ),
-                    ],
                   ],
                 ),
               ),
