@@ -22,6 +22,8 @@ class TodayHealthTasks extends StatefulWidget {
 
   final Future<void> Function()? onDataChanged;
 
+  final bool showEmptyMessage;
+
   const TodayHealthTasks({
     super.key,
     required this.petId,
@@ -30,6 +32,7 @@ class TodayHealthTasks extends StatefulWidget {
     required this.medications,
     required this.completedMedicationIds,
     this.onDataChanged,
+    this.showEmptyMessage = false,
   });
 
   @override
@@ -46,14 +49,36 @@ class _TodayHealthTasksState extends State<TodayHealthTasks> {
   Widget build(BuildContext context) {
     // 오늘 해야 할 일이 없으면 카드 숨김
     if (totalCount == 0) {
-      return const SizedBox.shrink();
+      if (!widget.showEmptyMessage) {
+        return const SizedBox.shrink(); // 아무것도 차지하지 않는 빈 공간을 만드는 위젯. 가로 0, 세로 0인 SizedBox라고 생각하면 됨
+      }
+
+      return Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        margin: const EdgeInsets.only(top: 24),
+        decoration: BoxDecoration(
+          color: Colors.grey.withValues(alpha: 0.08),
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Text(
+          '🐾 오늘 예정된 건강 관리가 없어요.',
+          style: TextStyle(
+            fontSize: 13,
+            color: Colors.grey[700],
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+      );
     }
 
     final primaryColor = Theme.of(context).primaryColor;
 
     return Container(
       width: double.infinity,
-      margin: const EdgeInsets.only(bottom: 12),
+      margin: widget.showEmptyMessage
+          ? const EdgeInsets.only(top: 24)
+          : const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
@@ -71,7 +96,7 @@ class _TodayHealthTasksState extends State<TodayHealthTasks> {
                 const SizedBox(width: 8),
 
                 const Text(
-                  '오늘 해야 할 일',
+                  '오늘의 건강 관리',
                   style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
                 ),
 
