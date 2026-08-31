@@ -268,11 +268,7 @@ class _HomeScreenState extends State<HomeScreen> {
       floatingActionButton: // FloatingActionButton: 화면 위에 둥둥 떠있는 버튼
       pets.isNotEmpty
           ? FloatingActionButton(
-              elevation: 0,
-              backgroundColor: Theme.of(
-                context,
-              ).primaryColor.withValues(alpha: 0.3),
-              foregroundColor: Theme.of(context).primaryColor,
+              // elevation: 0,
               onPressed: () async {
                 await Navigator.push(
                   context,
@@ -283,7 +279,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
                 loadPets();
               },
-              child: Icon(Icons.add),
+              child: Icon(Icons.add, color: Theme.of(context).primaryColor),
             )
           : null,
     );
