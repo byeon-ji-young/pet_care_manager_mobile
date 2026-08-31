@@ -553,15 +553,11 @@ class DatabaseHelper {
     final db = await database;
 
     final today = DateTimeUtils.todayKst();
-    final todayString =
-        '${today.year.toString().padLeft(4, '0')}-'
-        '${today.month.toString().padLeft(2, '0')}-'
-        '${today.day.toString().padLeft(2, '0')}';
 
     final maps = await db.query(
       'vaccinations',
       where: 'pet_id = ? AND next_date IS NOT NULL and next_date >= ?',
-      whereArgs: [petId, todayString],
+      whereArgs: [petId, today.toIso8601String()],
       orderBy: 'next_date ASC',
       limit: 1,
     );
@@ -578,28 +574,16 @@ class DatabaseHelper {
     final db = await database;
 
     final today = DateTimeUtils.todayKst();
-
-    final todayString =
-        '${today.year.toString().padLeft(4, '0')}-'
-        '${today.month.toString().padLeft(2, '0')}-'
-        '${today.day.toString().padLeft(2, '0')}';
-
     final tomorrow = today.add(const Duration(days: 1));
-
-    final tomorrowString =
-        '${tomorrow.year.toString().padLeft(4, '0')}-'
-        '${tomorrow.month.toString().padLeft(2, '0')}-'
-        '${tomorrow.day.toString().padLeft(2, '0')}';
 
     final maps = await db.query(
       'vaccinations',
       where: '''
-      pet_id = ?
-      AND next_date IS NOT NULL
-      AND next_date >= ?
-      AND next_date < ?
-    ''',
-      whereArgs: [petId, todayString, tomorrowString],
+        pet_id = ?
+        AND vaccination_date >= ?
+        AND vaccination_date < ?
+      ''',
+      whereArgs: [petId, today.toIso8601String(), tomorrow.toIso8601String()],
       orderBy: 'next_date ASC',
     );
 
@@ -758,49 +742,34 @@ class DatabaseHelper {
     return medications.first;
   }
 
-  // 반복 복용 약의 실제 다음 복용일 계산
+  // 반복 복용 약의 실제 다음 복용일 계산 - 오늘 복용해야 하는 약은 getTodayMedications()에서 처리. 이 함수에서는 "오늘 이후"의 가장 가까운 복용일만 반환
   DateTime? _calculateNextMedicationDate(Medication medication) {
     final today = DateTimeUtils.todayKst();
     // final todayOnly = DateTime(today.year, today.month, today.day);
 
-    // 다음 복용일이 지정되어 있는 경우
-    DateTime baseDate = medication.nextDate ?? medication.medicationDate;
-
-    // 반복하지 않는 약
+    // 1. 반복하지 않는 약 - 오늘이거나 이미 지난 경우 오늘 일정 또는 과거 기록이므로 예정일에서는 제외
     if (medication.repeatType == 'none') {
-      if (baseDate.isBefore(today)) {
+      if (medication.nextDate == null) {
         return null;
       }
 
-      return baseDate;
-    }
-    // 매일
-    else if (medication.repeatType == 'daily') {
-      while (baseDate.isBefore(today)) {
-        baseDate = baseDate.add(const Duration(days: 1));
+      final nextDate = DateTime(
+        medication.nextDate!.year,
+        medication.nextDate!.month,
+        medication.nextDate!.day,
+      );
+
+      if (!nextDate.isAfter(today)) {
+        return null;
       }
 
-      return baseDate;
+      return nextDate;
     }
-    // 매주
-    else if (medication.repeatType == 'weekly') {
-      while (baseDate.isBefore(today)) {
-        baseDate = baseDate.add(const Duration(days: 7));
-      }
-
-      return baseDate;
-    }
-    // n일 마다
-    if (medication.repeatType == 'interval' &&
-        medication.repeatInterval != null &&
-        medication.repeatInterval! > 0) {
-      final interval = medication.repeatInterval!;
-
-      while (baseDate.isBefore(today)) {
-        baseDate = baseDate.add(Duration(days: interval));
-      }
-
-      return baseDate;
+    // 2. 반복 복용 약 - 매일 / 매주 / N일마다 복용하는 약은 오늘 해야 할 일에서 관리
+    else if (medication.repeatType == 'daily' ||
+        medication.repeatType == 'weekly' ||
+        medication.repeatType == 'interval') {
+      return null;
     }
 
     return null;
