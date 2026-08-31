@@ -418,6 +418,7 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
 
                 await loadHealthRecords();
                 await loadUpcomingHealthRecords();
+                await loadTodayHealthRecords();
               }
             },
             onStatusTap: () async {
@@ -436,6 +437,7 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
 
                 await loadHealthRecords();
                 await loadUpcomingHealthRecords();
+                await loadTodayHealthRecords();
               } catch (e) {
                 debugPrint('병원 방문 상태 변경 실패: $e');
 
@@ -489,6 +491,7 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
 
                 await loadVaccinations();
                 await loadUpcomingVaccinations();
+                await loadTodayVaccinations();
               }
             },
           ),
@@ -656,6 +659,7 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
 
                       await loadHealthRecords();
                       await loadUpcomingHealthRecords();
+                      await loadTodayHealthRecords();
                     }
                   },
                 ),
@@ -690,6 +694,7 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
 
                       await loadVaccinations();
                       await loadUpcomingVaccinations();
+                      await loadTodayVaccinations();
                     }
                   },
                 ),
@@ -970,6 +975,7 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
 
                     await loadHealthRecords();
                     await loadUpcomingHealthRecords();
+                    await loadTodayHealthRecords();
                   }
                 },
 
@@ -994,6 +1000,7 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
 
                     await loadVaccinations();
                     await loadUpcomingVaccinations();
+                    await loadTodayVaccinations();
                   }
                 },
 
