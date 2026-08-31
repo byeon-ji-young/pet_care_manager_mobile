@@ -5,8 +5,6 @@ import 'package:pet_care_manager_mobile/models/medication.dart';
 
 import 'pet_register_screen.dart';
 import 'pet_detail_screen.dart';
-import 'health_record_register_screen.dart';
-import 'vaccination_register_screen.dart';
 
 import '../database/database_helper.dart';
 
@@ -397,8 +395,6 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildTodayHealthRecordItem(HealthRecord record) {
     final isCompleted = record.status == 'completed';
 
-    final timeText = record.time?.format(context);
-
     return Container(
       width: double.infinity,
       margin: const EdgeInsets.only(bottom: 5),
@@ -406,47 +402,151 @@ class _HomeScreenState extends State<HomeScreen> {
         color: Colors.blue.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(10),
       ),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(10),
-        onTap: () async {
-          await Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => HealthRecordRegisterScreen(
-                petId: record.petId,
-                record: record,
-              ),
-            ),
-          );
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        child: Row(
+          children: [
+            const Text('🏥', style: TextStyle(fontSize: 17)),
 
-          await loadPets();
-        },
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-          child: Row(
-            children: [
-              const Text('🏥', style: TextStyle(fontSize: 17)),
+            const SizedBox(width: 8),
 
-              const SizedBox(width: 8),
-
-              Expanded(
-                child: Text(
-                  timeText != null
-                      ? '$timeText ${record.title} ${isCompleted ? '방문 완료' : '방문 예정'}'
-                      : '${record.title} ${isCompleted ? '방문 완료' : '방문 예정'}',
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    // color: isCompleted ? Colors.grey[600] : Colors.black87,
-                  ),
+            Expanded(
+              child: Text(
+                record.time != null
+                    ? '${record.time!.format(context)} ${record.title}'
+                    : record.title,
+                style: const TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
+            ),
 
-              // if (isCompleted)
-              //   const Icon(Icons.check_circle, color: Colors.green, size: 19),
-              Icon(Icons.chevron_right, color: Colors.grey[400], size: 20),
-            ],
-          ),
+            const SizedBox(width: 8),
+
+            Text(
+              isCompleted ? '방문 완료' : '방문 예정',
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: isCompleted ? Colors.grey : Colors.blue,
+              ),
+            ),
+
+            const SizedBox(width: 6),
+
+            GestureDetector(
+              onTap: () async {
+                if (record.id == null) return;
+
+                try {
+                  if (isCompleted) {
+                    await DatabaseHelper.instance.cancelHealthRecord(
+                      record.id!,
+                    );
+                  } else {
+                    await DatabaseHelper.instance.completeHealthRecord(
+                      record.id!,
+                    );
+                  }
+
+                  await loadPets();
+                } catch (e) {
+                  debugPrint('병원 방문 상태 변경 실패: $e');
+
+                  if (!mounted) return;
+
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('방문 상태를 변경하지 못했어요.')),
+                  );
+                }
+              },
+              child: Icon(
+                isCompleted ? Icons.check_circle : Icons.check_circle_outline,
+                color: isCompleted ? Colors.green : Colors.grey,
+                size: 20,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTodayVaccinationItem(Pet pet, Vaccination vaccination) {
+    final isCompleted = vaccination.status == 'completed';
+
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.only(bottom: 5),
+      decoration: BoxDecoration(
+        color: Colors.orange.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        child: Row(
+          children: [
+            const Text('💉', style: TextStyle(fontSize: 17)),
+
+            const SizedBox(width: 8),
+
+            Expanded(
+              child: Text(
+                vaccination.vaccineName,
+                style: const TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+
+            const SizedBox(width: 8),
+
+            Text(
+              isCompleted ? '접종 완료' : '접종 예정',
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: isCompleted ? Colors.grey : Colors.orange,
+              ),
+            ),
+
+            const SizedBox(width: 6),
+
+            GestureDetector(
+              onTap: () async {
+                if (vaccination.id == null) return;
+
+                try {
+                  if (isCompleted) {
+                    await DatabaseHelper.instance.cancelVaccination(
+                      vaccination.id!,
+                    );
+                  } else {
+                    await DatabaseHelper.instance.completeVaccination(
+                      vaccination.id!,
+                    );
+                  }
+
+                  await loadPets();
+                } catch (e) {
+                  debugPrint('예방접종 상태 변경 실패: $e');
+
+                  if (!mounted) return;
+
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('예방접종 상태를 변경하지 못했어요.')),
+                  );
+                }
+              },
+              child: Icon(
+                isCompleted ? Icons.check_circle : Icons.check_circle_outline,
+                color: isCompleted ? Colors.green : Colors.grey,
+                size: 20,
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -456,6 +556,30 @@ class _HomeScreenState extends State<HomeScreen> {
     final isCompleted =
         medication.id != null &&
         (completedMedicationIds[pet.id] ?? {}).contains(medication.id);
+
+    Color statusColor;
+    String statusText;
+
+    if (isCompleted) {
+      statusColor = Colors.grey;
+      statusText = '복용 완료';
+    } else {
+      switch (medication.scheduleStatus) {
+        case 'passed':
+          statusColor = Colors.redAccent;
+          statusText = '복용 시간이 지났어요';
+          break;
+
+        case 'upcoming':
+          statusColor = Colors.orange;
+          statusText = '복용 예정';
+          break;
+
+        default:
+          statusColor = Colors.grey;
+          statusText = '복용 시간 미정';
+      }
+    }
 
     return Container(
       width: double.infinity,
@@ -476,16 +600,22 @@ class _HomeScreenState extends State<HomeScreen> {
               medication.medicationTime != null
                   ? '${medication.medicationTime!.format(context)} ${medication.medicationName}'
                   : medication.medicationName,
-              style: TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-                // color: isCompleted ? Colors.grey : Colors.black87,
-                // decoration: isCompleted ? TextDecoration.lineThrough : null,
-              ),
+              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
             ),
           ),
 
           const SizedBox(width: 8),
+
+          Text(
+            statusText,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: statusColor,
+            ),
+          ),
+
+          const SizedBox(width: 6),
 
           GestureDetector(
             onTap: () async {
@@ -522,57 +652,6 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildTodayVaccinationItem(Pet pet, Vaccination vaccination) {
-    return Container(
-      width: double.infinity,
-      margin: const EdgeInsets.only(bottom: 5),
-      decoration: BoxDecoration(
-        color: Colors.orange.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(10),
-        onTap: () async {
-          await Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => VaccinationRegisterScreen(
-                petId: pet.id!,
-                vaccination: vaccination,
-              ),
-            ),
-          );
-
-          await loadPets();
-        },
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-          child: Row(
-            children: [
-              const Text('💉', style: TextStyle(fontSize: 17)),
-
-              const SizedBox(width: 8),
-
-              Expanded(
-                child: Text(
-                  '${vaccination.vaccineName} 예방접종 예정',
-                  style: const TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-
-              const SizedBox(width: 8),
-
-              Icon(Icons.chevron_right, color: Colors.grey[400], size: 20),
-            ],
-          ),
-        ),
       ),
     );
   }
