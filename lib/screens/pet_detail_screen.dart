@@ -462,7 +462,12 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
             iconBgColor: const Color(0xFFE8F5E9),
             iconColor: Colors.green,
             title: vaccination.vaccineName,
-            subtitle: vaccination.hospital,
+            subtitle: [
+              if (vaccination.hospital != null &&
+                  vaccination.hospital!.isNotEmpty)
+                vaccination.hospital!,
+              vaccination.status == 'completed' ? '접종 완료' : '접종 예정',
+            ].join(' · '),
             onTap: () async {
               final result = await Navigator.push(
                 context,
