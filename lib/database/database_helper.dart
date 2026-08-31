@@ -81,7 +81,7 @@ class DatabaseHelper {
     */
     return await openDatabase(
       path,
-      version: 6, // DB 구조가 바뀔 때만 올림
+      version: 7, // DB 구조가 바뀔 때만 올림
       onConfigure: (db) async {
         await db.execute('PRAGMA foreign_keys = ON');
       },
@@ -125,6 +125,7 @@ class DatabaseHelper {
             next_date TEXT,
             hospital TEXT,
             memo TEXT,
+            status TEXT NOT NULL DEFAULT 'completed',
             FOREIGN KEY (pet_id) REFERENCES pets(id) ON DELETE CASCADE
           )
         ''');
@@ -214,6 +215,13 @@ class DatabaseHelper {
         if (oldVersion < 6) {
           await db.execute(
             "ALTER TABLE health_records ADD COLUMN status TEXT NOT NULL DEFAULT 'scheduled'",
+          );
+        }
+
+        // 6 → 7. 예방 접종 테이블에 상태 컬럼 추가
+        if (oldVersion < 7) {
+          await db.execute(
+            "ALTER TABLE vaccinations ADD COLUMN status TEXT NOT NULL DEFAULT 'completed'",
           );
         }
       },
@@ -516,6 +524,7 @@ class DatabaseHelper {
         'next_date': vaccination.nextDate?.toIso8601String(),
         'hospital': vaccination.hospital,
         'memo': vaccination.memo,
+        'status': vaccination.status,
       },
       where: 'id = ?',
       whereArgs: [vaccination.id],
@@ -538,8 +547,9 @@ class DatabaseHelper {
 
     final maps = await db.query(
       'vaccinations',
-      where: 'pet_id = ? AND next_date IS NOT NULL AND next_date > ?',
-      whereArgs: [petId, today.toIso8601String()],
+      where:
+          'pet_id = ? AND next_date IS NOT NULL AND next_date > ? AND status = ?',
+      whereArgs: [petId, today.toIso8601String(), 'scheduled'],
       orderBy: 'next_date ASC',
     );
 
@@ -588,6 +598,40 @@ class DatabaseHelper {
     );
 
     return maps.map((map) => Vaccination.fromMap(map)).toList();
+  }
+
+  // 예방접종 완료 처리
+  Future<int> completeVaccination(int id) async {
+    final db = await database;
+
+    try {
+      return await db.update(
+        'vaccinations',
+        {'status': 'completed'},
+        where: 'id = ?',
+        whereArgs: [id],
+      );
+    } catch (e) {
+      debugPrint('예방접종 완료 처리 실패: $e');
+      rethrow;
+    }
+  }
+
+  // 예방접종 완료 취소
+  Future<int> cancelVaccination(int id) async {
+    final db = await database;
+
+    try {
+      return await db.update(
+        'vaccinations',
+        {'status': 'scheduled'},
+        where: 'id = ?',
+        whereArgs: [id],
+      );
+    } catch (e) {
+      debugPrint('예방접종 완료 취소 실패: $e');
+      rethrow;
+    }
   }
 
   // ========================================================= weight_records =========================================================

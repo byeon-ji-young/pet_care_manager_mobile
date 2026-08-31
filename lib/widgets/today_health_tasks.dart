@@ -190,13 +190,58 @@ class _TodayHealthTasksState extends State<TodayHealthTasks> {
 
               const SizedBox(width: 8),
 
-              Text(
-                isCompleted ? '방문 완료' : '방문 예정',
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  color: color,
-                ),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    isCompleted ? '방문 완료' : '방문 예정',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: color,
+                    ),
+                  ),
+
+                  const SizedBox(width: 6),
+
+                  IconButton(
+                    onPressed: () async {
+                      if (record.id == null) return;
+
+                      try {
+                        if (isCompleted) {
+                          await DatabaseHelper.instance.cancelHealthRecord(
+                            record.id!,
+                          );
+                        } else {
+                          await DatabaseHelper.instance.completeHealthRecord(
+                            record.id!,
+                          );
+                        }
+
+                        await widget.onDataChanged?.call();
+                      } catch (e) {
+                        debugPrint('병원 방문 상태 변경 실패: $e');
+
+                        if (!mounted) return;
+
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('병원 방문 상태를 변경하지 못했어요.')),
+                        );
+                      }
+                    },
+                    icon: Icon(
+                      isCompleted
+                          ? Icons.check_circle
+                          : Icons.check_circle_outline,
+                      size: 22,
+                    ),
+                    color: isCompleted ? Colors.grey : Colors.blue,
+                    tooltip: isCompleted ? '방문 완료 취소' : '방문 완료 처리',
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                  ),
+                ],
               ),
             ],
           ),
@@ -207,6 +252,9 @@ class _TodayHealthTasksState extends State<TodayHealthTasks> {
 
   // 오늘 예방접종 하나
   Widget _buildTodayVaccinationItem(Vaccination vaccination) {
+    final isCompleted = vaccination.status == 'completed';
+    final color = isCompleted ? Colors.grey : Colors.green;
+
     return Padding(
       padding: const EdgeInsets.only(top: 5, bottom: 2),
       child: InkWell(
@@ -221,7 +269,6 @@ class _TodayHealthTasksState extends State<TodayHealthTasks> {
               ),
             ),
           );
-
           if (result != null && mounted) {
             await widget.onDataChanged?.call();
           }
@@ -232,16 +279,10 @@ class _TodayHealthTasksState extends State<TodayHealthTasks> {
             children: [
               CircleAvatar(
                 radius: 18,
-                backgroundColor: Colors.green.withValues(alpha: 0.1),
-                child: const Icon(
-                  Icons.vaccines_outlined,
-                  color: Colors.green,
-                  size: 20,
-                ),
+                backgroundColor: color.withValues(alpha: 0.1),
+                child: Icon(Icons.vaccines_outlined, color: color, size: 20),
               ),
-
               const SizedBox(width: 12),
-
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -253,9 +294,7 @@ class _TodayHealthTasksState extends State<TodayHealthTasks> {
                         fontWeight: FontWeight.w600,
                       ),
                     ),
-
                     const SizedBox(height: 3),
-
                     Text(
                       vaccination.hospital?.isNotEmpty == true
                           ? vaccination.hospital!
@@ -265,16 +304,53 @@ class _TodayHealthTasksState extends State<TodayHealthTasks> {
                   ],
                 ),
               ),
-
               const SizedBox(width: 8),
-
-              const Text(
-                '접종 예정',
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.green,
-                ),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    isCompleted ? '접종 완료' : '접종 예정',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: color,
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  IconButton(
+                    onPressed: () async {
+                      if (vaccination.id == null) return;
+                      try {
+                        if (isCompleted) {
+                          await DatabaseHelper.instance.cancelVaccination(
+                            vaccination.id!,
+                          );
+                        } else {
+                          await DatabaseHelper.instance.completeVaccination(
+                            vaccination.id!,
+                          );
+                        }
+                        await widget.onDataChanged?.call();
+                      } catch (e) {
+                        debugPrint('예방접종 상태 변경 실패: $e');
+                        if (!mounted) return;
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('예방접종 상태를 변경하지 못했어요.')),
+                        );
+                      }
+                    },
+                    icon: Icon(
+                      isCompleted
+                          ? Icons.check_circle
+                          : Icons.check_circle_outline,
+                      size: 22,
+                    ),
+                    color: isCompleted ? Colors.grey : Colors.green,
+                    tooltip: isCompleted ? '접종 완료 취소' : '접종 완료 처리',
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                  ),
+                ],
               ),
             ],
           ),
