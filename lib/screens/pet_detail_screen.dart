@@ -11,13 +11,14 @@ import '../database/database_helper.dart';
 
 import '../widgets/weight_chart.dart';
 import '../widgets/pet_profile_header.dart';
+import '../widgets/today_health_tasks.dart';
+import '../widgets/upcoming_health_tasks.dart';
 
 import 'pet_register_screen.dart';
 import 'health_record_register_screen.dart';
 import 'vaccination_register_screen.dart';
 import 'weight_record_register_screen.dart';
 import 'medication_register_screen.dart';
-import 'medication_history_screen.dart';
 
 import '../utils/date_time_utils.dart';
 
@@ -289,689 +290,6 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
 
     return result ??
         false; // 다이얼로그 바깥 영역(배경)을 눌러서 닫은 경우 null이 반환되므로 false 처리. 즉, result가 있으면 result, 없으면 false
-  }
-
-  // 병원기록, 예방접종, 약 복용 알림 카드 위젯
-  Widget _buildBannerItem({
-    required String title,
-    required DateTime targetDate,
-    required String categoryType, // 'hospital', 'vaccine', 'medication'
-    VoidCallback? onTap,
-  }) {
-    final today = DateTimeUtils.todayKst();
-    final todayDate = DateTime(today.year, today.month, today.day);
-    final tDate = DateTime(targetDate.year, targetDate.month, targetDate.day);
-    final difference = tDate.difference(todayDate).inDays;
-
-    Color textColor;
-    IconData iconData;
-    String message;
-
-    final primaryColor = Theme.of(context).primaryColor;
-
-    if (difference == 0) {
-      textColor = Colors.red.shade900;
-      iconData = Icons.notifications_active_outlined;
-
-      if (categoryType == 'vaccine') {
-        message = '오늘은 $title 예방접종 날이에요!';
-      } else if (categoryType == 'medication') {
-        message = '오늘은 $title 복용일이에요!';
-      } else {
-        message = '오늘은 $title 병원 방문일이에요!';
-      }
-    } else if (difference > 0) {
-      textColor = primaryColor.withValues(alpha: 0.9);
-      iconData = Icons.event_available_rounded;
-
-      if (categoryType == 'vaccine') {
-        message = '$title 예방접종까지 $difference일 남았어요.';
-      } else if (categoryType == 'medication') {
-        message = '$title 복용까지 $difference일 남았어요.';
-      } else {
-        message = '$title 병원 방문까지 $difference일 남았어요.';
-      }
-    } else {
-      textColor = Colors.red.shade900;
-      iconData = Icons.warning_amber_rounded;
-
-      if (categoryType == 'vaccine') {
-        message = '$title 예방접종 예정일이 ${difference.abs()}일 지났어요!';
-      } else if (categoryType == 'medication') {
-        message = '$title 복용 예정일이 ${difference.abs()}일 지났어요!';
-      } else {
-        message = '$title 병원 방문 예정일이 ${difference.abs()}일 지났어요!';
-      }
-    }
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(8),
-        child: Row(
-          children: [
-            Icon(iconData, color: textColor, size: 20),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                message,
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: textColor,
-                ),
-              ),
-            ),
-            if (onTap != null)
-              Icon(Icons.chevron_right, color: Colors.grey[400], size: 20),
-          ],
-        ),
-      ),
-    );
-  }
-
-  // 병원 방문 알림 카드 그룹화
-  Widget _buildHealthRecordGroupCard(List<HealthRecord> list) {
-    final items = list.take(2).toList();
-
-    final primaryColor = Theme.of(context).primaryColor;
-
-    return Container(
-      width: double.infinity,
-      margin: const EdgeInsets.only(bottom: 12),
-      decoration: BoxDecoration(
-        color: primaryColor.withValues(alpha: 0.05),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: primaryColor.withValues(alpha: 0.3)),
-      ),
-      child: Column(
-        children: List.generate(items.length, (index) {
-          final item = items[index];
-
-          return Column(
-            children: [
-              _buildBannerItem(
-                title: item.title,
-                targetDate: item.date,
-                categoryType: 'hospital',
-                onTap: () async {
-                  final result = await Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => HealthRecordRegisterScreen(
-                        petId: widget.pet.id!,
-                        record: item,
-                      ),
-                    ),
-                  );
-
-                  if (result != null && mounted) {
-                    if (result is DateTime) {
-                      setState(() {
-                        selectedDay = result;
-                        focusedDay = result;
-                      });
-                    }
-
-                    await loadHealthRecords();
-                    await loadUpcomingHealthRecords();
-                  }
-                },
-              ),
-
-              if (index < items.length - 1)
-                Divider(
-                  height: 1,
-                  thickness: 1,
-                  color: primaryColor.withValues(alpha: 0.2),
-                  indent: 16,
-                  endIndent: 16,
-                ),
-            ],
-          );
-        }),
-      ),
-    );
-  }
-
-  // 예방 접종 알림 카드 그룹화
-  Widget _buildVaccinationGroupCard(List<Vaccination> list) {
-    final items = list.take(2).toList();
-
-    final primaryColor = Theme.of(context).primaryColor;
-
-    return Container(
-      width: double.infinity,
-      margin: const EdgeInsets.only(bottom: 12),
-      decoration: BoxDecoration(
-        color: primaryColor.withValues(alpha: 0.05),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: primaryColor.withValues(alpha: 0.3)),
-      ),
-      child: Column(
-        children: List.generate(items.length, (index) {
-          // List.generate: items의 개수만큼 UI 생성
-          final item = items[index];
-
-          return Column(
-            children: [
-              _buildBannerItem(
-                title: item.vaccineName,
-                targetDate: item.nextDate!,
-                categoryType: 'vaccine',
-                onTap: () async {
-                  final result = await Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => VaccinationRegisterScreen(
-                        petId: widget.pet.id!,
-                        vaccination: item,
-                      ),
-                    ),
-                  );
-
-                  if (result != null && mounted) {
-                    if (result is DateTime) {
-                      setState(() {
-                        selectedDay = result;
-                        focusedDay = result;
-                      });
-                    }
-
-                    await loadVaccinations();
-                    await loadUpcomingVaccinations();
-                  }
-                },
-              ),
-              if (index < items.length - 1)
-                Divider(
-                  height: 1,
-                  thickness: 1,
-                  color: primaryColor.withValues(alpha: 0.2),
-                  indent: 16,
-                  endIndent: 16,
-                ),
-            ],
-          );
-        }),
-      ),
-    );
-  }
-
-  // 약 복용 알림 카드 그룹화
-  Widget _buildMedicationGroupCard(List<Medication> list) {
-    final items = list.take(2).toList();
-
-    final primaryColor = Theme.of(context).primaryColor;
-
-    return Container(
-      width: double.infinity,
-      margin: const EdgeInsets.only(bottom: 12),
-      decoration: BoxDecoration(
-        color: primaryColor.withValues(alpha: 0.05),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: primaryColor.withValues(alpha: 0.3)),
-      ),
-      child: Column(
-        children: List.generate(items.length, (index) {
-          // List.generate: items의 개수만큼 UI 생성
-          final item = items[index];
-
-          return Column(
-            children: [
-              _buildBannerItem(
-                title: item.medicationName,
-                targetDate: item.nextDate!,
-                categoryType: 'medication',
-                onTap: () async {
-                  final result = await Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => MedicationRegisterScreen(
-                        petId: widget.pet.id!,
-                        medication: item,
-                      ),
-                    ),
-                  );
-
-                  if (result != null && mounted) {
-                    if (result is DateTime) {
-                      setState(() {
-                        selectedDay = result;
-                        focusedDay = result;
-                      });
-                    }
-
-                    await loadMedications();
-                    await loadUpcomingMedications();
-                    await loadTodayMedications();
-                  }
-                },
-              ),
-              if (index < items.length - 1)
-                Divider(
-                  height: 1,
-                  thickness: 1,
-                  color: primaryColor.withValues(alpha: 0.2),
-                  indent: 16,
-                  endIndent: 16,
-                ),
-            ],
-          );
-        }),
-      ),
-    );
-  }
-
-  // 오늘 해야 할 일 카드
-  Widget _buildTodayHealthTasks() {
-    final totalCount =
-        todayHealthRecords.length +
-        todayVaccinations.length +
-        todayMedications.length;
-
-    // 오늘 해야 할 일이 없으면 카드 숨김
-    if (totalCount == 0) {
-      return const SizedBox.shrink();
-    }
-
-    final primaryColor = Theme.of(context).primaryColor;
-
-    return Container(
-      width: double.infinity,
-      margin: const EdgeInsets.only(bottom: 12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: primaryColor.withValues(alpha: 0.35)),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(Icons.today_outlined, color: primaryColor, size: 20),
-                const SizedBox(width: 8),
-                const Text(
-                  '오늘 해야 할 일',
-                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(width: 6),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 7,
-                    vertical: 2,
-                  ),
-                  decoration: BoxDecoration(
-                    color: primaryColor.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Text(
-                    '$totalCount',
-                    style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.bold,
-                      color: primaryColor,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 12),
-
-            // 병원
-            ...todayHealthRecords.map(
-              (record) => _buildTodayHealthRecordItem(record),
-            ),
-
-            // 예방접종
-            ...todayVaccinations.map(
-              (vaccination) => _buildTodayVaccinationItem(vaccination),
-            ),
-
-            // 약
-            ...todayMedications.map(
-              (medication) => _buildTodayMedicationItem(medication),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  // 기록 종류별 아이콘 색상
-  Color _getRecordColor(String type) {
-    switch (type) {
-      case 'hospital':
-        return Colors.blue;
-      case 'vaccine':
-        return Colors.green;
-      case 'medication':
-        return Colors.orange;
-      case 'weight':
-        return Colors.purple;
-      default:
-        return Colors.grey;
-    }
-  }
-
-  // 오늘 병원 방문 하나
-  Widget _buildTodayHealthRecordItem(HealthRecord record) {
-    final isCompleted = record.status == 'completed';
-
-    final color = isCompleted ? Colors.grey : Colors.blue;
-
-    return Padding(
-      padding: const EdgeInsets.only(top: 5, bottom: 2),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(8),
-        onTap: () async {
-          final result = await Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => HealthRecordRegisterScreen(
-                petId: widget.pet.id!,
-                record: record,
-              ),
-            ),
-          );
-
-          if (result != null && mounted) {
-            await loadHealthRecords();
-            await loadUpcomingHealthRecords();
-            await loadTodayHealthRecords();
-          }
-        },
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 4),
-          child: Row(
-            children: [
-              CircleAvatar(
-                radius: 18,
-                backgroundColor: color.withValues(alpha: 0.1),
-                child: Icon(
-                  Icons.local_hospital_outlined,
-                  color: color,
-                  size: 20,
-                ),
-              ),
-
-              const SizedBox(width: 12),
-
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      record.title,
-                      style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-
-                    const SizedBox(height: 3),
-
-                    Text(
-                      [
-                        if (record.hospital != null &&
-                            record.hospital!.isNotEmpty)
-                          record.hospital!,
-                        if (record.time != null) record.time!.format(context),
-                      ].join(' · '),
-                      style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-                    ),
-                  ],
-                ),
-              ),
-
-              const SizedBox(width: 8),
-
-              Text(
-                isCompleted ? '방문 완료' : '방문 예정',
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  color: color,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  // 오늘 예방접종 하나
-  Widget _buildTodayVaccinationItem(Vaccination vaccination) {
-    return Padding(
-      padding: const EdgeInsets.only(top: 5, bottom: 2),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(8),
-        onTap: () async {
-          final result = await Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => VaccinationRegisterScreen(
-                petId: widget.pet.id!,
-                vaccination: vaccination,
-              ),
-            ),
-          );
-
-          if (result != null && mounted) {
-            await loadVaccinations();
-            await loadUpcomingVaccinations();
-            await loadTodayVaccinations();
-          }
-        },
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 4),
-          child: Row(
-            children: [
-              CircleAvatar(
-                radius: 18,
-                backgroundColor: Colors.green.withValues(alpha: 0.1),
-                child: const Icon(
-                  Icons.vaccines_outlined,
-                  color: Colors.green,
-                  size: 20,
-                ),
-              ),
-
-              const SizedBox(width: 12),
-
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      vaccination.vaccineName,
-                      style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-
-                    const SizedBox(height: 3),
-
-                    Text(
-                      vaccination.hospital?.isNotEmpty == true
-                          ? vaccination.hospital!
-                          : '접종 병원 미정',
-                      style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-                    ),
-                  ],
-                ),
-              ),
-
-              const SizedBox(width: 8),
-
-              const Text(
-                '접종 예정',
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.green,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  // 오늘 복용할 약 하나
-  Widget _buildTodayMedicationItem(Medication medication) {
-    final isCompleted =
-        medication.id != null && completedMedicationIds.contains(medication.id);
-
-    IconData icon = Icons.medication_outlined;
-    Color color;
-    String statusText;
-
-    if (isCompleted) {
-      color = Colors.grey;
-      statusText = '복용 완료';
-    } else {
-      switch (medication.scheduleStatus) {
-        case 'passed':
-          icon = Icons.notifications_active_outlined;
-          color = Colors.redAccent;
-          statusText = '복용 시간이 지났어요';
-          break;
-
-        case 'upcoming':
-          color = Colors.orange;
-          statusText = '복용 예정';
-          break;
-
-        default:
-          color = Colors.grey;
-          statusText = '복용 시간 미정';
-      }
-    }
-
-    return Padding(
-      padding: const EdgeInsets.only(top: 5, bottom: 2),
-      child: Row(
-        children: [
-          CircleAvatar(
-            radius: 18,
-            backgroundColor: color.withValues(alpha: 0.1),
-            child: Icon(icon, color: color, size: 20),
-          ),
-
-          const SizedBox(width: 12),
-
-          Expanded(
-            child: InkWell(
-              borderRadius: BorderRadius.circular(8),
-              onTap: () async {
-                if (medication.id == null) return;
-
-                await Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) =>
-                        MedicationHistoryScreen(medication: medication),
-                  ),
-                );
-
-                // 이력 화면에서 돌아왔을 때 최신 상태 반영
-                await loadTodayMedicationLogs();
-              },
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 4),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      medication.medicationName,
-                      style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-
-                    const SizedBox(height: 3),
-
-                    Text(
-                      medication.medicationTime?.format(context) ?? '복용 시간 미정',
-                      style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                statusText,
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  color: color,
-                ),
-              ),
-
-              const SizedBox(width: 6),
-
-              IconButton(
-                onPressed: () async {
-                  if (medication.id == null) return;
-
-                  try {
-                    if (isCompleted) {
-                      // 복용 완료 취소
-                      await DatabaseHelper.instance.cancelMedicationToday(
-                        medication.id!,
-                      );
-                    } else {
-                      // 복용 완료 처리
-                      await DatabaseHelper.instance.completeMedication(
-                        medicationId: medication.id!,
-                        petId: widget.pet.id!,
-                        medicationDate: DateTimeUtils.nowKst(),
-                      );
-                    }
-                  } catch (e) {
-                    debugPrint('복용 상태 변경 실패: $e');
-
-                    if (!mounted) {
-                      return;
-                    }
-
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('복용 상태를 변경하지 못했어요.')),
-                    );
-                  }
-
-                  // 변경된 복용 상태 다시 불러오기
-                  await loadTodayMedicationLogs();
-                },
-                icon: Icon(
-                  isCompleted ? Icons.check_circle : Icons.check_circle_outline,
-                  size: 22,
-                ),
-                color: isCompleted ? Colors.grey : Colors.orange,
-                tooltip: isCompleted ? '복용 완료 취소' : '복용 완료 처리',
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
   }
 
   // 현재 선택한 날짜의 전체 기록 찾기
@@ -1595,23 +913,112 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
               const SizedBox(height: 16),
 
               // 2. 오늘 해야 할 일
-              _buildTodayHealthTasks(),
+              TodayHealthTasks(
+                petId: pet.id!,
+                healthRecords: todayHealthRecords,
+                vaccinations: todayVaccinations,
+                medications: todayMedications,
+                completedMedicationIds: completedMedicationIds,
+                onDataChanged: () async {
+                  await loadHealthRecords();
+                  await loadUpcomingHealthRecords();
+                  await loadTodayHealthRecords();
+
+                  await loadVaccinations();
+                  await loadUpcomingVaccinations();
+                  await loadTodayVaccinations();
+
+                  await loadMedications();
+                  await loadUpcomingMedications();
+                  await loadTodayMedications();
+
+                  await loadTodayMedicationLogs();
+                },
+              ),
 
               const SizedBox(height: 4),
 
-              // 3. 병원 방문 알림
-              if (upcomingHealthRecords.isNotEmpty)
-                _buildHealthRecordGroupCard(upcomingHealthRecords),
+              // 3. 예정 알림
+              UpcomingHealthTasks(
+                healthRecords: upcomingHealthRecords,
+                vaccinations: upcomingVaccinations,
+                medications: upcomingMedications,
 
-              // 4. 예방 접종 알림
-              if (upcomingVaccinations.isNotEmpty)
-                _buildVaccinationGroupCard(upcomingVaccinations),
+                onHealthRecordTap: (record) async {
+                  final result = await Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => HealthRecordRegisterScreen(
+                        petId: pet.id!,
+                        record: record,
+                      ),
+                    ),
+                  );
 
-              // 5. 약 복용 알림
-              if (upcomingMedications.isNotEmpty)
-                _buildMedicationGroupCard(upcomingMedications),
+                  if (result != null && mounted) {
+                    if (result is DateTime) {
+                      setState(() {
+                        selectedDay = result;
+                        focusedDay = result;
+                      });
+                    }
 
-              // 3. 건강 기록 카드 (+캘린더)
+                    await loadHealthRecords();
+                    await loadUpcomingHealthRecords();
+                  }
+                },
+
+                onVaccinationTap: (vaccination) async {
+                  final result = await Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => VaccinationRegisterScreen(
+                        petId: pet.id!,
+                        vaccination: vaccination,
+                      ),
+                    ),
+                  );
+
+                  if (result != null && mounted) {
+                    if (result is DateTime) {
+                      setState(() {
+                        selectedDay = result;
+                        focusedDay = result;
+                      });
+                    }
+
+                    await loadVaccinations();
+                    await loadUpcomingVaccinations();
+                  }
+                },
+
+                onMedicationTap: (medication) async {
+                  final result = await Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => MedicationRegisterScreen(
+                        petId: pet.id!,
+                        medication: medication,
+                      ),
+                    ),
+                  );
+
+                  if (result != null && mounted) {
+                    if (result is DateTime) {
+                      setState(() {
+                        selectedDay = result;
+                        focusedDay = result;
+                      });
+                    }
+
+                    await loadMedications();
+                    await loadUpcomingMedications();
+                    await loadTodayMedications();
+                  }
+                },
+              ),
+
+              // 4. 건강 기록 카드 (+캘린더)
               Card(
                 elevation: 0,
                 shape: RoundedRectangleBorder(
