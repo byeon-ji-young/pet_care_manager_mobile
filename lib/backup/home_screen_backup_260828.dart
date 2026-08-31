@@ -13,17 +13,15 @@ import '../models/vaccination.dart';
 
 import '../utils/date_time_utils.dart';
 
-class HomeScreenBackup260828 extends StatefulWidget {
+class HomeScreenBackup3 extends StatefulWidget {
   // StatelessWidget: 사용자에 동작에 의해 화면 자체의 데이터(상태)가 바로 바뀌지 않는 정적인 화면을 의미
-  const HomeScreenBackup260828({
-    super.key,
-  }); // 플러터가 위젯을 효율적으로 관리할 수 있도록 돕는 생성자 선언
+  const HomeScreenBackup3({super.key}); // 플러터가 위젯을 효율적으로 관리할 수 있도록 돕는 생성자 선언
 
   @override
-  State<HomeScreenBackup260828> createState() => _HomeScreenState();
+  State<HomeScreenBackup3> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreenBackup260828> {
+class _HomeScreenState extends State<HomeScreenBackup3> {
   List<Pet> pets = [];
 
   Map<int, Vaccination?> nextVaccinations = {};
