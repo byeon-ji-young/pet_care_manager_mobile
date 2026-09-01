@@ -789,7 +789,7 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
     const tabs = ['전체', '건강', '예방접종', '약', '체중'];
 
     return SizedBox(
-      height: 48,
+      height: 38,
       child: Row(
         children: List.generate(tabs.length, (index) {
           final isSelected = selectedRecordTab == index;
@@ -797,6 +797,7 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
           return Expanded(
             child: GestureDetector(
               // GestureDetector: 탭을 터치할 수 있게 만드는 부분
+              behavior: HitTestBehavior.opaque, // 텍스트 주변 여백을 터치해도 반응
               onTap: () {
                 setState(() {
                   selectedRecordTab = index;
@@ -1084,6 +1085,7 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
                         focusedDay: focusedDay,
                         firstDay: DateTime(2000),
                         lastDay: DateTime(2100),
+                        rowHeight: 48, // // 캘린더 전체 비율 및 높이 조절
                         headerStyle: HeaderStyle(
                           formatButtonVisible:
                               false, // 달력 헤더에 있는 Format 버튼을 숨기기
