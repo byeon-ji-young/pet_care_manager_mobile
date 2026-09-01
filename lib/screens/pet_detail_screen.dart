@@ -452,6 +452,7 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
                 );
               }
             },
+            isCompleted: record.status == 'completed',
           ),
         );
       }
@@ -474,6 +475,7 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
                 vaccination.hospital!,
               vaccination.status == 'completed' ? '접종 완료' : '접종 예정',
             ].join(' · '),
+            // 카드 클릭
             onTap: () async {
               final result = await Navigator.push(
                 context,
@@ -498,6 +500,37 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
                 await loadTodayVaccinations();
               }
             },
+            // 상태 변경
+            onStatusTap: () async {
+              if (vaccination.id == null) return;
+
+              try {
+                if (vaccination.status == 'completed') {
+                  await DatabaseHelper.instance.cancelVaccination(
+                    vaccination.id!,
+                  );
+                } else {
+                  await DatabaseHelper.instance.completeVaccination(
+                    vaccination.id!,
+                  );
+                }
+
+                if (!mounted) return;
+
+                await loadVaccinations();
+                await loadUpcomingVaccinations();
+                await loadTodayVaccinations();
+              } catch (e) {
+                debugPrint('예방접종 상태 변경 실패: $e');
+
+                if (!mounted) return;
+
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('접종 상태를 변경하지 못했어요.')),
+                );
+              }
+            },
+            isCompleted: vaccination.status == 'completed',
           ),
         );
       }
@@ -1310,6 +1343,7 @@ class _SelectedRecordCard extends StatelessWidget {
   final String? subtitle;
   final VoidCallback? onTap;
   final VoidCallback? onStatusTap;
+  final bool? isCompleted;
 
   const _SelectedRecordCard({
     required this.icon,
@@ -1319,6 +1353,7 @@ class _SelectedRecordCard extends StatelessWidget {
     this.subtitle,
     this.onTap,
     this.onStatusTap,
+    this.isCompleted,
   });
 
   @override
@@ -1380,6 +1415,23 @@ class _SelectedRecordCard extends StatelessWidget {
               ),
 
               const SizedBox(width: 8),
+
+              // 상태 변경 버튼
+              if (onStatusTap != null)
+                IconButton(
+                  onPressed: onStatusTap,
+                  icon: Icon(
+                    isCompleted == true
+                        ? Icons.check_circle
+                        : Icons.check_circle_outline,
+                    color: isCompleted == true ? Colors.grey : iconColor,
+                    size: 24,
+                  ),
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
+                ),
+
+              const SizedBox(width: 4),
 
               // 이동 아이콘
               if (onTap != null)
