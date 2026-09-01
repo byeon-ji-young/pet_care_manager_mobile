@@ -1185,6 +1185,8 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
                         lastDay: DateTime(2100),
                         rowHeight: 48, // // 캘린더 전체 비율 및 높이 조절
                         headerStyle: HeaderStyle(
+                          // 헤더 위/아래 여백 조절
+                          headerPadding: const EdgeInsets.only(bottom: 10),
                           formatButtonVisible:
                               false, // 달력 헤더에 있는 Format 버튼을 숨기기
                           titleCentered: true,
