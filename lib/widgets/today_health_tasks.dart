@@ -411,7 +411,7 @@ class _TodayHealthTasksState extends State<TodayHealthTasks> {
           break;
 
         default:
-          color = Colors.grey;
+          color = Colors.orange;
           statusText = '복용 시간 미정';
       }
     }
