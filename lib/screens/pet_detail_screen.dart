@@ -747,7 +747,7 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
                       color: Colors.blue,
                     ),
                   ),
-                  title: const Text('병원기록'),
+                  title: const Text('건강'),
                   trailing: const Icon(Icons.chevron_right, color: Colors.grey),
                   onTap: () async {
                     Navigator.pop(context); // 바텀시트 닫기
@@ -822,7 +822,7 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
                       color: Colors.orange,
                     ),
                   ),
-                  title: const Text('약 복용'),
+                  title: const Text('약'),
                   trailing: const Icon(Icons.chevron_right, color: Colors.grey),
                   onTap: () async {
                     Navigator.pop(context);
@@ -860,7 +860,7 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
                       color: Colors.purple,
                     ),
                   ),
-                  title: const Text('체중기록'),
+                  title: const Text('체중'),
                   trailing: const Icon(Icons.chevron_right, color: Colors.grey),
                   onTap: () async {
                     Navigator.pop(context);
