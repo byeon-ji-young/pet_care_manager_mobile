@@ -243,11 +243,11 @@ class _HomeScreenState extends State<HomeScreen> {
                               _PetHomeProfileHeader(pet: pet),
 
                               const Positioned(
-                                top: 0,
+                                top: 20,
                                 right: 0,
                                 child: Icon(
                                   Icons.chevron_right,
-                                  size: 20,
+                                  size: 24,
                                   color: Colors.grey,
                                 ),
                               ),
