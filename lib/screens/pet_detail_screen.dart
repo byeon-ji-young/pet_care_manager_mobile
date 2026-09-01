@@ -380,7 +380,7 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
   List<Widget> _buildSelectedRecordCards(DateTime day, Pet pet) {
     final widgets = <Widget>[];
 
-    // 전체, 건강
+    // 전체, 병원기록
     if (selectedRecordTab == 0 || selectedRecordTab == 1) {
       final records = _getHealthRecordsForDay(day);
 
@@ -394,6 +394,10 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
             subtitle: [
               if (record.hospital != null && record.hospital!.isNotEmpty)
                 record.hospital!,
+              if (record.examinationType != null &&
+                  record.examinationType!.isNotEmpty)
+                // '검사: ${record.examinationType!}',
+                record.examinationType!,
               if (record.time != null) record.time!.format(context),
               record.status == 'completed' ? '방문 완료' : '방문 예정',
             ].join(' · '),

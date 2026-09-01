@@ -26,6 +26,10 @@ class _HealthRecordRegisterScreenState
   final TextEditingController hospitalController = TextEditingController();
   final TextEditingController titleController = TextEditingController();
   final TextEditingController descriptionController = TextEditingController();
+  final TextEditingController examinationTypeController =
+      TextEditingController();
+  final TextEditingController examinationResultController =
+      TextEditingController();
   final TextEditingController costController = TextEditingController();
 
   DateTime selectedDate = DateTimeUtils.todayKst();
@@ -42,6 +46,9 @@ class _HealthRecordRegisterScreenState
           record.hospital ?? ''; // ??는 null일 경우 다른 값을 사용하라
       titleController.text = record.title;
       descriptionController.text = record.description ?? '';
+      examinationTypeController.text = record.examinationType ?? '';
+      examinationResultController.text = record.examinationResult ?? '';
+
       costController.text = record.cost?.toString() ?? '';
 
       selectedDate = record.date;
@@ -54,6 +61,8 @@ class _HealthRecordRegisterScreenState
     hospitalController.dispose();
     titleController.dispose();
     descriptionController.dispose();
+    examinationTypeController.dispose();
+    examinationResultController.dispose();
     costController.dispose();
 
     super.dispose();
@@ -210,7 +219,42 @@ class _HealthRecordRegisterScreenState
 
                     const SizedBox(height: 15),
 
-                    // 4. 방문 날짜 선택
+                    // 4. 검사 종류 입력창
+                    TextField(
+                      controller: examinationTypeController,
+                      decoration: InputDecoration(
+                        labelText: '검사 종류',
+                        hintText: '예: 혈액검사 / X-ray / 초음파',
+                        prefixIcon: const Icon(Icons.biotech_outlined),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 15),
+
+                    // 5. 검사 결과 입력창
+                    TextField(
+                      controller: examinationResultController,
+                      maxLines: 4,
+                      decoration: InputDecoration(
+                        labelText: '검사 결과',
+                        hintText: '검사 결과나 수치 등을 기록해 주세요.',
+                        alignLabelWithHint: true,
+                        prefixIcon: const Padding(
+                          padding: EdgeInsets.only(bottom: 40),
+                          child: Icon(Icons.assignment_outlined),
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 15),
+
+                    // 6. 방문 날짜 선택
                     /*
                     InkWell: 터치했을 때 물결처럼 퍼지는 클릭 효과를 만들어주는 위젯
 
@@ -280,7 +324,7 @@ class _HealthRecordRegisterScreenState
 
                     const SizedBox(height: 15),
 
-                    // 5. 방문 시간 선택
+                    // 7. 방문 시간 선택
                     InkWell(
                       onTap: () async {
                         final pickedTime = await showTimePicker(
@@ -340,7 +384,7 @@ class _HealthRecordRegisterScreenState
 
                     const SizedBox(height: 15),
 
-                    // 6. 진료비 입력창
+                    // 8. 진료비 입력창
                     TextField(
                       controller: costController,
                       keyboardType: TextInputType.number,
@@ -400,6 +444,14 @@ class _HealthRecordRegisterScreenState
                       description: descriptionController.text.trim().isEmpty
                           ? null
                           : descriptionController.text.trim(),
+                      examinationType:
+                          examinationTypeController.text.trim().isEmpty
+                          ? null
+                          : examinationTypeController.text.trim(),
+                      examinationResult:
+                          examinationResultController.text.trim().isEmpty
+                          ? null
+                          : examinationResultController.text.trim(),
                       cost: int.tryParse(
                         costController.text.trim(),
                       ), // tryParse: 비어있으면 null

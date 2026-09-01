@@ -10,6 +10,8 @@ class HealthRecord {
   final String? description;
   final int? cost;
   final String status; // scheduled: 예정, completed: 진료완료, cancelled: 취소
+  final String? examinationType; // 검사 종류
+  final String? examinationResult; // 검사 결과
 
   HealthRecord({
     this.id,
@@ -21,6 +23,8 @@ class HealthRecord {
     this.description,
     this.cost,
     this.status = 'scheduled',
+    this.examinationType,
+    this.examinationResult,
   });
 
   // HealthRecord 객체 → SQLite Map
@@ -37,6 +41,8 @@ class HealthRecord {
       'description': description,
       'cost': cost,
       'status': status,
+      'examination_type': examinationType,
+      'examination_result': examinationResult,
     };
   }
 
@@ -60,6 +66,8 @@ class HealthRecord {
       description: map['description'] as String?,
       cost: map['cost'] as int?,
       status: map['status'] as String? ?? 'scheduled',
+      examinationType: map['examination_type'] as String?,
+      examinationResult: map['examination_result'] as String?,
     );
   }
 }

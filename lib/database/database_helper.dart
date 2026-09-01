@@ -81,7 +81,7 @@ class DatabaseHelper {
     */
     return await openDatabase(
       path,
-      version: 7, // DB 구조가 바뀔 때만 올림
+      version: 8, // DB 구조가 바뀔 때만 올림
       onConfigure: (db) async {
         await db.execute('PRAGMA foreign_keys = ON');
       },
@@ -111,6 +111,8 @@ class DatabaseHelper {
             description TEXT,
             cost INTEGER,
             status TEXT NOT NULL DEFAULT 'scheduled',
+            examination_type TEXT,
+            examination_result TEXT
             FOREIGN KEY (pet_id) REFERENCES pets(id) ON DELETE CASCADE
           )
         ''');
@@ -222,6 +224,17 @@ class DatabaseHelper {
         if (oldVersion < 7) {
           await db.execute(
             "ALTER TABLE vaccinations ADD COLUMN status TEXT NOT NULL DEFAULT 'completed'",
+          );
+        }
+
+        // 7 → 8. 병원 기록에 검사 종류 및 검사 결과 컬럼 추가
+        if (oldVersion < 8) {
+          await db.execute(
+            'ALTER TABLE health_records ADD COLUMN examination_type TEXT',
+          );
+
+          await db.execute(
+            'ALTER TABLE health_records ADD COLUMN examination_result TEXT',
           );
         }
       },
@@ -406,6 +419,8 @@ class DatabaseHelper {
         'title': record.title,
         'description': record.description,
         'cost': record.cost,
+        'examination_type': record.examinationType,
+        'examination_result': record.examinationResult,
       },
       where: 'id = ?',
       whereArgs: [record.id],
