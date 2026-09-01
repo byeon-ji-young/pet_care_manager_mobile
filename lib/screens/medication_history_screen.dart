@@ -56,10 +56,13 @@ class _MedicationHistoryScreenState extends State<MedicationHistoryScreen> {
   }
 
   String _formatTime(DateTime date) {
-    final hour = date.hour.toString().padLeft(2, '0');
+    final hour = date.hour;
     final minute = date.minute.toString().padLeft(2, '0');
 
-    return '$hour:$minute';
+    final period = hour >= 12 ? 'PM' : 'AM';
+    final displayHour = hour % 12 == 0 ? 12 : hour % 12;
+
+    return '${displayHour.toString().padLeft(2, '0')}:$minute $period';
   }
 
   @override
@@ -160,14 +163,14 @@ class _MedicationHistoryScreenState extends State<MedicationHistoryScreen> {
               ),
             ),
 
-            Text(
-              completed ? '복용 완료' : '미복용',
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                color: completed ? Colors.green : Colors.grey,
-              ),
-            ),
+            // Text(
+            //   completed ? '복용 완료' : '미복용',
+            //   style: TextStyle(
+            //     fontSize: 12,
+            //     fontWeight: FontWeight.w600,
+            //     color: completed ? Colors.green : Colors.grey,
+            //   ),
+            // ),
           ],
         ),
       ),
