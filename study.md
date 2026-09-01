@@ -2,7 +2,7 @@
 
 Flutter로 `Pet Care Manager Mobile`을 개발하면서 공부한 내용을 정리한 문서입니다.
 
-개발하면서 새롭게 배운 Flutter, Dart, SQLite, 로컬 알림, Android 설정, Git 등의 개념과 실제 프로젝트에 적용한 내용을 기록합니다.
+개발하면서 새롭게 배운 Flutter, Dart, SQLite, 날짜/시간 처리, 로컬 알림, Android 설정, Git 등의 개념과 실제 프로젝트에 적용한 내용을 기록합니다.
 
 ---
 
@@ -30,11 +30,11 @@ flutter devices
 
 예:
 
-- Android Emulator
-- iOS Simulator
-- Windows
-- Chrome
-- Edge
+* Android Emulator
+* iOS Simulator
+* Windows
+* Chrome
+* Edge
 
 ---
 
@@ -103,12 +103,6 @@ flutter pub get
 패키지 다운로드 및 적용
 ```
 
-패키지를 코드에서 사용할 때는 `import`합니다.
-
-```dart
-import 'package:table_calendar/table_calendar.dart';
-```
-
 ---
 
 ### `flutter pub add`
@@ -163,10 +157,10 @@ Scaffold(
 
 주로 다음과 같은 화면 구성에 사용합니다.
 
-- AppBar
-- Body
-- FloatingActionButton
-- BottomNavigationBar
+* AppBar
+* Body
+* FloatingActionButton
+* BottomNavigationBar
 
 ---
 
@@ -314,11 +308,12 @@ class PetProfileHeader extends StatelessWidget {
 
 예:
 
-- 반려동물 목록
-- 선택한 날짜
-- 입력한 데이터
-- DB에서 불러온 데이터
-- 완료 여부
+* 반려동물 목록
+* 선택한 날짜
+* 입력한 데이터
+* DB에서 불러온 데이터
+* 완료 여부
+* 선택된 탭
 
 ```dart
 class HomeScreen extends StatefulWidget {
@@ -376,11 +371,12 @@ setState(() {
 
 프로젝트에서는 다음과 같은 상황에서 사용했습니다.
 
-- 날짜 선택
-- 다음 예방접종일 변경
-- 다음 예방접종일 삭제
-- 약 복용 완료 상태 변경
-- 목록 새로고침
+* 날짜 선택
+* 다음 예방접종일 변경
+* 다음 예방접종일 삭제
+* 약 복용 완료 상태 변경
+* 목록 새로고침
+* 선택된 기록 탭 변경
 
 ---
 
@@ -498,6 +494,7 @@ nameController.text = '프리다';
 @override
 void dispose() {
   nameController.dispose();
+
   super.dispose();
 }
 ```
@@ -572,14 +569,12 @@ GestureDetector(
 대표적인 이벤트:
 
 ```text
-onTap         한 번 탭
-onDoubleTap   두 번 탭
-onLongPress   길게 누르기
-onTapDown     누르는 순간
-onTapUp       손가락을 뗀 순간
+onTap          한 번 탭
+onDoubleTap    두 번 탭
+onLongPress    길게 누르기
+onTapDown      누르는 순간
+onTapUp        손가락을 뗀 순간
 ```
-
-프로젝트에서는 작은 버튼이나 특정 영역의 터치 이벤트를 처리할 때 사용할 수 있습니다.
 
 ---
 
@@ -596,7 +591,7 @@ InkWell(
 )
 ```
 
-날짜 선택 영역처럼 사용자가 터치할 수 있는 UI에 사용했습니다.
+날짜 선택 영역처럼 사용자가 터치할 수 있는 UI에 사용할 수 있습니다.
 
 ---
 
@@ -630,8 +625,6 @@ if (nextDate != null) ...[
   Text('날짜 선택 (선택사항)'),
 ]
 ```
-
-`nextDate`가 있으면 날짜와 삭제 버튼을 표시하고, 없으면 날짜 선택 안내 문구를 표시할 수 있습니다.
 
 ---
 
@@ -712,12 +705,6 @@ print('우리 아이는 $name입니다.');
 print('${pet.name}의 몸무게는 ${pet.weight}kg입니다.');
 ```
 
-단순한 변수는 중괄호 없이 사용할 수 있습니다.
-
-```dart
-'$difference일 남았어요.'
-```
-
 ---
 
 ## 15. null 처리
@@ -740,18 +727,6 @@ DateTime? nextDate;
 nextDate ?? vaccinationDate
 ```
 
-의미:
-
-```text
-nextDate가 있으면
-    ↓
-nextDate 사용
-
-nextDate가 null이면
-    ↓
-vaccinationDate 사용
-```
-
 ---
 
 ### `?.`
@@ -761,8 +736,6 @@ vaccinationDate 사용
 ```dart
 medication.medicationTime?.format(context)
 ```
-
-`medicationTime`이 null이면 `format()`을 실행하지 않습니다.
 
 ---
 
@@ -774,7 +747,7 @@ medication.medicationTime?.format(context)
 nextDate!
 ```
 
-단, 실제 값이 null이면 오류가 발생할 수 있으므로 주의해야 합니다.
+실제 값이 null이면 오류가 발생할 수 있으므로 주의해야 합니다.
 
 ---
 
@@ -796,12 +769,6 @@ final today = DateTime.now();
 final now = DateTime.now();
 ```
 
-예방접종 등록 화면에서는 기본 접종 날짜를 오늘로 설정할 수 있습니다.
-
-```dart
-DateTime vaccinationDate = DateTime.now();
-```
-
 ---
 
 ### `DateTime` 날짜 직접 생성
@@ -813,8 +780,6 @@ final date = DateTime(
   21,
 );
 ```
-
-연도, 월, 일을 지정하여 날짜를 만들 수 있습니다.
 
 ---
 
@@ -838,8 +803,6 @@ difference > 1
 → 며칠 남음
 ```
 
-프로젝트에서는 예방접종 예정일까지 남은 날짜를 계산할 때 사용했습니다.
-
 ---
 
 ### 날짜만 비교하기
@@ -853,8 +816,6 @@ final todayOnly = DateTime(
   today.day,
 );
 ```
-
-이렇게 하면 날짜 비교에서 시/분/초 때문에 발생하는 문제를 줄일 수 있습니다.
 
 ---
 
@@ -887,14 +848,14 @@ if (pickedDate != null) {
 
 `firstDate`와 `lastDate`를 이용하면 선택할 수 있는 날짜 범위를 제한할 수 있습니다.
 
-예를 들어 과거의 접종 날짜만 선택하도록 하는 경우:
+예:
 
 ```dart
 firstDate: DateTime(2000),
 lastDate: DateTime.now(),
 ```
 
-다음 접종일은 현재 접종일보다 이전 날짜를 선택하지 못하도록 할 수 있습니다.
+다음 접종일은 현재 접종일보다 이전 날짜를 선택하지 못하도록 할 수도 있습니다.
 
 ```dart
 firstDate: vaccinationDate,
@@ -925,11 +886,43 @@ lastDate: DateTime(2100),
 
 ---
 
-## 17. `TimeOfDay`
+## 17. 한국 시간 기준 날짜/시간 처리
+
+프로젝트에서는 한국에서 사용하는 앱이기 때문에 날짜와 시간을 명확하게 한국 시간 기준으로 처리할 필요가 있습니다.
+
+이를 위해 `DateTimeUtils`를 사용하여 날짜와 현재 시간을 관리합니다.
+
+```dart
+final today = DateTimeUtils.todayKst();
+```
+
+현재 한국 시간:
+
+```dart
+final now = DateTimeUtils.nowKst();
+```
+
+이렇게 공통 함수를 사용하면 화면마다 `DateTime.now()`를 직접 사용하는 것보다 날짜 기준을 일관되게 관리할 수 있습니다.
+
+특히 약 복용 일정처럼:
+
+```text
+오늘
+↓
+오늘 복용
+↓
+내일 복용
+↓
+다음 예정일
+```
+
+을 판단해야 하는 기능에서는 날짜 기준을 통일하는 것이 중요합니다.
+
+---
+
+## 18. `TimeOfDay`
 
 Flutter에서는 시간을 선택하거나 표시할 때 `TimeOfDay`를 사용할 수 있습니다.
-
-예:
 
 ```dart
 TimeOfDay(
@@ -944,11 +937,6 @@ TimeOfDay(
 medication.medicationTime?.format(context)
 ```
 
-여기서:
-
-- `?.` : 값이 null이 아닐 때만 `format()` 실행
-- `??` : 왼쪽 값이 null이면 오른쪽 값 사용
-
 예:
 
 ```dart
@@ -960,11 +948,9 @@ subtitle:
 
 ---
 
-## 18. 이미지 파일 처리
+## 19. 이미지 파일 처리
 
 반려동물 프로필 이미지처럼 로컬 파일을 화면에 표시할 수 있습니다.
-
-먼저 `dart:io`를 import합니다.
 
 ```dart
 import 'dart:io';
@@ -994,11 +980,9 @@ child: pet.imagePath == null
 
 ---
 
-## 19. 비동기 처리
+## 20. 비동기 처리
 
 Flutter에서는 DB 작업이나 알림 예약처럼 시간이 걸릴 수 있는 작업에 비동기 처리를 사용합니다.
-
----
 
 ### `Future`
 
@@ -1009,8 +993,6 @@ Future<void> saveWeightRecord() async {
   ...
 }
 ```
-
-`Future<void>`는 비동기 작업이 끝난 후 별도의 값을 반환하지 않는다는 의미입니다.
 
 ---
 
@@ -1034,8 +1016,6 @@ Future<void> saveWeightRecord() async {
 await DatabaseHelper.instance.insertWeightRecord(record);
 ```
 
-DB 저장이 완료된 후 다음 코드가 실행됩니다.
-
 ---
 
 ### `try-catch`
@@ -1049,8 +1029,6 @@ try {
   print(e);
 }
 ```
-
-오류가 발생하더라도 앱이 갑자기 종료되지 않도록 적절하게 예외를 처리할 수 있습니다.
 
 ---
 
@@ -1074,7 +1052,7 @@ SQLite 저장
 
 ---
 
-## 20. SQLite
+## 21. SQLite
 
 Pet Care Manager Mobile에서는 SQLite를 사용하여 데이터를 로컬에 저장합니다.
 
@@ -1111,8 +1089,6 @@ SQLite
 
 `DatabaseHelper`를 Singleton으로 구성하면 앱 전체에서 하나의 DB 접근 객체를 사용할 수 있습니다.
 
-개념:
-
 ```text
 화면 A ─┐
 화면 B ─┼→ DatabaseHelper → SQLite
@@ -1139,8 +1115,6 @@ await db.insert(
   pet.toMap(),
 );
 ```
-
-예방접종이나 체중 기록을 등록할 때도 동일한 CRUD 구조를 사용합니다.
 
 ---
 
@@ -1193,11 +1167,11 @@ Delete
 
 프로젝트에서는 다음 데이터에 CRUD를 적용했습니다.
 
-- 반려동물
-- 건강 기록
-- 예방접종
-- 체중 기록
-- 약 복용 기록
+* 반려동물
+* 건강 기록
+* 예방접종
+* 체중 기록
+* 약 복용 기록
 
 ---
 
@@ -1221,8 +1195,6 @@ if (widget.record == null) {
 
 데이터베이스 구조가 변경되면 데이터베이스 버전을 올리고 Migration을 처리할 수 있습니다.
 
-예:
-
 ```text
 DB Version 1
     ↓
@@ -1237,7 +1209,7 @@ DB Version 2
 
 ---
 
-## 21. Model 설계
+## 22. Model 설계
 
 데이터베이스의 데이터를 화면에서 사용하기 쉽게 Dart Model로 분리했습니다.
 
@@ -1252,7 +1224,7 @@ Medication
 MedicationLog
 ```
 
-예를 들어 `Pet` Model은 반려동물의 데이터를 객체 형태로 관리합니다.
+예:
 
 ```dart
 class Pet {
@@ -1278,7 +1250,7 @@ Flutter UI
 
 ---
 
-## 22. Widget 분리
+## 23. Widget 분리
 
 화면의 코드가 너무 길어지거나 특정 UI가 독립적인 역할을 가지게 되면 Widget을 별도 파일로 분리할 수 있습니다.
 
@@ -1286,6 +1258,7 @@ Flutter UI
 
 ```text
 widgets/
+
 ├── pet_profile_header.dart
 └── weight_chart.dart
 ```
@@ -1296,29 +1269,11 @@ widgets/
 
 다음과 같은 경우 별도 Widget으로 분리하는 것이 좋습니다.
 
-- 여러 화면에서 재사용되는 UI
-- 하나의 독립적인 역할을 가지는 UI
-- 코드가 길어지는 UI
-- 상태나 동작을 자체적으로 관리하는 UI
-- 화면의 핵심 로직과 분리하고 싶은 UI
-
-예:
-
-```dart
-class PetProfileHeader extends StatelessWidget {
-  final Pet pet;
-
-  const PetProfileHeader({
-    super.key,
-    required this.pet,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    ...
-  }
-}
-```
+* 여러 화면에서 재사용되는 UI
+* 하나의 독립적인 역할을 가지는 UI
+* 코드가 길어지는 UI
+* 상태나 동작을 자체적으로 관리하는 UI
+* 화면의 핵심 로직과 분리하고 싶은 UI
 
 ---
 
@@ -1348,7 +1303,7 @@ _buildSomething()
 
 ---
 
-## 23. 체중 변화 그래프
+## 24. 체중 변화 그래프
 
 `fl_chart`를 사용하여 반려동물의 체중 변화를 그래프로 표시했습니다.
 
@@ -1362,17 +1317,17 @@ Y축
 
 주요 기능:
 
-- 날짜순 체중 데이터 표시
-- 체중 변화 시각화
-- 그래프 포인트 선택
-- 선택한 날짜 확인
-- 선택한 체중 확인
+* 날짜순 체중 데이터 표시
+* 체중 변화 시각화
+* 그래프 포인트 선택
+* 선택한 날짜 확인
+* 선택한 체중 확인
 
 단순한 목록보다 시간에 따른 변화를 쉽게 확인할 수 있도록 구현했습니다.
 
 ---
 
-## 24. 건강 캘린더
+## 25. 건강 캘린더
 
 `table_calendar`를 사용하여 날짜별 건강 기록을 확인할 수 있도록 구현했습니다.
 
@@ -1380,14 +1335,14 @@ Y축
 
 관리 가능한 기록:
 
-- 🏥 건강 기록
-- 💉 예방접종 기록
-- ⚖️ 체중 기록
-- 💊 약 복용 기록
+* 🏥 건강 기록
+* 💉 예방접종 기록
+* ⚖️ 체중 기록
+* 💊 약 복용 기록
 
 ---
 
-## 25. 로컬 알림
+## 26. 로컬 알림
 
 Flutter에서 앱 내부 알림 기능을 구현하기 위해 `flutter_local_notifications` 패키지를 사용했습니다.
 
@@ -1457,17 +1412,17 @@ final FlutterLocalNotificationsPlugin _notifications =
     FlutterLocalNotificationsPlugin();
 ```
 
-이 객체를 통해 다음 기능을 구현할 수 있습니다.
+다음 기능을 구현할 수 있습니다.
 
-- 알림 초기화
-- 예약 알림
-- 반복 알림
-- 알림 취소
-- 알림 권한 요청
+* 알림 초기화
+* 예약 알림
+* 반복 알림
+* 알림 취소
+* 알림 권한 요청
 
 ---
 
-## 26. Android 알림 초기화
+## 27. Android 알림 초기화
 
 Android에서 사용할 알림 아이콘을 설정할 수 있습니다.
 
@@ -1479,7 +1434,7 @@ const androidSettings = AndroidInitializationSettings(
 
 ---
 
-## 27. iOS 알림 초기화
+## 28. iOS 알림 초기화
 
 iOS 알림 기능을 초기화하기 위한 설정입니다.
 
@@ -1514,7 +1469,7 @@ await _notifications.initialize(
 
 ---
 
-## 28. Android 알림 권한
+## 29. Android 알림 권한
 
 Android 13 이상에서는 알림 권한을 요청해야 합니다.
 
@@ -1530,7 +1485,7 @@ await androidPlugin?.requestExactAlarmsPermission();
 
 ---
 
-## 29. Timezone
+## 30. Timezone
 
 특정 시간에 알림을 예약하려면 날짜와 시간을 정확하게 처리해야 합니다.
 
@@ -1579,7 +1534,7 @@ scheduledDate: tz.TZDateTime.from(
 
 ---
 
-## 30. 예약 알림
+## 31. 예약 알림
 
 ### `zonedSchedule()`
 
@@ -1604,7 +1559,7 @@ await _notifications.zonedSchedule(
 
 ### `exactAllowWhileIdle`
 
-Android가 절전 상태(Doze/idle)에 있더라도 예약한 시간에 최대한 정확하게 알림을 실행하도록 요청합니다.
+Android가 절전 상태에 있더라도 예약한 시간에 최대한 정확하게 알림을 실행하도록 요청합니다.
 
 ```dart
 androidScheduleMode:
@@ -1615,9 +1570,9 @@ androidScheduleMode:
 
 ---
 
-## 31. 반복 알림
+## 32. 반복 알림
 
-약 복용 알림은 반복 유형에 따라 예약 방식을 다르게 처리할 수 있습니다.
+약 복용 알림은 반복 유형에 따라 예약 방식을 다르게 처리합니다.
 
 현재 프로젝트에서는:
 
@@ -1769,15 +1724,53 @@ for (int i = 0; i < repeatCount; i++) {
 
 ---
 
-## 32. 약 복용 완료 상태
+## 33. 약 복용 일정 데이터 설계
+
+약 복용 기능에서는 `Medication`이 약 자체의 일정 정보를 관리합니다.
+
+주요 데이터:
+
+```text
+Medication
+
+id
+petId
+medicationName
+medicationDate
+medicationTime
+nextDate
+memo
+repeatType
+repeatInterval
+```
+
+약 복용 일정은 단순히 한 날짜만 저장하는 것이 아니라 반복 여부에 따라 다음 복용일을 계산해야 합니다.
+
+```text
+Medication
+     ↓
+복용 시작일
+     ↓
+반복 유형
+     ↓
+다음 복용일 계산
+     ↓
+오늘 일정 / 예정 일정
+```
+
+---
+
+## 34. 약 복용 완료 상태
 
 약 복용 일정과 실제 복용 완료 여부를 구분하기 위해 `Medication`과 `MedicationLog`를 분리했습니다.
 
 ```text
 Medication
+
 → 약 자체의 복용 일정
 
 MedicationLog
+
 → 특정 날짜에 실제로 복용을 완료했는지 기록
 ```
 
@@ -1837,7 +1830,304 @@ MedicationLog 상태 변경 또는 삭제
 
 ---
 
-## 33. Core Library Desugaring
+## 35. 오늘 일정과 예정 일정 분리
+
+약 복용 기능을 구현하면서 모든 약을 하나의 목록으로 보여주는 것보다 날짜 기준으로 분리하는 것이 사용자에게 더 이해하기 쉽다는 것을 학습했습니다.
+
+현재 프로젝트에서는 크게 다음과 같이 구분합니다.
+
+```text
+오늘 복용할 약
+      ↓
+todayMedications
+
+앞으로 복용할 약
+      ↓
+upcomingMedications
+```
+
+오늘 일정에서는 실제 복용 완료 여부까지 함께 표시합니다.
+
+```text
+오늘의 약
+   ↓
+복용 예정
+   ↓
+복용 완료
+```
+
+미래 일정에서는 다음 복용 예정일을 중심으로 표시합니다.
+
+---
+
+## 36. 약 복용 일정 상태
+
+오늘의 약 목록에서는 복용 시간이 현재 시간보다 지났는지, 아직 남았는지를 판단하여 상태를 표시할 수 있습니다.
+
+프로젝트에서는 `scheduleStatus`를 이용하여 상태를 구분합니다.
+
+```text
+passed
+→ 복용 시간이 지남
+
+upcoming
+→ 아직 복용 시간이 되지 않음
+```
+
+예:
+
+```text
+09:00 약 복용
+      ↓
+현재 10:00
+      ↓
+passed
+```
+
+반대로:
+
+```text
+14:00 약 복용
+      ↓
+현재 10:00
+      ↓
+upcoming
+```
+
+이를 통해 오늘 일정에서도 단순히 약 이름만 보여주는 것이 아니라 현재 상황을 함께 표시할 수 있습니다.
+
+---
+
+## 37. 반복 약의 다음 복용일 계산
+
+반복 약은 오늘 일정과 미래 일정을 구분하기 위해 다음 복용일을 계산해야 합니다.
+
+프로젝트에서는 반복 유형에 따라 다음 복용일을 계산합니다.
+
+```text
+none
+daily
+weekly
+interval
+```
+
+---
+
+### 반복하지 않는 약
+
+반복하지 않는 약은 오늘 이후의 날짜만 예정 일정으로 처리합니다.
+
+```text
+오늘 이후
+→ 예정 일정
+
+오늘
+→ 오늘 일정
+
+과거
+→ 과거 기록
+```
+
+---
+
+### 매일 복용
+
+오늘이거나 이미 지난 날짜라면 하루씩 이동하여 오늘 이후의 가장 가까운 날짜를 찾습니다.
+
+```dart
+while (!baseDate.isAfter(today)) {
+  baseDate = baseDate.add(
+    const Duration(days: 1),
+  );
+}
+```
+
+---
+
+### 매주 복용
+
+오늘이거나 이미 지난 날짜라면 7일씩 이동합니다.
+
+```dart
+while (!baseDate.isAfter(today)) {
+  baseDate = baseDate.add(
+    const Duration(days: 7),
+  );
+}
+```
+
+---
+
+### N일마다 복용
+
+`repeatInterval`에 저장된 일수만큼 이동합니다.
+
+```dart
+while (!baseDate.isAfter(today)) {
+  baseDate = baseDate.add(
+    Duration(days: interval),
+  );
+}
+```
+
+예:
+
+```text
+3일마다
+
+8월 28일
+   ↓
+8월 31일
+   ↓
+9월 3일
+   ↓
+9월 6일
+```
+
+---
+
+### 다음 복용일 계산의 핵심
+
+중요한 것은 **오늘 복용해야 하는 약을 다음 복용일 계산에서 다시 오늘 일정으로 만들지 않는 것**입니다.
+
+따라서 다음 예정일 계산에서는:
+
+```text
+baseDate > today
+```
+
+가 되도록 날짜를 이동합니다.
+
+즉:
+
+```text
+오늘 일정
+→ 오늘 복용해야 하는 약
+
+예정 일정
+→ 오늘 이후 가장 가까운 복용일
+```
+
+로 역할을 분리합니다.
+
+---
+
+## 38. 오늘의 건강 일정 UI
+
+약 복용 기능을 확장하면서 특정 기능만 보여주는 것보다 사용자가 오늘 해야 할 건강 관련 일정을 한 곳에서 확인할 수 있도록 구성하는 방향을 학습했습니다.
+
+예:
+
+```text
+오늘의 건강 일정
+
+💊 약 복용
+💉 예방접종
+🏥 건강 기록
+⚖️ 체중 기록
+```
+
+약 복용에서는:
+
+```text
+오늘 복용할 약
+      ↓
+약 이름
+복용 시간
+복용 상태
+완료 버튼
+```
+
+과 같은 형태로 구성할 수 있습니다.
+
+---
+
+### 오늘 약 카드
+
+프로젝트에서는 `_buildTodayMedicationCard()`와 같은 화면 내부 메서드를 사용하여 오늘의 약 목록을 하나의 UI 영역으로 구성할 수 있습니다.
+
+```text
+Today Medication Card
+        ↓
+약 개수
+        ↓
+오늘의 약 목록
+        ↓
+각 약의 시간 / 상태 / 완료 여부
+```
+
+---
+
+### 오늘 약 항목
+
+각 약 항목은 `_buildTodayMedicationItem()`과 같이 별도의 작은 UI 메서드로 구성할 수 있습니다.
+
+표시 정보:
+
+```text
+약 이름
+복용 시간
+복용 상태
+완료 / 취소
+```
+
+화면의 역할을 작은 단위로 나누면 전체 화면 코드를 이해하기 쉬워집니다.
+
+---
+
+## 39. 기록 탭 상태 관리
+
+Pet Detail 화면에서는 여러 종류의 기록을 하나의 화면에서 보여주기 때문에 선택된 탭을 상태로 관리할 수 있습니다.
+
+```dart
+int selectedRecordTab = 0;
+```
+
+예:
+
+```text
+0 → 전체
+1 → 건강
+2 → 예방접종
+3 → 약
+4 → 체중
+```
+
+사용자가 탭을 변경하면 `setState()`를 통해 화면을 다시 그립니다.
+
+```dart
+setState(() {
+  selectedRecordTab = index;
+});
+```
+
+이 과정을 통해 하나의 상세 화면에서 여러 종류의 기록을 전환해서 확인할 수 있습니다.
+
+---
+
+## 40. Banner UI 공통화
+
+예방접종과 약 복용처럼 서로 다른 데이터라도 화면에서 "다가오는 일정"이라는 비슷한 형태로 표시할 수 있습니다.
+
+이런 경우 공통 UI 메서드를 사용할 수 있습니다.
+
+```text
+예방접종
+   ↓
+다가오는 일정
+
+약 복용
+   ↓
+다가오는 일정
+```
+
+프로젝트에서는 `_buildBannerItem()`처럼 공통 UI를 만들고 데이터만 다르게 전달하는 방식으로 구조를 개선했습니다.
+
+이런 방식은 동일한 UI가 여러 곳에서 반복되는 것을 줄이는 데 도움이 됩니다.
+
+---
+
+## 41. Core Library Desugaring
 
 `flutter_local_notifications`를 Android에서 사용하면서 다음과 같은 오류가 발생할 수 있습니다.
 
@@ -1846,7 +2136,7 @@ Dependency ':flutter_local_notifications'
 requires core library desugaring to be enabled
 ```
 
-이 경우 Android의 `app/build.gradle.kts`에서 설정을 추가해야 합니다.
+Android의 `app/build.gradle.kts`에서 설정을 추가합니다.
 
 ```kotlin
 compileOptions {
@@ -1868,17 +2158,9 @@ dependencies {
 
 Core Library Desugaring은 최신 Java API 기능을 낮은 Android 버전에서도 사용할 수 있도록 변환해 주는 기능입니다.
 
-설정 후 다시:
-
-```bash
-flutter run
-```
-
-을 실행합니다.
-
 ---
 
-## 34. `flutter analyze`
+## 42. `flutter analyze`
 
 Flutter 프로젝트의 Dart 코드를 정적으로 분석하여 코드에 문제가 있는지 검사합니다.
 
@@ -1886,15 +2168,15 @@ Flutter 프로젝트의 Dart 코드를 정적으로 분석하여 코드에 문�
 flutter analyze
 ```
 
-프로젝트 전체의 Dart 코드를 검사하여 다음과 같은 문제를 찾아줍니다.
+찾아낼 수 있는 문제:
 
-- 문법 오류
-- 타입 오류
-- 존재하지 않는 변수나 메서드 사용
-- 사용하지 않는 import
-- 사용하지 않는 변수
-- Flutter/Dart에서 권장하지 않는 코드
-- 기타 정적 분석 경고 및 오류
+* 문법 오류
+* 타입 오류
+* 존재하지 않는 변수나 메서드 사용
+* 사용하지 않는 import
+* 사용하지 않는 변수
+* 권장되지 않는 코드
+* 기타 정적 분석 경고 및 오류
 
 예:
 
@@ -1908,9 +2190,14 @@ No issues found!
 
 ---
 
-### `flutter analyze`의 장점
+### `flutter analyze`와 `flutter run`의 차이
 
-앱을 직접 실행하지 않아도 코드의 문제를 미리 확인할 수 있습니다.
+| 명령어               | 목적                  |
+| ----------------- | ------------------- |
+| `flutter analyze` | 코드에 문제가 있는지 정적으로 검사 |
+| `flutter run`     | 실제 기기/에뮬레이터에서 앱 실행  |
+
+추천 흐름:
 
 ```text
 코드 작성
@@ -1922,81 +2209,13 @@ flutter analyze
 코드 수정
    ↓
 flutter run
+   ↓
+실제 동작 확인
 ```
-
-Git에 커밋하기 전에 실행하면 실행하기 전 코드의 문제를 미리 확인할 수 있습니다.
-
-예:
-
-```bash
-flutter analyze
-```
-
-문제가 없다면:
-
-```bash
-git status
-git add .
-git commit -m "feat: 약 복용 기능 추가"
-git push
-```
-
-처럼 작업할 수 있습니다.
 
 ---
 
-### `flutter analyze`와 `flutter run`의 차이
-
-| 명령어 | 목적 |
-|---|---|
-| `flutter analyze` | 코드에 문제가 있는지 정적으로 검사 |
-| `flutter run` | 실제 기기/에뮬레이터에서 앱 실행 |
-
-따라서 앱을 실행하기 전에:
-
-```bash
-flutter analyze
-```
-
-로 코드를 검사하고,
-
-문제가 없다면:
-
-```bash
-flutter run
-```
-
-으로 실제 앱을 실행하는 방식으로 사용할 수 있습니다.
-
----
-
-### 분석 결과의 종류
-
-Flutter analyzer는 문제의 심각도에 따라 다음과 같은 결과를 표시할 수 있습니다.
-
-```text
-error
-warning
-info
-```
-
-`error`
-
-→ 코드가 정상적으로 분석되거나 컴파일되는 것을 막을 수 있는 심각한 문제
-
-`warning`
-
-→ 잠재적인 문제나 권장되지 않는 코드
-
-`info`
-
-→ 코드 스타일이나 개선을 위한 안내
-
-따라서 단순히 오류가 발생했는지만 보는 것이 아니라 어떤 종류의 문제가 발생했는지도 함께 확인하는 것이 중요합니다.
-
----
-
-## 35. Git 기본 명령어
+## 43. Git 기본 명령어
 
 ### `git status`
 
@@ -2070,11 +2289,9 @@ git push
 
 ---
 
-## 36. 앱 아이콘 변경
+## 44. 앱 아이콘 변경
 
 Flutter 앱의 기본 아이콘을 원하는 이미지로 변경하기 위해 `flutter_launcher_icons` 패키지를 사용할 수 있습니다.
-
----
 
 ### 패키지 설치
 
@@ -2098,8 +2315,6 @@ flutter_launcher_icons:
   image_path: "assets/icon/app_icon.png"
 ```
 
-`image_path`에는 준비한 앱 아이콘 이미지의 경로를 지정합니다.
-
 ---
 
 ### 아이콘 생성
@@ -2110,37 +2325,9 @@ dart run flutter_launcher_icons
 
 설정된 이미지를 기반으로 Android 및 iOS에서 사용할 수 있는 다양한 크기의 앱 아이콘을 자동으로 생성합니다.
 
-실행 과정:
-
-```text
-앱 아이콘 이미지 준비
-        ↓
-pubspec.yaml에 이미지 경로 설정
-        ↓
-flutter_launcher_icons 설정
-        ↓
-dart run flutter_launcher_icons
-        ↓
-Android / iOS 아이콘 자동 생성
-```
-
 ---
 
-### 앱 아이콘과 알림 아이콘
-
-`flutter_local_notifications`의 Android 초기화에서도 다음과 같이 앱 아이콘을 사용할 수 있습니다.
-
-```dart
-const androidSettings = AndroidInitializationSettings(
-  '@mipmap/ic_launcher',
-);
-```
-
-`@mipmap/ic_launcher`는 Android 앱의 기본 런처 아이콘을 참조합니다.
-
----
-
-## 37. 개발하면서 배운 문제 해결
+## 45. 개발하면서 배운 문제 해결
 
 ### `databaseFactory not initialized`
 
@@ -2156,40 +2343,11 @@ DB를 사용하는 시점과 초기화 방식이 올바른지 확인해야 합�
 
 `flutter_local_notifications` 패키지를 Android에서 사용하기 위해 Core Library Desugaring 설정이 필요할 수 있습니다.
 
-오류 메시지:
-
-```text
-Dependency ':flutter_local_notifications'
-requires core library desugaring to be enabled
-```
-
-해결 방법:
-
-```kotlin
-compileOptions {
-    isCoreLibraryDesugaringEnabled = true
-}
-```
-
-그리고:
-
-```kotlin
-dependencies {
-    coreLibraryDesugaring(
-        "com.android.tools:desugar_jdk_libs:2.1.5"
-    )
-}
-```
-
-를 추가합니다.
-
 ---
 
 ### `Undefined name 'NotificationService'`
 
 `NotificationService` 클래스를 만들었지만 해당 파일을 `import`하지 않았을 때 발생할 수 있습니다.
-
-예:
 
 ```dart
 import 'services/notification_service.dart';
@@ -2237,27 +2395,43 @@ GitHub 계정과 Git 인증 정보를 확인해야 합니다.
 
 ---
 
-## 38. 개발하면서 익힌 문제 해결 흐름
+## 46. 개발하면서 익힌 문제 해결 흐름
 
 에러가 발생했을 때 무작정 코드를 수정하기보다는 다음과 같은 순서로 확인하는 습관을 익혔습니다.
 
 ```text
 에러 발생
+
    ↓
+
 에러 메시지 확인
+
    ↓
+
 어떤 파일 / 어떤 코드에서 발생했는지 확인
+
    ↓
+
 관련 패키지 버전 확인
+
    ↓
+
 Flutter / Android 설정 확인
+
    ↓
+
 코드 수정
+
    ↓
+
 flutter analyze
+
    ↓
+
 flutter run
+
    ↓
+
 실제 동작 확인
 ```
 
@@ -2265,7 +2439,7 @@ flutter run
 
 ---
 
-## 39. 현재 프로젝트에서 사용한 주요 개념 정리
+## 47. 현재 프로젝트에서 사용한 주요 개념 정리
 
 ### Flutter
 
@@ -2281,7 +2455,6 @@ ListTile
 
 StatelessWidget
 StatefulWidget
-
 initState()
 setState()
 mounted
@@ -2296,10 +2469,14 @@ GestureDetector
 InkWell
 
 showDatePicker()
+
 조건부 UI
 Collection-if
 Spread operator
+
 FileImage
+
+Widget 분리
 ```
 
 ---
@@ -2309,6 +2486,10 @@ FileImage
 ```text
 DateTime
 TimeOfDay
+
+DateTimeUtils
+todayKst()
+nowKst()
 
 ?
 ??
@@ -2321,6 +2502,7 @@ join()
 double.tryParse()
 
 문자열 보간
+
 Future
 async
 await
@@ -2345,6 +2527,9 @@ Delete
 Model
 toMap()
 Migration
+
+Medication
+MedicationLog
 ```
 
 ---
@@ -2404,141 +2589,168 @@ git pull
 
 ---
 
-## 40. 앞으로 추가해서 공부할 내용
+## 48. 앞으로 추가해서 공부할 내용
 
 ### Flutter
 
-- [x] `table_calendar` 사용
-- [x] 캘린더에서 날짜 선택하기
-- [x] 날짜별 건강 기록 조회
-- [x] `StatefulWidget`
-- [x] `StatelessWidget`
-- [x] `initState()`
-- [x] `setState()`
-- [x] `mounted`
-- [x] `Navigator.push()`
-- [x] `Navigator.pop()` 결과 전달
-- [x] `TextEditingController`
-- [x] `GestureDetector`
-- [x] `InkWell`
-- [x] `showDatePicker()`
-- [x] 조건부 UI
-- [x] Collection-if / Spread operator
-- [x] `FileImage`
-- [x] `ListView`
-- [x] `Card`
-- [x] `ListTile`
-- [x] Widget 분리
-- [ ] Flutter 화면 디자인 및 레이아웃 심화
-- [ ] 더 복잡한 상태 관리 방식
+* [x] `table_calendar` 사용
+* [x] 캘린더에서 날짜 선택하기
+* [x] 날짜별 건강 기록 조회
+* [x] `StatefulWidget`
+* [x] `StatelessWidget`
+* [x] `initState()`
+* [x] `setState()`
+* [x] `mounted`
+* [x] `Navigator.push()`
+* [x] `Navigator.pop()` 결과 전달
+* [x] `TextEditingController`
+* [x] `GestureDetector`
+* [x] `InkWell`
+* [x] `showDatePicker()`
+* [x] 조건부 UI
+* [x] Collection-if / Spread operator
+* [x] `FileImage`
+* [x] `ListView`
+* [x] `Card`
+* [x] `ListTile`
+* [x] Widget 분리
+* [x] 화면 내부 `_build...()` 메서드 활용
+* [x] 탭 상태 관리
+* [ ] Flutter 화면 디자인 및 레이아웃 심화
+* [ ] 더 복잡한 상태 관리 방식
 
 ---
 
 ### Dart
 
-- [x] `DateTime`
-- [x] `TimeOfDay`
-- [x] 날짜 차이 계산
-- [x] 날짜 범위 제한
-- [x] `??`
-- [x] `?.`
-- [x] `!`
-- [x] 문자열 보간
-- [x] `List<String>`
-- [x] `join()`
-- [x] `double.tryParse()`
-- [x] `Future`
-- [x] `async`
-- [x] `await`
-- [x] 예외 처리 (`try-catch`)
-- [ ] Class 심화
-- [ ] Constructor 심화
-- [ ] Enum
-- [ ] Extension
-- [ ] Generic
+* [x] `DateTime`
+* [x] `TimeOfDay`
+* [x] 날짜 차이 계산
+* [x] 날짜 범위 제한
+* [x] 한국 시간 기준 날짜 처리
+* [x] `??`
+* [x] `?.`
+* [x] `!`
+* [x] 문자열 보간
+* [x] `List<String>`
+* [x] `join()`
+* [x] `double.tryParse()`
+* [x] `Future`
+* [x] `async`
+* [x] `await`
+* [x] 예외 처리 (`try-catch`)
+* [x] 반복 날짜 계산
+* [ ] Class 심화
+* [ ] Constructor 심화
+* [ ] Enum
+* [ ] Extension
+* [ ] Generic
 
 ---
 
 ### SQLite
 
-- [x] SQLite CRUD
-- [x] 반려동물 데이터 관리
-- [x] 건강 기록 관리
-- [x] 예방접종 기록 관리
-- [x] 체중 기록 관리
-- [x] 약 복용 기록 관리
-- [x] DatabaseHelper Singleton
-- [x] Model과 SQLite 연결
-- [x] Database Migration
-- [ ] SQLite JOIN
-- [ ] 복잡한 SQL Query
-- [ ] Index
-- [ ] 데이터베이스 최적화
+* [x] SQLite CRUD
+* [x] 반려동물 데이터 관리
+* [x] 건강 기록 관리
+* [x] 예방접종 기록 관리
+* [x] 체중 기록 관리
+* [x] 약 복용 기록 관리
+* [x] 약 복용 완료 로그 관리
+* [x] DatabaseHelper Singleton
+* [x] Model과 SQLite 연결
+* [x] Database Migration
+* [ ] SQLite JOIN
+* [ ] 복잡한 SQL Query
+* [ ] Index
+* [ ] 데이터베이스 최적화
+
+---
+
+### 약 복용 기능
+
+* [x] 약 복용 데이터 Model 설계
+* [x] 약 복용 시간 관리
+* [x] 반복 유형 관리
+* [x] 매일 반복
+* [x] 매주 반복
+* [x] N일마다 반복
+* [x] 다음 복용일 계산
+* [x] 오늘 복용 일정 분리
+* [x] 미래 예정 일정 분리
+* [x] 복용 완료 상태 관리
+* [x] 복용 완료 취소
+* [x] `MedicationLog`
+* [x] 복용 시간에 따른 상태 표시
+* [x] 오늘 약 목록 UI
+* [ ] 약 복용 일정 수정 기능 고도화
+* [ ] 복용 이력 상세 화면
+* [ ] 약 복용 통계
 
 ---
 
 ### 로컬 알림
 
-- [x] `flutter_local_notifications` 패키지 설치 및 초기화
-- [x] 알림 권한 요청
-- [x] 특정 시간 예약 알림
-- [x] 약 복용 시간 알림
-- [x] 매일 반복 알림
-- [x] 매주 반복 알림
-- [x] N일마다 반복 알림
-- [x] 예약 알림 취소
-- [x] Timezone 적용
-- [x] 정확한 알람 권한
-- [x] 예방접종 예정 알림
-- [ ] 즉시 알림
-- [ ] 알림 설정 화면
-- [ ] 알림 세부 설정
+* [x] `flutter_local_notifications` 패키지 설치 및 초기화
+* [x] 알림 권한 요청
+* [x] 특정 시간 예약 알림
+* [x] 약 복용 시간 알림
+* [x] 매일 반복 알림
+* [x] 매주 반복 알림
+* [x] N일마다 반복 알림
+* [x] 예약 알림 취소
+* [x] Timezone 적용
+* [x] 정확한 알람 권한
+* [x] 예방접종 예정 알림
+* [ ] 즉시 알림
+* [ ] 알림 설정 화면
+* [ ] 알림 세부 설정
 
 ---
 
 ### Android
 
-- [x] Core Library Desugaring
-- [x] Android 알림 권한 처리
-- [x] 정확한 알람 권한 처리
-- [ ] Android Manifest 설정 심화
-- [ ] Release 빌드
-- [ ] APK / AAB 생성
+* [x] Core Library Desugaring
+* [x] Android 알림 권한 처리
+* [x] 정확한 알람 권한 처리
+* [ ] Android Manifest 설정 심화
+* [ ] Release 빌드
+* [ ] APK / AAB 생성
 
 ---
 
 ### Git
 
-- [x] `git status`
-- [x] `git add`
-- [x] `git commit`
-- [x] `git push`
-- [x] `git pull`
-- [ ] Branch
-- [ ] Merge
-- [ ] Rebase
-- [ ] GitHub Pull Request
+* [x] `git status`
+* [x] `git add`
+* [x] `git commit`
+* [x] `git push`
+* [x] `git pull`
+* [ ] Branch
+* [ ] Merge
+* [ ] Rebase
+* [ ] GitHub Pull Request
 
 ---
 
 ### 앱 꾸미기
 
-- [x] 앱 이름 변경
-- [x] 앱 아이콘 변경
-- [x] `flutter_launcher_icons` 패키지 사용
-- [ ] Flutter 화면 디자인 및 레이아웃 심화
-- [ ] Theme 설정
-- [ ] 공통 색상 관리
-- [ ] 공통 TextStyle 관리
-- [ ] 다크 모드
+* [x] 앱 이름 변경
+* [x] 앱 아이콘 변경
+* [x] `flutter_launcher_icons` 패키지 사용
+* [ ] Flutter 화면 디자인 및 레이아웃 심화
+* [ ] Theme 설정
+* [ ] 공통 색상 관리
+* [ ] 공통 TextStyle 관리
+* [ ] 다크 모드
 
 ---
 
-## 41. 프로젝트를 통해 배운 개발 구조
+## 49. 프로젝트를 통해 배운 개발 구조
 
 Pet Care Manager Mobile을 개발하면서 단순히 화면을 만드는 것뿐만 아니라 각 역할을 분리하는 것이 중요하다는 것을 학습했습니다.
 
-현재 프로젝트는 다음과 같은 구조로 구성되어 있습니다.
+현재 프로젝트의 기본적인 구조는 다음과 같습니다.
 
 ```text
 Screen
@@ -2570,11 +2782,20 @@ Screen
   └── WeightChart
 ```
 
+화면 내부에서만 사용하는 작은 UI는 `_build...()` 메서드로 관리할 수 있습니다.
+
+```text
+Screen
+  ├── _buildTodayMedicationCard()
+  ├── _buildTodayMedicationItem()
+  └── _buildBannerItem()
+```
+
 이러한 구조를 사용하면 프로젝트의 규모가 커지더라도 각 기능을 나누어 관리하기 쉬워집니다.
 
 ---
 
-## 42. 개발하면서 가장 중요하게 배운 점
+## 50. 개발하면서 가장 중요하게 배운 점
 
 ### 기능이 많아질수록 역할을 분리해야 한다
 
@@ -2583,7 +2804,7 @@ Screen
 따라서:
 
 ```text
-화면
+Screen
 ↓
 UI
 
@@ -2630,9 +2851,9 @@ await DatabaseHelper.instance.insertPet(pet);
 _buildSomething()
 ```
 
-형태의 메서드로 관리할 수 있지만,
+형태의 메서드로 관리할 수 있습니다.
 
-규모가 커지거나 독립적인 역할을 가지는 UI는:
+하지만 규모가 커지거나 독립적인 역할을 가지는 UI는:
 
 ```text
 widgets/
@@ -2656,11 +2877,47 @@ Model
 Widget
 ```
 
-이러한 흐름을 이해하는 것이 Flutter 앱 구조를 이해하는 데 중요하다는 것을 배웠습니다.
+---
+
+### 오늘 일정과 미래 일정을 분리하기
+
+약 복용 기능을 개발하면서 모든 일정을 하나의 목록으로 보여주는 것보다 사용자가 지금 해야 할 일과 앞으로 해야 할 일을 구분할 수 있도록 만드는 것이 중요하다는 것을 배웠습니다.
+
+```text
+오늘 해야 할 일
+      ↓
+Today
+
+앞으로 해야 할 일
+      ↓
+Upcoming
+```
+
+특히 반복되는 일정은 단순히 날짜를 저장하는 것뿐만 아니라 현재 날짜를 기준으로 다음 일정을 계산해야 합니다.
 
 ---
 
-## 43. 앞으로의 학습 방향
+### 반복 일정은 "원본 일정"과 "실제 기록"을 분리하기
+
+약 복용 기능을 구현하면서 반복 일정 자체와 실제 복용 여부를 하나의 데이터로 관리하면 복잡해질 수 있다는 것을 배웠습니다.
+
+따라서:
+
+```text
+Medication
+↓
+복용 규칙 / 일정
+
+MedicationLog
+↓
+특정 날짜의 실제 복용 상태
+```
+
+처럼 분리하면 반복 일정과 실제 수행 기록을 독립적으로 관리할 수 있습니다.
+
+---
+
+## 51. 앞으로의 학습 방향
 
 현재 프로젝트에서는 Flutter 앱 개발에 필요한 기본적인 기능부터 실제 애플리케이션에서 사용할 수 있는 기능까지 직접 구현했습니다.
 
@@ -2681,25 +2938,31 @@ Service
       ↓
 Notification
       ↓
+반복 일정 관리
+      ↓
 앱 구조 개선
       ↓
 상태 관리 심화
+      ↓
+Repository
       ↓
 배포
 ```
 
 특히 다음 내용을 추가로 학습할 예정입니다.
 
-- Flutter 상태 관리
-- Widget 설계
-- Repository 패턴
-- Service 구조
-- SQLite JOIN
-- 데이터베이스 최적화
-- Android Release 빌드
-- APK / AAB 배포
-- Git Branch 전략
-- 앱 UI/UX 개선
+* Flutter 상태 관리
+* Widget 설계
+* Repository 패턴
+* Service 구조
+* SQLite JOIN
+* 데이터베이스 최적화
+* Android Release 빌드
+* APK / AAB 배포
+* Git Branch 전략
+* 앱 UI/UX 개선
+* 테스트 코드 작성
+* 반복 일정 및 기록 데이터 구조 개선
 
 ---
 
@@ -2709,20 +2972,24 @@ Notification
 
 특히 단순한 CRUD 구현에 그치지 않고:
 
-- 반려동물별 데이터 관리
-- 건강 기록 관리
-- 예방접종 일정 관리
-- 체중 변화 시각화
-- 건강 캘린더
-- 약 복용 일정 관리
-- 약 복용 완료 상태 관리
-- 반복 알림
-- Timezone 처리
-- Android 알림 권한
-- Database Migration
-- Widget 분리
-- Service 분리
+* 반려동물별 데이터 관리
+* 건강 기록 관리
+* 예방접종 일정 관리
+* 체중 변화 시각화
+* 건강 캘린더
+* 약 복용 일정 관리
+* 반복 약 복용 일정 계산
+* 약 복용 완료 상태 관리
+* 오늘의 약 일정 관리
+* 미래 예정 일정 관리
+* 반복 알림
+* Timezone 처리
+* Android 알림 권한
+* Database Migration
+* Widget 분리
+* Service 분리
+* 오늘 일정과 예정 일정의 데이터 분리
 
 등을 직접 구현하면서 실제 앱 개발 과정에서 발생하는 문제를 해결하는 경험을 쌓았습니다.
 
-앞으로도 이 프로젝트를 계속 개선하면서 Flutter 개발 경험뿐만 아니라 데이터베이스 설계, 앱 구조 설계, 유지보수 가능한 코드 작성 방법까지 함께 학습해 나갈 예정입니다.
+앞으로도 이 프로젝트를 계속 개선하면서 Flutter 개발 경험뿐만 아니라 데이터베이스 설계, 반복 일정 데이터 설계, 앱 구조 설계, 유지보수 가능한 코드 작성 방법까지 함께 학습해 나갈 예정입니다.
