@@ -8,9 +8,10 @@ import '../services/notification_service.dart';
 
 import '../utils/date_time_utils.dart';
 
+import 'vaccination_history_screen.dart';
+
 class VaccinationRegisterScreen extends StatefulWidget {
   final int petId;
-
   final Vaccination? vaccination;
 
   const VaccinationRegisterScreen({
@@ -344,9 +345,48 @@ class _VaccinationRegisterScreen extends State<VaccinationRegisterScreen> {
                       ),
                     ),
 
+                    // 5. 접종 이력
+                    if (isEditing) ...[
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: TextButton.icon(
+                          onPressed: () async {
+                            final vaccinations = await DatabaseHelper.instance
+                                .getVaccinationsByPetId(widget.petId);
+
+                            if (!context.mounted) return;
+
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => VaccinationHistoryScreen(
+                                  vaccineName: widget.vaccination!.vaccineName,
+                                  vaccinations: vaccinations,
+                                ),
+                              ),
+                            );
+                          },
+                          icon: const Icon(Icons.history, size: 16),
+                          label: const Text(
+                            '접종 이력 보기',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          style: TextButton.styleFrom(
+                            foregroundColor: Theme.of(context).primaryColor,
+                            padding: const EdgeInsets.only(right: 8, top: 5),
+                            minimumSize: Size.zero,
+                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          ),
+                        ),
+                      ),
+                    ],
+
                     const SizedBox(height: 15),
 
-                    // 5. 메모
+                    // 6. 메모
                     TextField(
                       controller: memoController,
                       maxLines: 3,
