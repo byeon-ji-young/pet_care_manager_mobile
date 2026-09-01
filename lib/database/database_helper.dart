@@ -112,7 +112,7 @@ class DatabaseHelper {
             cost INTEGER,
             status TEXT NOT NULL DEFAULT 'scheduled',
             examination_type TEXT,
-            examination_result TEXT
+            examination_result TEXT,
             FOREIGN KEY (pet_id) REFERENCES pets(id) ON DELETE CASCADE
           )
         ''');
