@@ -380,7 +380,7 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
   List<Widget> _buildSelectedRecordCards(DateTime day, Pet pet) {
     final widgets = <Widget>[];
 
-    // 전체, 병원기록
+    // 전체, 건강
     if (selectedRecordTab == 0 || selectedRecordTab == 1) {
       final records = _getHealthRecordsForDay(day);
 
@@ -1158,23 +1158,8 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
                     children: [
                       // 건강 기록 제목 + 기록 추가 버튼
                       Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        mainAxisAlignment: MainAxisAlignment.end,
                         children: [
-                          const Padding(
-                            padding: EdgeInsets.only(
-                              left: 8,
-                              top: 4,
-                              bottom: 8,
-                            ),
-                            child: Text(
-                              '🗓️ 건강 기록',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-
                           ElevatedButton.icon(
                             onPressed: _showAddRecordBottomSheet,
                             icon: const Icon(Icons.add, size: 18),
@@ -1182,7 +1167,7 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
                             style: ElevatedButton.styleFrom(
                               elevation: 0,
                               padding: const EdgeInsets.symmetric(
-                                horizontal: 14,
+                                horizontal: 10,
                                 vertical: 8,
                               ),
                               shape: RoundedRectangleBorder(
