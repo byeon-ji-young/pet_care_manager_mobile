@@ -591,7 +591,7 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
             alignment: Alignment.centerRight,
             child: TextButton.icon(
               onPressed: _showWeightChart,
-              icon: const Icon(Icons.monitor_weight_outlined, size: 16),
+              icon: const Icon(Icons.show_chart_outlined, size: 16),
               label: const Text(
                 '체중 변화 그래프',
                 style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
@@ -619,78 +619,76 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (context) {
-        return Container(
-          child: SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
-              child: Column(
-                mainAxisSize: MainAxisSize.min, // 내부 컨텐츠 크기만큼 유연하게 조절
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // 1. 위쪽 손잡이 (Handle Bar)
-                  Center(
-                    child: Container(
-                      width: 40,
-                      height: 4,
-                      margin: const EdgeInsets.only(bottom: 16),
-                      decoration: BoxDecoration(
-                        color: Colors.grey[300],
-                        borderRadius: BorderRadius.circular(2),
-                      ),
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min, // 내부 컨텐츠 크기만큼 유연하게 조절
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // 1. 위쪽 손잡이 (Handle Bar)
+                Center(
+                  child: Container(
+                    width: 40,
+                    height: 4,
+                    margin: const EdgeInsets.only(bottom: 16),
+                    decoration: BoxDecoration(
+                      color: Colors.grey[300],
+                      borderRadius: BorderRadius.circular(2),
                     ),
                   ),
+                ),
 
-                  const SizedBox(height: 16),
+                const SizedBox(height: 16),
 
-                  // 2. 상단 헤더 영역 (제목 & 서브텍스트)
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Row(
-                        children: [
-                          // Icon(
-                          //   Icons.show_chart,
-                          //   size: 18,
-                          //   color: Theme.of(context).primaryColor,
-                          // ),
-                          // const SizedBox(width: 6),
-                          const Text(
-                            '📈 체중 변화 그래프',
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.black87,
-                            ),
-                          ),
-                        ],
-                      ),
-                      Text(
-                        '총 ${weightRecords.length}개 기록',
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.grey[700],
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ],
-                  ),
-
-                  const SizedBox(height: 10),
-
-                  // 3. 차트를 감싸는 깔끔한 메인 카드
-                  Card(
-                    elevation: 0,
-                    // color: Colors.white,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                // 2. 상단 헤더 영역 (제목 & 서브텍스트)
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Row(
                       children: [
-                        // 차트 위젯 배치
-                        WeightChart(records: weightRecords),
+                        // Icon(
+                        //   Icons.show_chart,
+                        //   size: 18,
+                        //   color: Theme.of(context).primaryColor,
+                        // ),
+                        const SizedBox(width: 6),
+                        const Text(
+                          '체중 변화 그래프', // 📈
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black87,
+                          ),
+                        ),
                       ],
                     ),
+                    Text(
+                      '총 ${weightRecords.length}개 기록',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.grey[700],
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+
+                const SizedBox(height: 10),
+
+                // 3. 차트를 감싸는 깔끔한 메인 카드
+                Card(
+                  elevation: 0,
+                  // color: Colors.white,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // 차트 위젯 배치
+                      WeightChart(records: weightRecords),
+                    ],
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
         );
