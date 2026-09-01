@@ -418,17 +418,9 @@ class _HealthRecordRegisterScreenState
                       return;
                     }
 
-                    final now = DateTimeUtils.nowKst();
+                    final today = DateTimeUtils.todayKst();
 
-                    final selectedDateTime = DateTime(
-                      selectedDate.year,
-                      selectedDate.month,
-                      selectedDate.day,
-                      selectedTime?.hour ?? 23,
-                      selectedTime?.minute ?? 59,
-                    );
-
-                    final defaultStatus = selectedDateTime.isAfter(now)
+                    final defaultStatus = selectedDate.isAfter(today)
                         ? 'scheduled'
                         : 'completed';
 

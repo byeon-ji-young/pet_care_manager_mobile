@@ -384,6 +384,12 @@ class _VaccinationRegisterScreen extends State<VaccinationRegisterScreen> {
                       return;
                     }
 
+                    final today = DateTimeUtils.todayKst();
+
+                    final defaultStatus = vaccinationDate.isAfter(today)
+                        ? 'scheduled'
+                        : 'completed';
+
                     final vaccination = Vaccination(
                       id: widget.vaccination?.id,
                       petId: widget.petId,
@@ -396,6 +402,8 @@ class _VaccinationRegisterScreen extends State<VaccinationRegisterScreen> {
                       memo: memoController.text.trim().isEmpty
                           ? null
                           : memoController.text.trim(),
+                      // 수정할 때는 기존 상태 유지. 신규 등록이면 날짜 기준으로 자동 결정
+                      status: widget.vaccination?.status ?? defaultStatus,
                     );
 
                     int? vaccinationId;
