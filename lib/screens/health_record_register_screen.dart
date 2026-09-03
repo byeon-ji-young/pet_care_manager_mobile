@@ -244,6 +244,33 @@ class _HealthRecordRegisterScreenState
     }
   }
 
+  // 사진 확대
+  void _showImagePreview(String imagePath) {
+    showDialog(
+      context: context,
+      barrierColor: Colors.black87,
+      builder: (context) {
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          insetPadding: const EdgeInsets.all(20),
+          child: InteractiveViewer(
+            // InteractiveViewer: 손가락으로 확대/축소하거나 이동할 수 있게 해주는 위젯
+            minScale: 0.8, // 얼마나 작게 축소할 수 있는지 (1.0 = 원래 크기)
+            maxScale: 4.0, // 얼마나 크게 확대할 수 있는지 (1.0 = 원래 크기)
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: Image.file(
+                File(imagePath),
+                fit: BoxFit
+                    .contain, // BoxFit.contain: 이미지 전체가 잘리지 않도록 화면 안에 맞춰서 보여주는 방식. 사진 전체를 보여주기 때문에 위아래 또는 좌우 빈 공간이 생길 수 있음
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final isEditing = widget.record != null;
@@ -434,16 +461,22 @@ class _HealthRecordRegisterScreenState
                                         return Stack(
                                           // Stack: 여러 위젯을 겹쳐서 배치할 때 사용하는 Flutter 위젯
                                           children: [
-                                            ClipRRect(
-                                              // ClipRRect: 위젯의 모서리를 둥글게 잘라주는(clip) 위젯
-                                              borderRadius:
-                                                  BorderRadius.circular(10),
-                                              child: Image.file(
-                                                File(image.imagePath),
-                                                width: 80,
-                                                height: 80,
-                                                fit: BoxFit
-                                                    .cover, // fit: 이미지를 지정한 크기 안에 어떻게 맞춰서 보여줄지 결정하는 옵션
+                                            GestureDetector(
+                                              onTap: () => _showImagePreview(
+                                                image.imagePath,
+                                              ),
+                                              child: ClipRRect(
+                                                // ClipRRect: 위젯의 모서리를 둥글게 잘라주는(clip) 위젯
+                                                borderRadius:
+                                                    BorderRadius.circular(10),
+                                                child: Image.file(
+                                                  File(image.imagePath),
+                                                  width: 80,
+                                                  height: 80,
+                                                  // fit: 이미지를 지정한 크기 안에 어떻게 맞춰서 보여줄지 결정하는 옵션
+                                                  fit: BoxFit
+                                                      .cover, // BoxFit.cover: 이미지를 주어진 영역에 꽉 채우는 방식. 사진이 잘릴 수 있음
+                                                ),
                                               ),
                                             ),
 
@@ -487,14 +520,18 @@ class _HealthRecordRegisterScreenState
 
                                         return Stack(
                                           children: [
-                                            ClipRRect(
-                                              borderRadius:
-                                                  BorderRadius.circular(10),
-                                              child: Image.file(
-                                                File(image.path),
-                                                width: 80,
-                                                height: 80,
-                                                fit: BoxFit.cover,
+                                            GestureDetector(
+                                              onTap: () =>
+                                                  _showImagePreview(image.path),
+                                              child: ClipRRect(
+                                                borderRadius:
+                                                    BorderRadius.circular(10),
+                                                child: Image.file(
+                                                  File(image.path),
+                                                  width: 80,
+                                                  height: 80,
+                                                  fit: BoxFit.cover,
+                                                ),
                                               ),
                                             ),
 
