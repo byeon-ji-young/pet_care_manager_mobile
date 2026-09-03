@@ -1,4 +1,6 @@
+# =========================================================
 # Miscellaneous
+# =========================================================
 *.class
 *.log
 *.pyc
@@ -12,34 +14,56 @@
 .swiftpm/
 migrate_working_dir/
 
-# IntelliJ related
+# =========================================================
+# IntelliJ / Android Studio
+# =========================================================
 *.iml
 *.ipr
 *.iws
 .idea/
 
-# The .vscode folder contains launch configuration and tasks you configure in
-# VS Code which you may wish to be included in version control, so this line
-# is commented out by default.
+# =========================================================
+# VS Code
+# ---------------------------------------------------------
+# launch configuration / tasks 등을 Git에 포함하려면 주석 유지
+# =========================================================
 #.vscode/
 
-# Flutter/Dart/Pub related
-**/doc/api/
-**/ios/Flutter/.last_build_id
+# =========================================================
+# Flutter / Dart / Pub
+# =========================================================
 .dart_tool/
 .flutter-plugins-dependencies
 .pub-cache/
 .pub/
+**/doc/api/
+coverage/
+
+# =========================================================
+# Flutter Build
+# =========================================================
 /build/
-/coverage/
 
-# Symbolication related
-app.*.symbols
+# =========================================================
+# Flutter iOS
+# =========================================================
+**/ios/Flutter/.last_build_id
 
-# Obfuscation related
-app.*.map.json
-
-# Android Studio will place build artifacts here
+# =========================================================
+# Android Build
+# =========================================================
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# =========================================================
+# Kotlin / Gradle
+# =========================================================
+android/.kotlin/
+android/.gradle/
+
+# =========================================================
+# Symbolication / Obfuscation
+# =========================================================
+app.*.symbols
+app.*.map.json
