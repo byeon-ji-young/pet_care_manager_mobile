@@ -273,7 +273,7 @@ class DatabaseHelper {
 
     final List<Map<String, dynamic>> maps = await db.query(
       'pets',
-      orderBy: 'id DESC',
+      orderBy: 'id ASC',
     );
 
     return maps.map((map) {
