@@ -3,6 +3,9 @@ import 'package:flutter/material.dart';
 import '../database/database_helper.dart';
 import '../models/medication.dart';
 import '../models/medication_log.dart';
+import '../models/medication_history_item.dart';
+
+import '../utils/date_time_utils.dart';
 
 class MedicationHistoryScreen extends StatefulWidget {
   final Medication medication;
@@ -15,7 +18,7 @@ class MedicationHistoryScreen extends StatefulWidget {
 }
 
 class _MedicationHistoryScreenState extends State<MedicationHistoryScreen> {
-  List<MedicationLog> logs = [];
+  List<MedicationHistoryItem> history = [];
   bool isLoading = true;
 
   @override
@@ -38,13 +41,89 @@ class _MedicationHistoryScreenState extends State<MedicationHistoryScreen> {
       return;
     }
 
-    final result = await DatabaseHelper.instance.getMedicationLog(medicationId);
+    // 이 약의 실제 복용 완료 로그 조회
+    final logs = await DatabaseHelper.instance.getMedicationLog(medicationId);
+
+    final medication = widget.medication;
+
+    final today = DateTimeUtils.todayKst();
+
+    final startDate = DateTime(
+      medication.medicationDate.year,
+      medication.medicationDate.month,
+      medication.medicationDate.day,
+    );
+
+    final items = <MedicationHistoryItem>[];
+
+    DateTime currentDate = startDate;
+
+    while (!currentDate.isAfter(today)) {
+      bool isScheduled = false;
+
+      // 반복 없음
+      if (medication.repeatType == 'none') {
+        if (medication.nextDate != null) {
+          final scheduledDate = DateTime(
+            medication.nextDate!.year,
+            medication.nextDate!.month,
+            medication.nextDate!.day,
+          );
+
+          isScheduled = currentDate == scheduledDate;
+        }
+      }
+      // 매일
+      else if (medication.repeatType == 'daily') {
+        isScheduled = true;
+      }
+      // 매주
+      else if (medication.repeatType == 'weekly') {
+        isScheduled = currentDate.weekday == startDate.weekday;
+      }
+      // N일마다
+      else if (medication.repeatType == 'interval' &&
+          medication.repeatInterval != null &&
+          medication.repeatInterval! > 0) {
+        final difference = currentDate.difference(startDate).inDays;
+
+        isScheduled = difference % medication.repeatInterval! == 0;
+      }
+
+      if (isScheduled) {
+        MedicationLog? matchingLog;
+
+        for (final log in logs) {
+          final logDate = DateTime(
+            log.medicationDate.year,
+            log.medicationDate.month,
+            log.medicationDate.day,
+          );
+
+          if (logDate == currentDate) {
+            matchingLog = log;
+            break;
+          }
+        }
+
+        items.add(
+          MedicationHistoryItem(
+            medicationDate: currentDate,
+            completedAt: matchingLog?.completedAt,
+          ),
+        );
+      }
+
+      currentDate = currentDate.add(const Duration(days: 1));
+    }
+
+    // 최신 날짜가 위로 오도록 정렬
+    items.sort((a, b) => b.medicationDate.compareTo(a.medicationDate));
 
     if (!mounted) return;
 
-    // 아직 이 화면이 살아있을 때만 setState (mounted 조건 때문)
     setState(() {
-      logs = result;
+      history = items;
       isLoading = false;
     });
   }
@@ -77,14 +156,14 @@ class _MedicationHistoryScreenState extends State<MedicationHistoryScreen> {
       ),
       body: isLoading
           ? const Center(child: CircularProgressIndicator()) // 로딩 아이콘
-          : logs.isEmpty
+          : history.isEmpty
           ? _buildEmptyState()
           : ListView.separated(
               padding: const EdgeInsets.all(16),
-              itemCount: logs.length,
+              itemCount: history.length,
               separatorBuilder: (_, _) => const SizedBox(height: 10),
               itemBuilder: (context, index) {
-                return _buildLogCard(logs[index]);
+                return _buildLogCard(history[index]);
               },
             ),
     );
@@ -106,8 +185,8 @@ class _MedicationHistoryScreenState extends State<MedicationHistoryScreen> {
     );
   }
 
-  Widget _buildLogCard(MedicationLog log) {
-    final completed = log.isCompleted;
+  Widget _buildLogCard(MedicationHistoryItem item) {
+    final completed = item.isCompleted;
 
     return Card(
       elevation: 0,
@@ -139,7 +218,7 @@ class _MedicationHistoryScreenState extends State<MedicationHistoryScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    _formatDate(log.medicationDate),
+                    _formatDate(item.medicationDate),
                     style: const TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.bold,
@@ -149,8 +228,8 @@ class _MedicationHistoryScreenState extends State<MedicationHistoryScreen> {
                   const SizedBox(height: 5),
 
                   Text(
-                    completed && log.completedAt != null
-                        ? '복용 완료 ${_formatTime(log.completedAt!)}'
+                    completed && item.completedAt != null
+                        ? '복용 완료 ${_formatTime(item.completedAt!)}'
                         : '복용하지 않음',
                     style: TextStyle(
                       fontSize: 13,
