@@ -1097,4 +1097,30 @@ class DatabaseHelper {
       rethrow;
     }
   }
+
+  // ========================================================= backup =========================================================
+  /// 백업용 전체 데이터 조회
+  Future<Map<String, dynamic>> getBackupData() async {
+    final db = await database;
+
+    final pets = await db.query('pets');
+    final healthRecords = await db.query('health_records');
+    final healthRecordImages = await db.query('health_record_images');
+    final vaccinations = await db.query('vaccinations');
+    final weightRecords = await db.query('weight_records');
+    final medications = await db.query('medications');
+    final medicationLogs = await db.query('medication_logs');
+
+    return {
+      'version': 1,
+      'created_at': DateTimeUtils.nowKst().toIso8601String(),
+      'pets': pets,
+      'health_records': healthRecords,
+      'health_record_images': healthRecordImages,
+      'vaccinations': vaccinations,
+      'weight_records': weightRecords,
+      'medications': medications,
+      'medication_logs': medicationLogs,
+    };
+  }
 }

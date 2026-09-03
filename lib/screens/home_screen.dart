@@ -5,6 +5,7 @@ import 'package:pet_care_manager_mobile/models/medication.dart';
 
 import 'pet_register_screen.dart';
 import 'pet_detail_screen.dart';
+import 'settings_screen.dart';
 
 import '../database/database_helper.dart';
 
@@ -144,6 +145,19 @@ class _HomeScreenState extends State<HomeScreen> {
           ],
         ),
         centerTitle: false, // 타이틀 좌측 정렬 유지
+
+        actions: [
+          // actions은 AppBar 오른쪽 영역
+          IconButton(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const SettingsScreen()),
+              );
+            },
+            icon: const Icon(Icons.settings_outlined, size: 22),
+          ),
+        ],
       ),
 
       body: pets.isEmpty
