@@ -547,7 +547,7 @@ class _HealthRecordRegisterScreenState
                                     separatorBuilder: (_, _) =>
                                         const SizedBox(width: 8),
                                     itemBuilder: (context, index) {
-                                      // 1. 기존 저장된 사진
+                                      // 6-1. 기존 저장된 사진
                                       if (index < existingImages.length) {
                                         final image = existingImages[index];
 
@@ -612,7 +612,7 @@ class _HealthRecordRegisterScreenState
                                         );
                                       }
 
-                                      // 2. 새로 선택한 사진
+                                      // 6-2. 새로 선택한 사진
                                       final newImageIndex =
                                           index - existingImages.length;
 
@@ -679,7 +679,7 @@ class _HealthRecordRegisterScreenState
                                         );
                                       }
 
-                                      // 3. 맨 마지막: 사진 추가 버튼
+                                      // 6-3. 맨 마지막: 사진 추가 버튼
                                       return InkWell(
                                         onTap: _pickImages,
                                         borderRadius: BorderRadius.circular(10),
