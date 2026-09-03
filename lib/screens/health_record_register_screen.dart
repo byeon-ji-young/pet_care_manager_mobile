@@ -244,6 +244,7 @@ class _HealthRecordRegisterScreenState
     }
   }
 
+  /*
   // 사진 확대
   void _showImagePreview(String imagePath) {
     showDialog(
@@ -269,6 +270,98 @@ class _HealthRecordRegisterScreenState
         );
       },
     );
+  }
+  */
+
+  // 사진 확대
+  void _showImagesPreview({
+    required List<String> imagePaths,
+    required int initialIndex,
+  }) {
+    final pageController = PageController(
+      initialPage: initialIndex,
+    ); // PageView의 페이지를 조종하는 컨트롤러
+    int currentIndex = initialIndex;
+
+    showDialog(
+      context: context,
+      barrierColor: Colors.black87,
+      builder: (context) {
+        return StatefulBuilder(
+          //currentIndex가 바뀌어야 하기 때문에 StatefulBuilder 사용
+          builder: (context, setDialogState) {
+            return Dialog(
+              backgroundColor: Colors.transparent,
+              insetPadding: const EdgeInsets.all(20),
+              child: Stack(
+                children: [
+                  // 사진 좌우 넘기기
+                  SizedBox(
+                    height: MediaQuery.of(context).size.height * 0.75,
+                    child: PageView.builder(
+                      // PageView: 페이지 단위로 좌우 스와이프할 수 있는 위젯
+                      controller: pageController,
+                      itemCount: imagePaths.length,
+                      onPageChanged: (index) {
+                        setDialogState(() {
+                          currentIndex = index;
+                        });
+                      },
+                      itemBuilder: (context, index) {
+                        return InteractiveViewer(
+                          // InteractiveViewer: 손가락으로 확대/축소하거나 이동할 수 있게 해주는 위젯
+                          minScale: 0.8, // 얼마나 작게 축소할 수 있는지 (1.0 = 원래 크기)
+                          maxScale: 4.0, // 얼마나 크게 확대할 수 있는지 (1.0 = 원래 크기)
+                          child: Center(
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(12),
+                              child: Image.file(
+                                File(imagePaths[index]),
+                                fit: BoxFit
+                                    .contain, // BoxFit.contain: 이미지 전체가 잘리지 않도록 화면 안에 맞춰서 보여주는 방식. 사진 전체를 보여주기 때문에 위아래 또는 좌우 빈 공간이 생길 수 있음
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+
+                  // 현재 사진 번호
+                  Positioned(
+                    top: 8, // bottom: 8,
+                    left: 0,
+                    right: 0,
+                    child: Center(
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 5,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.black.withValues(alpha: 0.55),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Text(
+                          '${currentIndex + 1} / ${imagePaths.length}',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    ).then((_) {
+      pageController.dispose();
+    });
   }
 
   @override
@@ -458,12 +551,22 @@ class _HealthRecordRegisterScreenState
                                       if (index < existingImages.length) {
                                         final image = existingImages[index];
 
+                                        final allImagePaths = [
+                                          ...existingImages.map(
+                                            (image) => image.imagePath,
+                                          ),
+                                          ...selectedImages.map(
+                                            (image) => image.path,
+                                          ),
+                                        ];
+
                                         return Stack(
                                           // Stack: 여러 위젯을 겹쳐서 배치할 때 사용하는 Flutter 위젯
                                           children: [
                                             GestureDetector(
-                                              onTap: () => _showImagePreview(
-                                                image.imagePath,
+                                              onTap: () => _showImagesPreview(
+                                                imagePaths: allImagePaths,
+                                                initialIndex: index,
                                               ),
                                               child: ClipRRect(
                                                 // ClipRRect: 위젯의 모서리를 둥글게 잘라주는(clip) 위젯
@@ -513,6 +616,15 @@ class _HealthRecordRegisterScreenState
                                       final newImageIndex =
                                           index - existingImages.length;
 
+                                      final allImagePaths = [
+                                        ...existingImages.map(
+                                          (image) => image.imagePath,
+                                        ),
+                                        ...selectedImages.map(
+                                          (image) => image.path,
+                                        ),
+                                      ];
+
                                       if (newImageIndex <
                                           selectedImages.length) {
                                         final image =
@@ -521,8 +633,12 @@ class _HealthRecordRegisterScreenState
                                         return Stack(
                                           children: [
                                             GestureDetector(
-                                              onTap: () =>
-                                                  _showImagePreview(image.path),
+                                              onTap: () => _showImagesPreview(
+                                                imagePaths: allImagePaths,
+                                                initialIndex:
+                                                    existingImages.length +
+                                                    newImageIndex,
+                                              ),
                                               child: ClipRRect(
                                                 borderRadius:
                                                     BorderRadius.circular(10),
