@@ -1,4 +1,5 @@
 import 'package:path/path.dart';
+import 'package:pet_care_manager_mobile/models/health_record_image.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:flutter/foundation.dart';
 
@@ -81,7 +82,7 @@ class DatabaseHelper {
     */
     return await openDatabase(
       path,
-      version: 8, // DB 구조가 바뀔 때만 올림
+      version: 9, // DB 구조가 바뀔 때만 올림
       onConfigure: (db) async {
         await db.execute('PRAGMA foreign_keys = ON');
       },
@@ -172,6 +173,18 @@ class DatabaseHelper {
             FOREIGN KEY (pet_id) REFERENCES pets(id) ON DELETE CASCADE
           )
         ''');
+
+        // health_record_images
+        await db.execute('''
+          CREATE TABLE health_record_images (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            health_record_id INTEGER NOT NULL,
+            image_path TEXT NOT NULL,
+            FOREIGN KEY (health_record_id)
+              REFERENCES health_records(id)
+              ON DELETE CASCADE
+          )
+        ''');
       },
 
       onUpgrade: (db, oldVersion, newVersion) async {
@@ -236,6 +249,20 @@ class DatabaseHelper {
           await db.execute(
             'ALTER TABLE health_records ADD COLUMN examination_result TEXT',
           );
+        }
+
+        // 건강 기록 사진 테이블 추가
+        if (oldVersion < 9) {
+          await db.execute('''
+            CREATE TABLE health_record_images (
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
+              health_record_id INTEGER NOT NULL,
+              image_path TEXT NOT NULL,
+              FOREIGN KEY (health_record_id)
+                REFERENCES health_records(id)
+                ON DELETE CASCADE
+            )
+          ''');
         }
       },
     );
@@ -502,6 +529,36 @@ class DatabaseHelper {
     );
 
     return maps.map((map) => HealthRecord.fromMap(map)).toList();
+  }
+
+  // 건강 기록 사진 추가
+  Future<int> insertHealthRecordImage(HealthRecordImage image) async {
+    final db = await database;
+
+    return db.insert('health_record_images', image.toMap());
+  }
+
+  // 건강 기록 사진 삭제
+  Future<int> deleteHealthRecordImage(int id) async {
+    final db = await database;
+
+    return db.delete('health_record_images', where: 'id = ?', whereArgs: [id]);
+  }
+
+  // 특정 건강 기록의 사진 조회
+  Future<List<HealthRecordImage>> getHealthRecordImages(
+    int healthRecordId,
+  ) async {
+    final db = await database;
+
+    final maps = await db.query(
+      'health_record_images',
+      where: 'health_record_id = ?',
+      whereArgs: [healthRecordId],
+      orderBy: 'id ASC',
+    );
+
+    return maps.map((map) => HealthRecordImage.fromMap(map)).toList();
   }
 
   // ========================================================= vaccination =========================================================
