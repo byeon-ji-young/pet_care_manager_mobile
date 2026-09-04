@@ -80,7 +80,7 @@ class _HealthSummaryScreenState extends State<HealthSummaryScreen> {
     final change = latestWeightRecord!.weight - previousWeightRecord!.weight;
 
     if (change == 0) {
-      return '이전 체중과 동일';
+      return '체중 변화 없음';
     } else if (change > 0) {
       return '+ ${change.toStringAsFixed(1)} kg 증가'; // change.toStringAsFixed(1)은 숫자를 소수점 첫째 자리까지 표시하는 문자열로 바꾸는 것
     } else {
@@ -277,397 +277,373 @@ class _HealthSummaryScreenState extends State<HealthSummaryScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        elevation: 0,
+        scrolledUnderElevation: 0,
         title: Text(
           '${widget.pet.name} 건강 요약',
-          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
         ),
         centerTitle: true,
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.only(
+          left: 20,
+          right: 20,
+          top: 16,
+          bottom: 36,
+        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // 체중
-            Row(
-              children: [
-                const Text(
-                  '체중 기록',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                ),
-
-                const Spacer(),
-
-                Text(
-                  '$weightRecordCount건',
-                  style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-                ),
-              ],
-            ),
+            // 1. 병원 기록
+            _buildSectionHeader('병원 기록', hospitalRecordCount),
 
             const SizedBox(height: 5),
 
-            Card(
-              elevation: 0,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-                side: BorderSide(color: Colors.grey.shade200),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: latestWeightRecord == null
-                    ? const Text(
-                        '등록된 체중 기록이 없어요.',
-                        style: TextStyle(fontSize: 13, color: Colors.grey),
-                      )
-                    : Row(
-                        children: [
-                          Container(
-                            width: 44,
-                            height: 44,
-                            decoration: const BoxDecoration(
-                              color: Color(0xFFF3E5F5),
-                              shape: BoxShape.circle,
-                            ),
-                            child: const Icon(
-                              Icons.monitor_weight_outlined,
-                              color: Colors.purple,
-                            ),
-                          ),
-
-                          const SizedBox(width: 12),
-
-                          Column(
+            _buildCard(
+              child: latestHealthRecord == null
+                  ? _buildEmptyState('등록된 병원 기록이 없어요.')
+                  : Row(
+                      children: [
+                        _buildIconBox(
+                          Icons.local_hospital_outlined,
+                          const Color(0xFFE3F2FD),
+                          Colors.blue,
+                        ),
+                        const SizedBox(width: 14),
+                        Expanded(
+                          child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const Text(
-                                '최근 기록',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: Colors.grey,
-                                ),
+                              Row(
+                                children: [
+                                  Text(
+                                    '최근 기록',
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.blue[700],
+                                    ),
+                                  ),
+                                  const SizedBox(width: 6),
+                                  Text(
+                                    _formatDate(latestHealthRecord!.date),
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: Colors.grey[600],
+                                    ),
+                                  ),
+                                ],
                               ),
-
-                              const SizedBox(height: 4),
-
+                              const SizedBox(height: 2),
                               Text(
-                                '${latestWeightRecord!.weight} kg',
+                                latestHealthRecord!.title,
                                 style: const TextStyle(
-                                  fontSize: 20,
+                                  fontSize: 16,
                                   fontWeight: FontWeight.bold,
+                                  color: Colors.black87,
                                 ),
+                                maxLines: 1, // 최대 한 줄까지만 표시
+                                overflow: TextOverflow
+                                    .ellipsis, // 텍스트가 공간보다 길어서 잘릴 경우 ...을 붙여서 표시
                               ),
-
-                              const SizedBox(height: 4),
-
-                              Text(
-                                _formatDate(latestWeightRecord!.date),
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: Colors.grey[600],
+                              if (latestHealthRecord!
+                                      .hospital
+                                      ?.isNotEmpty ?? // latestHealthRecord!: ! null이 아니다. hospital?: ? null일 수 있다
+                                  false) ...[
+                                const SizedBox(height: 1),
+                                Text(
+                                  latestHealthRecord!.hospital!,
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: Colors.grey[600],
+                                  ),
                                 ),
+                              ],
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+            ),
+
+            const SizedBox(height: 24),
+
+            // 2. 예방접종
+            _buildSectionHeader('예방접종', vaccinationRecordCount),
+
+            const SizedBox(height: 5),
+
+            _buildCard(
+              child: nextVaccination == null
+                  ? _buildEmptyState('예정된 예방접종이 없어요.')
+                  : Row(
+                      children: [
+                        _buildIconBox(
+                          Icons.vaccines_outlined,
+                          const Color(0xFFE8F5E9),
+                          Colors.green,
+                        ),
+                        const SizedBox(width: 14),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Text(
+                                    '다음 접종 예정',
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.green[700],
+                                    ),
+                                  ),
+                                  const SizedBox(width: 6),
+                                  Text(
+                                    _formatDate(nextVaccination!.nextDate!),
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: Colors.grey[600],
+                                    ),
+                                  ),
+                                ],
                               ),
-
-                              const SizedBox(height: 4),
-
+                              const SizedBox(height: 2),
                               Text(
-                                _getWeightChangeText(),
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: Colors.grey[600],
+                                nextVaccination!.vaccineName,
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.black87,
                                 ),
                               ),
                             ],
                           ),
-                        ],
-                      ),
-              ),
+                        ),
+                      ],
+                    ),
             ),
 
-            const SizedBox(height: 20),
+            const SizedBox(height: 24),
 
-            // 병원 기록
-            Row(
-              children: [
-                const Text(
-                  '병원 기록',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                ),
-
-                const Spacer(),
-
-                Text(
-                  '$hospitalRecordCount건',
-                  style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 5),
-
-            Card(
-              elevation: 0,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-                side: BorderSide(color: Colors.grey.shade200),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: latestHealthRecord == null
-                    ? const Text(
-                        '등록된 병원 기록이 없어요.',
-                        style: TextStyle(fontSize: 13, color: Colors.grey),
-                      )
-                    : Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Container(
-                            width: 44,
-                            height: 44,
-                            decoration: const BoxDecoration(
-                              color: Color(0xFFE3F2FD),
-                              shape: BoxShape.circle,
-                            ),
-                            child: const Icon(
-                              Icons.local_hospital_outlined,
-                              color: Colors.blue,
-                            ),
-                          ),
-
-                          const SizedBox(width: 12),
-
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const Text(
-                                  '최근 기록',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: Colors.grey,
-                                  ),
-                                ),
-
-                                const SizedBox(height: 4),
-
-                                Text(
-                                  latestHealthRecord!.title,
-                                  style: const TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-
-                                const SizedBox(height: 4),
-
-                                Text(
-                                  _formatDate(latestHealthRecord!.date),
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: Colors.grey[600],
-                                  ),
-                                ),
-
-                                if (latestHealthRecord!.hospital != null &&
-                                    latestHealthRecord!
-                                        .hospital!
-                                        .isNotEmpty) ...[
-                                  const SizedBox(height: 4),
-
-                                  Text(
-                                    latestHealthRecord!.hospital!,
-                                    style: TextStyle(
-                                      fontSize: 13,
-                                      color: Colors.grey[700],
-                                    ),
-                                  ),
-                                ],
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-              ),
-            ),
-
-            const SizedBox(height: 20),
-
-            // 예방접종
-            Row(
-              children: [
-                const Text(
-                  '예방접종',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                ),
-
-                const Spacer(),
-
-                Text(
-                  '$vaccinationRecordCount건',
-                  style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 5),
-
-            Card(
-              elevation: 0,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-                side: BorderSide(color: Colors.grey.shade200),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: nextVaccination == null
-                    ? const Text(
-                        '예정된 예방접종이 없어요.',
-                        style: TextStyle(fontSize: 13, color: Colors.grey),
-                      )
-                    : Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Container(
-                            width: 44,
-                            height: 44,
-                            decoration: const BoxDecoration(
-                              color: Color(0xFFE8F5E9),
-                              shape: BoxShape.circle,
-                            ),
-                            child: const Icon(
-                              Icons.vaccines_outlined,
-                              color: Colors.green,
-                            ),
-                          ),
-
-                          const SizedBox(width: 12),
-
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const Text(
-                                  '다음 접종',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: Colors.grey,
-                                  ),
-                                ),
-
-                                const SizedBox(height: 4),
-
-                                Text(
-                                  nextVaccination!.vaccineName,
-                                  style: const TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-
-                                const SizedBox(height: 4),
-
-                                Text(
-                                  // nextVaccination!.nextDate != null
-                                  //     ? _formatDate(nextVaccination!.nextDate!)
-                                  //     : '다음 접종일 미정',
-                                  _formatDate(nextVaccination!.nextDate!),
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: Colors.grey[600],
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-              ),
-            ),
-
-            const SizedBox(height: 20),
-
-            // 약 복용
-            const Text(
-              '약 복용',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-            ),
+            // 3. 약 복용
+            _buildSectionHeader('약 복용', medicationRecordCount),
 
             const SizedBox(height: 10),
 
-            Card(
-              elevation: 0,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-                side: BorderSide(color: Colors.grey.shade200),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 44,
-                      height: 44,
-                      decoration: const BoxDecoration(
-                        color: Color(0xFFFFF3E0),
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(
-                        Icons.medication_outlined,
-                        color: Colors.orange,
-                      ),
-                    ),
-
-                    const SizedBox(width: 12),
-
-                    Column(
+            _buildCard(
+              child: Row(
+                children: [
+                  _buildIconBox(
+                    Icons.medication_outlined,
+                    const Color(0xFFFFF3E0),
+                    Colors.orange,
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
                           '등록된 약 $medicationRecordCount개',
                           style: TextStyle(
-                            fontSize: 13,
+                            fontSize: 12,
                             color: Colors.grey[600],
                           ),
                         ),
-
-                        const SizedBox(height: 8),
-
+                        const SizedBox(height: 2),
                         if (medicationScheduledCount == 0)
                           const Text(
                             '복용 예정 기록이 없어요.',
                             style: TextStyle(fontSize: 14, color: Colors.grey),
                           )
-                        else ...[
+                        else
                           Row(
                             children: [
-                              Text(
-                                '최근 30일 복용 이행률',
+                              const Text(
+                                '최근 30일 이행률',
                                 style: TextStyle(
-                                  fontSize: 12,
-                                  color: Colors.grey[600],
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.black87,
                                 ),
                               ),
-
-                              const SizedBox(width: 10),
-
+                              const Spacer(),
                               Text(
                                 '${(medicationCompletionRate * 100).round()}%',
                                 style: const TextStyle(
-                                  fontSize: 24,
+                                  fontSize: 20,
                                   fontWeight: FontWeight.bold,
+                                  color: Colors.orange,
                                 ),
                               ),
                             ],
                           ),
-                        ],
                       ],
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
+            ),
+
+            const SizedBox(height: 24),
+
+            // 4. 체중 기록
+            _buildSectionHeader('체중 기록', weightRecordCount),
+
+            const SizedBox(height: 5),
+
+            _buildCard(
+              child: latestWeightRecord == null
+                  ? _buildEmptyState('등록된 체중 기록이 없어요.')
+                  : Row(
+                      children: [
+                        _buildIconBox(
+                          Icons.monitor_weight_outlined,
+                          const Color(0xFFF3E5F5),
+                          Colors.purple,
+                        ),
+                        const SizedBox(width: 14),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Text(
+                                    '최근 기록',
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.purple[700],
+                                    ),
+                                  ),
+                                  const SizedBox(width: 6),
+                                  Text(
+                                    _formatDate(latestWeightRecord!.date),
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: Colors.grey[600],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 2),
+                              Row(
+                                crossAxisAlignment: CrossAxisAlignment
+                                    .baseline, // 텍스트들의 글자 기준선(baseline)을 맞추겠다는 뜻
+                                textBaseline: TextBaseline
+                                    .alphabetic, //baseline을 사용하려면 어떤 기준선을 사용할지 지정해야 함. alphabetic은 일반적인 알파벳/문자 글꼴의 기준선을 사용한다는 의미
+                                children: [
+                                  Text(
+                                    '${latestWeightRecord!.weight}',
+                                    style: const TextStyle(
+                                      fontSize: 22,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.black87,
+                                    ),
+                                  ),
+                                  const Text(
+                                    ' kg',
+                                    style: TextStyle(
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.w600,
+                                      color: Colors.black87,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                        if (_getWeightChangeText().isNotEmpty)
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 6,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.grey[100],
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Text(
+                              _getWeightChangeText(),
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.grey[700],
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  // 공통 위젯 헬퍼 함수들
+  Widget _buildSectionHeader(String title, int count) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          title,
+          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+        ),
+        if (title != '약 복용')
+          Text(
+            '$count건',
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w500,
+              color: Colors.grey[600],
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildCard({required Widget child}) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.grey.shade200, width: 1),
+        // boxShadow: [
+        //   BoxShadow(
+        //     color: Colors.black.withValues(alpha: 0.08),
+        //     blurRadius: 8,
+        //     offset: const Offset(0, 2), // Offset(x, y)
+        //   ),
+        // ],
+      ),
+      child: child,
+    );
+  }
+
+  Widget _buildIconBox(IconData icon, Color bgColor, Color iconColor) {
+    return Container(
+      width: 44,
+      height: 44,
+      decoration: BoxDecoration(
+        color: bgColor,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Icon(icon, color: iconColor, size: 22),
+    );
+  }
+
+  Widget _buildEmptyState(String text) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      child: Text(
+        text,
+        style: TextStyle(fontSize: 13, color: Colors.grey[400]),
       ),
     );
   }
