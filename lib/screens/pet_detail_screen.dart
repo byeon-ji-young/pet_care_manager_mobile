@@ -66,6 +66,10 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
   // 0 = 전체, 1 = 건강, 2 = 예방접종, 3 = 약, 4 = 체중
   int selectedRecordTab = 0;
 
+  bool isSearching = false;
+  String searchQuery = '';
+  final TextEditingController searchController = TextEditingController();
+
   @override
   void initState() {
     super.initState();
@@ -94,6 +98,12 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
     ]);
 
     await loadTodayMedicationLogs();
+  }
+
+  @override
+  void dispose() {
+    searchController.dispose();
+    super.dispose();
   }
 
   Future<void> loadHealthRecords() async {
@@ -729,6 +739,313 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
     );
   }
 
+  // 검색어에 해당하는 기록 찾기
+  List<dynamic> _getSearchedRecords() {
+    final query = searchQuery.trim().toLowerCase();
+
+    // 검색어가 없으면 전체 기록 반환
+    if (query.isEmpty) {
+      return [
+        ...healthRecords,
+        ...vaccinations,
+        ...medications,
+        ...weightRecords,
+      ];
+    }
+
+    final results = <dynamic>[];
+
+    // 건강 기록
+    for (final record in healthRecords) {
+      final searchableText =
+          [
+                record.title,
+                record.hospital,
+                record.description,
+                record.examinationType,
+                record.examinationResult,
+              ]
+              .whereType<String>() // whereType<String>(): 문자열(String)인 값만 남김
+              .join(' ')
+              .toLowerCase();
+
+      if (searchableText.contains(query)) {
+        results.add(record);
+      }
+    }
+
+    // 예방접종
+    for (final vaccination in vaccinations) {
+      final searchableText = [
+        vaccination.vaccineName,
+        vaccination.hospital,
+        vaccination.memo,
+      ].whereType<String>().join(' ').toLowerCase();
+
+      if (searchableText.contains(query)) {
+        results.add(vaccination);
+      }
+    }
+
+    // 약
+    for (final medication in medications) {
+      final searchableText = [
+        medication.medicationName,
+        medication.memo,
+      ].whereType<String>().join(' ').toLowerCase();
+
+      if (searchableText.contains(query)) {
+        results.add(medication);
+      }
+    }
+
+    // 체중
+    for (final record in weightRecords) {
+      final searchableText = [
+        record.weight.toString(),
+        record.memo,
+      ].whereType<String>().join(' ').toLowerCase();
+
+      if (searchableText.contains(query)) {
+        results.add(record);
+      }
+    }
+
+    return results;
+  }
+
+  List<Widget> _buildSearchedRecordCards(List<dynamic> records, Pet pet) {
+    final widgets = <Widget>[];
+
+    // 최신 기록이 위로 오도록 정렬
+    records.sort((a, b) {
+      DateTime dateA;
+      DateTime dateB;
+
+      if (a is HealthRecord) {
+        dateA = a.date;
+      } else if (a is Vaccination) {
+        dateA = a.vaccinationDate;
+      } else if (a is Medication) {
+        dateA = a.medicationDate;
+      } else {
+        dateA = (a as WeightRecord).date;
+      }
+
+      if (b is HealthRecord) {
+        dateB = b.date;
+      } else if (b is Vaccination) {
+        dateB = b.vaccinationDate;
+      } else if (b is Medication) {
+        dateB = b.medicationDate;
+      } else {
+        dateB = (b as WeightRecord).date;
+      }
+
+      return dateB.compareTo(dateA);
+      // compareTo()는 앞에 있는 객체를 기준으로 뒤의 객체와 비교. 즉, B와 A 비교 => 최신 날짜(dateB)가 앞에 오도록 내림차순 정렬
+    });
+
+    for (final record in records) {
+      // 건강
+      if (record is HealthRecord) {
+        widgets.add(
+          _SelectedRecordCard(
+            icon: Icons.local_hospital_outlined,
+            iconBgColor: const Color(0xFFE3F2FD),
+            iconColor: Colors.blue,
+            title: record.title,
+            subtitle: [
+              _formatRecordDate(record.date),
+              if (record.hospital != null && record.hospital!.isNotEmpty)
+                record.hospital!,
+              if (record.examinationType != null &&
+                  record.examinationType!.isNotEmpty)
+                record.examinationType!,
+              record.status == 'completed' ? '방문 완료' : '방문 예정',
+            ].join(' · '),
+            onTap: () async {
+              final result = await Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => HealthRecordRegisterScreen(
+                    petId: pet.id!,
+                    record: record,
+                  ),
+                ),
+              );
+
+              if (result != null && mounted) {
+                await loadHealthRecords();
+                await loadUpcomingHealthRecords();
+                await loadTodayHealthRecords();
+              }
+            },
+            onStatusTap: () async {
+              if (record.id == null) return;
+
+              try {
+                if (record.status == 'completed') {
+                  await DatabaseHelper.instance.cancelHealthRecord(record.id!);
+                } else {
+                  await DatabaseHelper.instance.completeHealthRecord(
+                    record.id!,
+                  );
+                }
+
+                if (!mounted) return;
+
+                await loadHealthRecords();
+                await loadUpcomingHealthRecords();
+                await loadTodayHealthRecords();
+              } catch (e) {
+                debugPrint('병원 방문 상태 변경 실패: $e');
+
+                if (!mounted) return;
+
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('진료 상태를 변경하지 못했어요.')),
+                );
+              }
+            },
+            isCompleted: record.status == 'completed',
+          ),
+        );
+      }
+      // 예방접종
+      else if (record is Vaccination) {
+        widgets.add(
+          _SelectedRecordCard(
+            icon: Icons.vaccines_outlined,
+            iconBgColor: const Color(0xFFE8F5E9),
+            iconColor: Colors.green,
+            title: record.vaccineName,
+            subtitle: [
+              _formatRecordDate(record.vaccinationDate),
+              if (record.hospital != null && record.hospital!.isNotEmpty)
+                record.hospital!,
+              record.status == 'completed' ? '접종 완료' : '접종 예정',
+            ].join(' · '),
+            onTap: () async {
+              final result = await Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => VaccinationRegisterScreen(
+                    petId: pet.id!,
+                    vaccination: record,
+                  ),
+                ),
+              );
+
+              if (result != null && mounted) {
+                await loadVaccinations();
+                await loadUpcomingVaccinations();
+                await loadTodayVaccinations();
+              }
+            },
+            onStatusTap: () async {
+              if (record.id == null) return;
+
+              try {
+                if (record.status == 'completed') {
+                  await DatabaseHelper.instance.cancelVaccination(record.id!);
+                } else {
+                  await DatabaseHelper.instance.completeVaccination(record.id!);
+                }
+
+                if (!mounted) return;
+
+                await loadVaccinations();
+                await loadUpcomingVaccinations();
+                await loadTodayVaccinations();
+              } catch (e) {
+                debugPrint('예방접종 상태 변경 실패: $e');
+
+                if (!mounted) return;
+
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('접종 상태를 변경하지 못했어요.')),
+                );
+              }
+            },
+            isCompleted: record.status == 'completed',
+          ),
+        );
+      }
+      // 약
+      else if (record is Medication) {
+        widgets.add(
+          _SelectedRecordCard(
+            icon: Icons.medication_outlined,
+            iconBgColor: const Color(0xFFFFF3E0),
+            iconColor: Colors.orange,
+            title: record.medicationName,
+            subtitle: [
+              _formatRecordDate(record.medicationDate),
+              if (record.medicationTime != null)
+                record.medicationTime!.format(context),
+            ].join(' · '),
+            onTap: () async {
+              final result = await Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => MedicationRegisterScreen(
+                    petId: pet.id!,
+                    medication: record,
+                  ),
+                ),
+              );
+
+              if (result != null && mounted) {
+                await loadMedications();
+                await loadUpcomingMedications();
+                await loadTodayMedications();
+              }
+            },
+          ),
+        );
+      }
+      // 체중
+      else if (record is WeightRecord) {
+        widgets.add(
+          _SelectedRecordCard(
+            icon: Icons.monitor_weight_outlined,
+            iconBgColor: const Color(0xFFF3E5F5),
+            iconColor: Colors.purple,
+            title: '${record.weight} kg',
+            subtitle: [
+              _formatRecordDate(record.date),
+              if (record.memo != null && record.memo!.isNotEmpty) record.memo!,
+            ].join(' · '),
+            onTap: () async {
+              final result = await Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => WeightRecordRegisterScreen(
+                    petId: pet.id!,
+                    record: record,
+                  ),
+                ),
+              );
+
+              if (result != null && mounted) {
+                await loadWeightRecords();
+              }
+            },
+          ),
+        );
+      }
+    }
+
+    return widgets;
+  }
+
+  String _formatRecordDate(DateTime date) {
+    return '${date.year}.'
+        '${date.month.toString().padLeft(2, '0')}.'
+        '${date.day.toString().padLeft(2, '0')}';
+  }
+
   // 기록 추가 버튼 바텀 시트
   /*
   void _showAddRecordBottomSheet() {} 여기의 context는 상세화면의 context
@@ -933,60 +1250,134 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
     final primaryColor = Theme.of(context).primaryColor;
 
     const tabs = ['전체', '건강', '예방접종', '약', '체중'];
-
-    return SizedBox(
-      height: 38,
-      child: Row(
-        children: List.generate(tabs.length, (index) {
-          final isSelected = selectedRecordTab == index;
-
-          return Expanded(
-            child: GestureDetector(
-              // GestureDetector: 탭을 터치할 수 있게 만드는 부분
-              behavior: HitTestBehavior.opaque, // 텍스트 주변 여백을 터치해도 반응
-              onTap: () {
+    // 검색 중인 경우
+    if (isSearching) {
+      return SizedBox(
+        height: 38,
+        child: TextField(
+          controller: searchController,
+          autofocus: true,
+          onChanged: (value) {
+            setState(() {
+              searchQuery = value;
+            });
+          },
+          decoration: InputDecoration(
+            hintText: '기록을 검색해 주세요.',
+            prefixIcon: const Icon(Icons.search_outlined, size: 20),
+            suffixIcon: IconButton(
+              onPressed: () {
                 setState(() {
-                  selectedRecordTab = index;
+                  isSearching = false;
+                  searchQuery = '';
+                  searchController.clear();
                 });
               },
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.end, // 탭 안의 내용을 세로 방향으로 배치
-                children: [
-                  Expanded(
-                    child: Center(
-                      child: Text(
-                        tabs[index],
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: isSelected
-                              ? FontWeight.bold
-                              : FontWeight.w500,
-                          color: isSelected ? primaryColor : Colors.grey[600],
-                        ),
-                      ),
-                    ),
-                  ),
-
-                  AnimatedContainer(
-                    duration: const Duration(
-                      milliseconds: 200,
-                    ), // 값이 변경될 때 200ms 동안 애니메이션 효과
-                    curve: Curves.easeOut,
-                    width: isSelected ? 28 : 0,
-                    height: 3,
-                    decoration: BoxDecoration(
-                      color: primaryColor,
-                      borderRadius: BorderRadius.circular(3),
-                    ),
-                  ),
-                ],
-              ),
+              icon: const Icon(Icons.close, size: 20),
             ),
-          );
-        }),
-      ),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 12,
+              vertical: 0,
+            ),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: Colors.grey.shade300),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: Colors.grey.shade300),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: primaryColor),
+            ),
+          ),
+        ),
+      );
+    }
+
+    return Row(
+      children: [
+        // 기록 탭
+        Expanded(
+          child: SizedBox(
+            height: 38,
+            child: Row(
+              children: List.generate(tabs.length, (index) {
+                final isSelected = selectedRecordTab == index;
+
+                return Expanded(
+                  child: GestureDetector(
+                    // GestureDetector: 탭을 터치할 수 있게 만드는 부분
+                    behavior: HitTestBehavior.opaque, // 텍스트 주변 여백을 터치해도 반응
+                    onTap: () {
+                      setState(() {
+                        selectedRecordTab = index;
+                      });
+                    },
+                    child: Column(
+                      mainAxisAlignment:
+                          MainAxisAlignment.end, // 탭 안의 내용을 세로 방향으로 배치
+                      children: [
+                        Expanded(
+                          child: Center(
+                            child: Text(
+                              tabs[index],
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: isSelected
+                                    ? FontWeight.bold
+                                    : FontWeight.w500,
+                                color: isSelected
+                                    ? primaryColor
+                                    : Colors.grey[600],
+                              ),
+                            ),
+                          ),
+                        ),
+
+                        AnimatedContainer(
+                          duration: const Duration(
+                            milliseconds: 200,
+                          ), // 값이 변경될 때 200ms 동안 애니메이션 효과
+                          curve: Curves.easeOut,
+                          width: isSelected ? 28 : 0,
+                          height: 3,
+                          decoration: BoxDecoration(
+                            color: primaryColor,
+                            borderRadius: BorderRadius.circular(3),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              }),
+            ),
+          ),
+        ),
+
+        // 검색 버튼
+        Transform.translate(
+          // Offset(x, y): x는 좌우 이동, y는 상하 이동 (x가 음수면 좌, 양수면 우 / y가 음수면 상, 양수면 하)
+          offset: const Offset(0, -2),
+          child: IconButton(
+            onPressed: () {
+              setState(() {
+                isSearching = true;
+                searchQuery = '';
+                searchController.clear();
+              });
+            },
+            icon: const Icon(Icons.search_outlined, size: 20),
+            padding: const EdgeInsets.symmetric(horizontal: 8),
+            constraints: const BoxConstraints(),
+            tooltip: '기록 검색',
+          ),
+        ),
+      ],
     );
   }
 
@@ -1012,7 +1403,9 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
     // build()는 _PetDetailScreenState 안에 존재. State에서 부모 StatefulWidget의 값을 가져오려면 ~ 으로r 써야함. 즉 pet -> pet 작성해야 됨
     final pet = currentPet!;
 
-    final filteredRecords = _getFilteredRecordsForSelectedTab(selectedDay);
+    final filteredRecords = isSearching
+        ? _getSearchedRecords()
+        : _getFilteredRecordsForSelectedTab(selectedDay);
 
     return Scaffold(
       // backgroundColor: Colors.green[10],
@@ -1298,7 +1691,7 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
                                 child: Column(
                                   children: [
                                     const Text(
-                                      '아직 기록이 없어요.',
+                                      '검색 결과가 없어요.',
                                       style: TextStyle(
                                         fontSize: 14,
                                         fontWeight: FontWeight.w600,
@@ -1308,7 +1701,9 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
                                     const SizedBox(height: 5),
 
                                     Text(
-                                      _getEmptyRecordMessage(),
+                                      isSearching
+                                          ? '다른 검색어를 입력해 보세요.'
+                                          : _getEmptyRecordMessage(),
                                       style: TextStyle(
                                         color: Colors.grey[500],
                                         fontSize: 12,
@@ -1317,6 +1712,8 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
                                   ],
                                 ),
                               )
+                            else if (isSearching)
+                              ..._buildSearchedRecordCards(filteredRecords, pet)
                             else
                               ..._buildSelectedRecordCards(selectedDay, pet),
                           ],
