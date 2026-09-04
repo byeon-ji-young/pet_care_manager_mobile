@@ -1245,12 +1245,10 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
     );
   }
 
-  // 기록 종류 선택 탭
-  Widget _buildRecordTabs() {
+  Widget _buildSearchBar() {
     final primaryColor = Theme.of(context).primaryColor;
 
-    const tabs = ['전체', '건강', '예방접종', '약', '체중'];
-    // 검색 중인 경우
+    // 검색 중
     if (isSearching) {
       return SizedBox(
         height: 38,
@@ -1263,8 +1261,9 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
             });
           },
           decoration: InputDecoration(
-            hintText: '기록을 검색해 주세요.',
-            prefixIcon: const Icon(Icons.search_outlined, size: 20),
+            hintText: '검색할 기록을 입력하세요.',
+            hintStyle: TextStyle(fontSize: 14, color: Colors.grey.shade600),
+            prefixIcon: const Icon(Icons.search_outlined, size: 16),
             suffixIcon: IconButton(
               onPressed: () {
                 setState(() {
@@ -1273,28 +1272,60 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
                   searchController.clear();
                 });
               },
-              icon: const Icon(Icons.close, size: 20),
+              icon: const Icon(Icons.close, size: 16),
             ),
             contentPadding: const EdgeInsets.symmetric(
-              horizontal: 12,
+              horizontal: 4,
               vertical: 0,
             ),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
+            border: UnderlineInputBorder(
               borderSide: BorderSide(color: Colors.grey.shade300),
             ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
+            enabledBorder: UnderlineInputBorder(
               borderSide: BorderSide(color: Colors.grey.shade300),
             ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
+            focusedBorder: UnderlineInputBorder(
               borderSide: BorderSide(color: primaryColor),
             ),
           ),
         ),
       );
     }
+
+    // 기본 상태
+    return SizedBox(
+      height: 38,
+      child: Align(
+        alignment: Alignment.centerRight,
+        child: TextButton.icon(
+          onPressed: () {
+            setState(() {
+              isSearching = true;
+              searchQuery = '';
+              searchController.clear();
+            });
+          },
+          icon: const Icon(Icons.search_outlined, size: 18),
+          label: const Text(
+            '검색',
+            style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+          ),
+          style: TextButton.styleFrom(
+            foregroundColor: Colors.grey[700],
+            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+            minimumSize: Size.zero,
+            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          ),
+        ),
+      ),
+    );
+  }
+
+  // 기록 종류 선택 탭
+  Widget _buildRecordTabs() {
+    final primaryColor = Theme.of(context).primaryColor;
+
+    const tabs = ['전체', '건강', '예방접종', '약', '체중'];
 
     return Row(
       children: [
@@ -1356,25 +1387,6 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
                 );
               }),
             ),
-          ),
-        ),
-
-        // 검색 버튼
-        Transform.translate(
-          // Offset(x, y): x는 좌우 이동, y는 상하 이동 (x가 음수면 좌, 양수면 우 / y가 음수면 상, 양수면 하)
-          offset: const Offset(0, -2),
-          child: IconButton(
-            onPressed: () {
-              setState(() {
-                isSearching = true;
-                searchQuery = '';
-                searchController.clear();
-              });
-            },
-            icon: const Icon(Icons.search_outlined, size: 20),
-            padding: const EdgeInsets.symmetric(horizontal: 8),
-            constraints: const BoxConstraints(),
-            tooltip: '기록 검색',
           ),
         ),
       ],
@@ -1665,14 +1677,12 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
                         child: Divider(height: 24, color: Colors.grey.shade200),
                       ),
 
+                      // 검색 버튼
+                      _buildSearchBar(),
+
                       // 선택한 날짜 기록
                       Padding(
-                        padding: const EdgeInsets.fromLTRB(
-                          4,
-                          0,
-                          4,
-                          4,
-                        ), // L → T → R → B
+                        padding: const EdgeInsets.all(4),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
