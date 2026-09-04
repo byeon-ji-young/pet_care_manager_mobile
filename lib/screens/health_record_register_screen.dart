@@ -897,6 +897,23 @@ class _HealthRecordRegisterScreenState
                         ? 'scheduled'
                         : 'completed';
 
+                    final String costText = costController.text.trim();
+
+                    int? cost;
+
+                    if (costText.isNotEmpty) {
+                      cost = int.tryParse(costText);
+
+                      if (cost == null || cost < 0) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('진료비는 0원 이상의 숫자로 입력해주세요.'),
+                          ),
+                        );
+                        return;
+                      }
+                    }
+
                     final record = HealthRecord(
                       id: widget.record?.id,
                       petId: widget.petId,
@@ -917,9 +934,7 @@ class _HealthRecordRegisterScreenState
                           examinationResultController.text.trim().isEmpty
                           ? null
                           : examinationResultController.text.trim(),
-                      cost: int.tryParse(
-                        costController.text.trim(),
-                      ), // tryParse: 비어있으면 null
+                      cost: cost, // tryParse: 비어있으면 null
                       status: widget.record?.status ?? defaultStatus,
                     );
 
