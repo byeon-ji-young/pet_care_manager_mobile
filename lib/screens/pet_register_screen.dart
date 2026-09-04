@@ -553,10 +553,25 @@ class _PetRegisterScreenState extends State<PetRegisterScreen> {
                       return;
                     }
 
-                    // 몸무게 숫자 처리 ex. "3.5" -> double.tryParse() -> 3.5 / "abc" -> double.tryParse() -> null
-                    final double? weight = double.tryParse(
-                      weightController.text.trim(),
-                    );
+                    // 몸무게 입력값 검사
+                    final String weightText = weightController.text.trim();
+
+                    double? weight;
+
+                    if (weightText.isNotEmpty) {
+                      // 몸무게 숫자 처리 ex. "3.5" -> double.tryParse() -> 3.5 / "abc" -> double.tryParse() -> null
+                      weight = double.tryParse(weightText);
+
+                      // 숫자가 아니거나 0 이하인 경우
+                      if (weight == null || weight <= 0) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('몸무게는 0보다 큰 숫자로 입력해주세요.'),
+                          ),
+                        );
+                        return;
+                      }
+                    }
 
                     final String? oldImagePath = widget.pet?.imagePath;
                     String? savedImagePath = oldImagePath;
