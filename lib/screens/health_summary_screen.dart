@@ -614,19 +614,22 @@ class _HealthSummaryScreenState extends State<HealthSummaryScreen> {
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: Colors.grey.shade200, width: 1),
-        // boxShadow: [
-        //   BoxShadow(
-        //     color: Colors.black.withValues(alpha: 0.08),
-        //     blurRadius: 8,
-        //     offset: const Offset(0, 2), // Offset(x, y)
-        //   ),
-        // ],
+        /*
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.08),
+            blurRadius: 8,
+            offset: const Offset(0, 2), // Offset(x, y)
+          ),
+        ],
+        */
       ),
       child: child,
     );
   }
 
   Widget _buildIconBox(IconData icon, Color bgColor, Color iconColor) {
+    /*
     return Container(
       width: 44,
       height: 44,
@@ -634,6 +637,12 @@ class _HealthSummaryScreenState extends State<HealthSummaryScreen> {
         color: bgColor,
         borderRadius: BorderRadius.circular(12),
       ),
+      child: Icon(icon, color: iconColor, size: 22),
+    );
+    */
+    return CircleAvatar(
+      radius: 22,
+      backgroundColor: bgColor,
       child: Icon(icon, color: iconColor, size: 22),
     );
   }
