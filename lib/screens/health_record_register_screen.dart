@@ -44,6 +44,7 @@ class _HealthRecordRegisterScreenState
   final ImagePicker _imagePicker = ImagePicker();
   final List<XFile> selectedImages = [];
   List<HealthRecordImage> existingImages = [];
+  final List<HealthRecordImage> imagesToDelete = [];
 
   @override
   void initState() {
@@ -169,35 +170,10 @@ class _HealthRecordRegisterScreenState
 
   // 기존 사진 삭제
   Future<void> _deleteExistingImage(HealthRecordImage image) async {
-    try {
-      // DB에서 사진 정보 삭제
-      await DatabaseHelper.instance.deleteHealthRecordImage(image.id!);
-
-      // 실제 파일 삭제
-      final file = File(image.imagePath);
-
-      if (await file.exists()) {
-        await file.delete();
-      }
-
-      if (!mounted) {
-        return;
-      }
-
-      setState(() {
-        existingImages.remove(image);
-      });
-    } catch (e) {
-      debugPrint('기존 사진 삭제 실패: $e');
-
-      if (!mounted) {
-        return;
-      }
-
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('사진을 삭제하지 못했어요.')));
-    }
+    setState(() {
+      existingImages.remove(image);
+      imagesToDelete.add(image);
+    });
   }
 
   // 사진 저장
@@ -957,6 +933,23 @@ class _HealthRecordRegisterScreenState
                       // 선택한 사진 저장
                       if (recordId != null) {
                         await _saveImages(recordId);
+
+                        for (final image in imagesToDelete) {
+                          try {
+                            // DB에서 사진 정보 삭제
+                            await DatabaseHelper.instance
+                                .deleteHealthRecordImage(image.id!);
+
+                            // 실제 파일 삭제
+                            final file = File(image.imagePath);
+
+                            if (await file.exists()) {
+                              await file.delete();
+                            }
+                          } catch (e) {
+                            debugPrint('기존 사진 삭제 실패: $e');
+                          }
+                        }
                       }
                     } catch (e) {
                       debugPrint('병원 기록 저장 실패: $e');
