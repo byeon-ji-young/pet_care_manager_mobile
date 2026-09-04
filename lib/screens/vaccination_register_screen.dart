@@ -160,7 +160,7 @@ class _VaccinationRegisterScreen extends State<VaccinationRegisterScreen> {
                       controller: vaccineNameController,
                       decoration: InputDecoration(
                         labelText: '* 접종 종류',
-                        hintText: '예. 종합백신, 광견병',
+                        hintText: '예: 종합백신, 광견병',
                         prefixIcon: const Icon(Icons.vaccines_outlined),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),

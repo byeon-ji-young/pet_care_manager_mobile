@@ -160,7 +160,7 @@ class _MedicationRegisterScreen extends State<MedicationRegisterScreen> {
                       controller: medicationNameController,
                       decoration: InputDecoration(
                         labelText: '* 약 이름',
-                        hintText: '예. 심장사상충 약, 구충제',
+                        hintText: '특이사항이나 참고할 사항을 적어주세요.',
                         prefixIcon: const Icon(Icons.medication_outlined),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
@@ -494,7 +494,7 @@ class _MedicationRegisterScreen extends State<MedicationRegisterScreen> {
                                   keyboardType: TextInputType.number,
                                   decoration: const InputDecoration(
                                     suffixText: '일마다',
-                                    hintText: '예. 3',
+                                    hintText: '예: 3',
                                   ),
                                 ),
                                 actions: [
@@ -592,8 +592,8 @@ class _MedicationRegisterScreen extends State<MedicationRegisterScreen> {
                       controller: memoController,
                       maxLines: 3,
                       decoration: InputDecoration(
-                        labelText: '',
-                        hintText: '',
+                        labelText: '메모',
+                        hintText: '예: 식후에 복용, 사료와 함께 급여',
                         alignLabelWithHint: true,
                         prefixIcon: const Padding(
                           padding: EdgeInsets.only(bottom: 30),

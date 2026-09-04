@@ -273,7 +273,7 @@ class _WeightRecordRegisterScreen extends State<WeightRecordRegisterScreen> {
                       maxLines: 4,
                       decoration: InputDecoration(
                         labelText: '메모',
-                        hintText: '메모를 입력해주세요.',
+                        hintText: '예: 특이사항이나 참고할 사항을 적어주세요.',
                         alignLabelWithHint:
                             true, // TextField의 labelText와 hintText의 세로 정렬을 맞춰주는 옵션
                         prefixIcon: const Padding(
