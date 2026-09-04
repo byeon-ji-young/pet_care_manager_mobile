@@ -1123,4 +1123,74 @@ class DatabaseHelper {
       'medication_logs': medicationLogs,
     };
   }
+
+  // 데이터 복원
+  Future<void> restoreBackupData(Map<String, dynamic> backupData) async {
+    final db = await database;
+
+    await db.transaction((txn) async {
+      // 기존 데이터 삭제. 외래키 관계 때문에 자식 테이블부터 삭제
+      await txn.delete('health_record_images');
+      await txn.delete('medication_logs');
+
+      await txn.delete('health_records');
+      await txn.delete('vaccinations');
+      await txn.delete('weight_records');
+      await txn.delete('medications');
+
+      await txn.delete('pets');
+
+      // 부모 테이블부터 복원
+      // 1.pets
+      for (final item in backupData['pets'] as List) {
+        await txn.insert('pets', Map<String, dynamic>.from(item as Map));
+      }
+
+      // 2.health_records
+      for (final item in backupData['health_records'] as List) {
+        await txn.insert(
+          'health_records',
+          Map<String, dynamic>.from(item as Map),
+        );
+      }
+
+      // 3.vaccinations
+      for (final item in backupData['vaccinations'] as List) {
+        await txn.insert(
+          'vaccinations',
+          Map<String, dynamic>.from(item as Map),
+        );
+      }
+
+      // 4.weight_records
+      for (final item in backupData['weight_records'] as List) {
+        await txn.insert(
+          'weight_records',
+          Map<String, dynamic>.from(item as Map),
+        );
+      }
+
+      // 5.medications
+      for (final item in backupData['medications'] as List) {
+        await txn.insert('medications', Map<String, dynamic>.from(item as Map));
+      }
+
+      // 자식 테이블 복원
+      // 1.health_record_images
+      for (final item in backupData['health_record_images'] as List) {
+        await txn.insert(
+          'health_record_images',
+          Map<String, dynamic>.from(item as Map),
+        );
+      }
+
+      // 2.medication_logs
+      for (final item in backupData['medication_logs'] as List) {
+        await txn.insert(
+          'medication_logs',
+          Map<String, dynamic>.from(item as Map),
+        );
+      }
+    });
+  }
 }
