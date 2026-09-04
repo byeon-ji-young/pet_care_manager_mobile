@@ -621,6 +621,18 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
                 }
 
                 await loadWeightRecords();
+
+                final updatedPet = await DatabaseHelper.instance.getPetById(
+                  widget.pet.id!,
+                );
+
+                if (!mounted || updatedPet == null) {
+                  return;
+                }
+
+                setState(() {
+                  currentPet = updatedPet;
+                });
               }
             },
           ),
@@ -815,6 +827,7 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
     return results;
   }
 
+  // 검색 결과 카드
   List<Widget> _buildSearchedRecordCards(List<dynamic> records, Pet pet) {
     final widgets = <Widget>[];
 
@@ -1031,6 +1044,18 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
 
               if (result != null && mounted) {
                 await loadWeightRecords();
+
+                final updatedPet = await DatabaseHelper.instance.getPetById(
+                  widget.pet.id!,
+                );
+
+                if (!mounted || updatedPet == null) {
+                  return;
+                }
+
+                setState(() {
+                  currentPet = updatedPet;
+                });
               }
             },
           ),
@@ -1235,6 +1260,17 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
                       });
 
                       await loadWeightRecords();
+
+                      final updatedPet = await DatabaseHelper.instance
+                          .getPetById(widget.pet.id!);
+
+                      if (!mounted || updatedPet == null) {
+                        return;
+                      }
+
+                      setState(() {
+                        currentPet = updatedPet;
+                      });
                     }
                   },
                 ),
@@ -1471,7 +1507,7 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // 1. 반려동물 정보 (프로필 헤더)
-              PetProfileHeader(pet: pet),
+              PetProfileHeader(pet: currentPet!),
 
               const SizedBox(height: 10),
 

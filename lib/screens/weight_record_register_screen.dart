@@ -85,6 +85,8 @@ class _WeightRecordRegisterScreen extends State<WeightRecordRegisterScreen> {
       await DatabaseHelper.instance.updateWeightRecord(record);
     }
 
+    await DatabaseHelper.instance.syncPetCurrentWeight(widget.petId);
+
     if (!mounted) {
       return;
     }
@@ -129,6 +131,8 @@ class _WeightRecordRegisterScreen extends State<WeightRecordRegisterScreen> {
     }
 
     await DatabaseHelper.instance.deleteWeightRecord(record.id!);
+
+    await DatabaseHelper.instance.syncPetCurrentWeight(widget.petId);
 
     if (!mounted) {
       return;

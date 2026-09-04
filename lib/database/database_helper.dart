@@ -377,6 +377,18 @@ class DatabaseHelper {
     return await db.delete('pets', where: 'id = ?', whereArgs: [id]);
   }
 
+  // 반려동물 현재 몸무게 업데이트
+  Future<int> updatePetWeight(int petId, double? weight) async {
+    final db = await database;
+
+    return await db.update(
+      'pets',
+      {'weight': weight},
+      where: 'id = ?',
+      whereArgs: [petId],
+    );
+  }
+
   // ========================================================= health_records =========================================================
   // 병원 기록 추가
   Future<int> insertHealthRecord(HealthRecord record) async {
@@ -750,6 +762,19 @@ class DatabaseHelper {
     final db = await database;
 
     return db.delete('weight_records', where: 'id = ?', whereArgs: [id]);
+  }
+
+  // 가장 최근 체중 기록을 반려동물의 현재 몸무게에 반영
+  Future<void> syncPetCurrentWeight(int petId) async {
+    final records = await getWeightRecordsByPetId(petId);
+
+    if (records.isEmpty) {
+      return;
+    }
+
+    final latestRecord = records.first;
+
+    await updatePetWeight(petId, latestRecord.weight);
   }
 
   // ========================================================= medication =========================================================
