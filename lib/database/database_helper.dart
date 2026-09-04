@@ -906,9 +906,24 @@ class DatabaseHelper {
       return nextDate;
     }
     // 2. 반복 복용 약 - 매일 / 매주 / N일마다 복용하는 약은 오늘 해야 할 일에서 관리
+    // 단, nextDate가 명시되어 있고 아직 미래라면 "첫 다음 복용일"만 다가오는 건강 관리에 표시
     else if (medication.repeatType == 'daily' ||
         medication.repeatType == 'weekly' ||
         medication.repeatType == 'interval') {
+      if (medication.nextDate == null) {
+        return null;
+      }
+
+      final nextDate = DateTime(
+        medication.nextDate!.year,
+        medication.nextDate!.month,
+        medication.nextDate!.day,
+      );
+
+      if (nextDate.isAfter(today)) {
+        return nextDate;
+      }
+
       return null;
     }
 
