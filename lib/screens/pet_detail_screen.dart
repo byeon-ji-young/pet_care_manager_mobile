@@ -229,7 +229,7 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Text('반려동물 삭제'),
+          // title: const Text('반려동물 삭제'),
           content: Text('${pet.name}을(를) 정말 삭제하시겠습니까?'),
           actions: [
             TextButton(
