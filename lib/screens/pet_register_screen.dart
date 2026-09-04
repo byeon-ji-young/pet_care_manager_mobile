@@ -108,6 +108,7 @@ class _PetRegisterScreenState extends State<PetRegisterScreen> {
 
     setState(() {
       selectedImage = image;
+      removeImage = false;
     });
   }
 
