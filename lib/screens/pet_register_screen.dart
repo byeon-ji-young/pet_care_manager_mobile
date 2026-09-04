@@ -188,7 +188,7 @@ class _PetRegisterScreenState extends State<PetRegisterScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          widget.pet == null ? '반려동물 등록' : '반려동물 수정',
+          widget.pet == null ? '반려동물 등록' : '${widget.pet!.name} 정보 수정',
           style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
         ),
         centerTitle: true,
