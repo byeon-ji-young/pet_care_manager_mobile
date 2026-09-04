@@ -631,9 +631,8 @@ class DatabaseHelper {
 
     final maps = await db.query(
       'vaccinations',
-      where:
-          'pet_id = ? AND next_date IS NOT NULL AND next_date > ? AND status = ?',
-      whereArgs: [petId, today.toIso8601String(), 'scheduled'],
+      where: 'pet_id = ? AND next_date IS NOT NULL AND next_date > ? ',
+      whereArgs: [petId, today.toIso8601String()],
       orderBy: 'next_date ASC',
     );
 
