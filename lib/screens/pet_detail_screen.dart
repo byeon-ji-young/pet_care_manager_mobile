@@ -19,6 +19,7 @@ import 'health_record_register_screen.dart';
 import 'vaccination_register_screen.dart';
 import 'weight_record_register_screen.dart';
 import 'medication_register_screen.dart';
+import 'health_summary_screen.dart';
 
 import '../utils/date_time_utils.dart';
 
@@ -1472,9 +1473,41 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
               // 1. 반려동물 정보 (프로필 헤더)
               PetProfileHeader(pet: pet),
 
-              const SizedBox(height: 16),
+              const SizedBox(height: 10),
 
-              // 2. 오늘 해야 할 일
+              // 2. 건강 요약
+              Align(
+                alignment: Alignment.centerRight,
+                child: TextButton.icon(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => HealthSummaryScreen(pet: pet),
+                      ),
+                    );
+                  },
+                  icon: const Icon(Icons.analytics_outlined, size: 17),
+                  label: const Text(
+                    '건강 요약 보기',
+                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                  ),
+                  style: TextButton.styleFrom(
+                    foregroundColor: Theme.of(context).primaryColor,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 4,
+                      vertical: 4,
+                    ),
+                    minimumSize: Size.zero,
+                    tapTargetSize: MaterialTapTargetSize
+                        .shrinkWrap, // shrinkWrap: 실제로 터치할 수 있는 영역의 크기를 줄이는 설정
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 10),
+
+              // 3. 오늘 해야 할 일
               TodayHealthTasks(
                 petId: pet.id!,
                 healthRecords: todayHealthRecords,
@@ -1500,7 +1533,7 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
 
               const SizedBox(height: 4),
 
-              // 3. 예정 알림
+              // 4. 예정 알림
               UpcomingHealthTasks(
                 healthRecords: upcomingHealthRecords,
                 vaccinations: upcomingVaccinations,
@@ -1582,7 +1615,7 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
                 },
               ),
 
-              // 4. 건강 기록 카드 (+캘린더)
+              // 5. 건강 기록 카드 (+캘린더)
               Card(
                 elevation: 0,
                 shape: RoundedRectangleBorder(
