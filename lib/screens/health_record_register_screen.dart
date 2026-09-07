@@ -139,6 +139,25 @@ class _HealthRecordRegisterScreenState
       return;
     }
 
+    // 삭제 전에 해당 병원 기록의 사진 조회
+    final images = await DatabaseHelper.instance.getHealthRecordImages(
+      record.id!,
+    );
+
+    // 실제 사진 파일 삭제
+    for (final image in images) {
+      try {
+        final file = File(image.imagePath);
+
+        if (await file.exists()) {
+          await file.delete();
+        }
+      } catch (e) {
+        debugPrint('병원 기록 삭제 중 사진 파일 삭제 실패: $e');
+      }
+    }
+
+    // health_record_images 데이터는 ON DELETE CASCADE로 함께 삭제됨
     await DatabaseHelper.instance.deleteHealthRecord(record.id!);
 
     if (!mounted) {

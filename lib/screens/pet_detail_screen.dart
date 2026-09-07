@@ -241,7 +241,12 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
       builder: (context) {
         return AlertDialog(
           // title: const Text('반려동물 삭제'),
-          content: Text('${pet.name}을(를) 정말 삭제하시겠습니까?'),
+          content: Text(
+            '${pet.name}을(를) 정말 삭제하시겠습니까?\n\n'
+            '건강 기록, 예방접종, 체중 기록, 약 복용 기록과 '
+            '관련 사진도 함께 삭제됩니다.\n\n'
+            '삭제한 데이터는 복구할 수 없습니다.',
+          ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context, false),
@@ -249,6 +254,7 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
             ),
             TextButton(
               onPressed: () => Navigator.pop(context, true),
+              style: TextButton.styleFrom(foregroundColor: Colors.redAccent),
               child: const Text('삭제'),
             ),
           ],

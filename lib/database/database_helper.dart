@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:path/path.dart';
 import 'package:pet_care_manager_mobile/models/health_record_image.dart';
 import 'package:sqflite/sqflite.dart';
@@ -374,6 +376,23 @@ class DatabaseHelper {
   Future<int> deletePet(int id) async {
     final db = await database;
 
+    // 삭제 전에 해당 반려동물의 병원 기록 사진을 조회
+    final images = await getHealthRecordImagesByPet(id);
+
+    // 실제 사진 파일 삭제
+    for (final image in images) {
+      try {
+        final file = File(image.imagePath);
+
+        if (await file.exists()) {
+          await file.delete();
+        }
+      } catch (e) {
+        debugPrint('반려동물 삭제 중 사진 파일 삭제 실패: $e');
+      }
+    }
+
+    // 관련된 건강 기록, 예방접종, 체중 기록, 약, 약 복용 기록, 병원 기록 사진 DB 데이터는 ON DELETE CASCADE에 의해 함께 삭제됨
     return await db.delete('pets', where: 'id = ?', whereArgs: [id]);
   }
 
@@ -568,6 +587,39 @@ class DatabaseHelper {
       where: 'health_record_id = ?',
       whereArgs: [healthRecordId],
       orderBy: 'id ASC',
+    );
+
+    return maps.map((map) => HealthRecordImage.fromMap(map)).toList();
+  }
+
+  // 특정 반려동물의 병원 기록 ID 조회
+  Future<List<int>> getHealthRecordIdsByPet(int petId) async {
+    final db = await database;
+
+    final maps = await db.query(
+      'health_records',
+      columns: ['id'],
+      where: 'pet_id = ?',
+      whereArgs: [petId],
+    );
+
+    return maps.map((map) => map['id'] as int).toList();
+  }
+
+  // 특정 반려동물의 모든 병원 기록 사진 조회
+  Future<List<HealthRecordImage>> getHealthRecordImagesByPet(int petId) async {
+    final db = await database;
+
+    final maps = await db.rawQuery(
+      '''
+        SELECT health_record_images.*
+          FROM health_record_images
+         INNER JOIN health_records
+            ON health_record_images.health_record_id = health_records.id
+         WHERE health_records.pet_id = ?
+         ORDER BY health_record_images.id ASC
+      ''',
+      [petId],
     );
 
     return maps.map((map) => HealthRecordImage.fromMap(map)).toList();
