@@ -96,6 +96,8 @@ class SettingsScreen extends StatelessWidget {
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(const SnackBar(content: Text('데이터 복원이 완료되었어요.')));
+
+        Navigator.pop(context, true);
       }
     } catch (e) {
       debugPrint('데이터 복원 실패: $e');

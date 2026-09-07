@@ -149,11 +149,15 @@ class _HomeScreenState extends State<HomeScreen> {
         actions: [
           // actions은 AppBar 오른쪽 영역
           IconButton(
-            onPressed: () {
-              Navigator.push(
+            onPressed: () async {
+              final restored = await Navigator.push<bool>(
                 context,
                 MaterialPageRoute(builder: (context) => const SettingsScreen()),
               );
+
+              if (restored == true) {
+                await loadPets();
+              }
             },
             icon: const Icon(Icons.settings_outlined, size: 22),
           ),
