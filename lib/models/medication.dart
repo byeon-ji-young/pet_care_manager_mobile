@@ -6,11 +6,11 @@ class Medication {
   final int? id; // DB에서 생성되는 약 기록 ID
   final int petId; // 어떤 반려동물의 약인지
   final String medicationName; // 약 이름
-  final DateTime medicationDate; // 복용일
+  final DateTime medicationDate; // 복용일 (반복의 시작일)
   final TimeOfDay? medicationTime; // 복용시간
-  final DateTime? nextDate; // 다음 복용 예정일
-  final String repeatType; // 반복 복용 방식
-  final int? repeatInterval; // 반복 간격
+  final DateTime? nextDate; // 다음 복용 예정일 (반복 없음(none)일 때 실제 복용 예정일)
+  final String repeatType; // 반복 복용 방식 (반복 규칙)
+  final int? repeatInterval; // 반복 간격（N일마다일 때 주기)
   final String? memo; // 메모
 
   Medication({

@@ -116,6 +116,7 @@ class _MedicationRegisterScreen extends State<MedicationRegisterScreen> {
   @override
   Widget build(BuildContext context) {
     final isEditing = widget.medication != null;
+    final isRepeatMedication = repeatType != 'none';
 
     return Scaffold(
       appBar: AppBar(title: null, centerTitle: true),
@@ -320,24 +321,28 @@ class _MedicationRegisterScreen extends State<MedicationRegisterScreen> {
 
                     // 4. 다음 복용 예정일
                     InkWell(
-                      onTap: () async {
-                        final pickedDate = await showDatePicker(
-                          context: context,
-                          initialDate: nextDate ?? medicationDate,
-                          firstDate: medicationDate,
-                          lastDate: DateTime(2100),
-                        );
+                      onTap: isRepeatMedication
+                          ? null
+                          : () async {
+                              final pickedDate = await showDatePicker(
+                                context: context,
+                                initialDate: nextDate ?? medicationDate,
+                                firstDate: medicationDate,
+                                lastDate: DateTime(2100),
+                              );
 
-                        if (!mounted) {
-                          return;
-                        }
+                              if (!mounted) {
+                                return;
+                              }
 
-                        if (pickedDate != null) {
-                          setState(() {
-                            nextDate = pickedDate;
-                          });
-                        }
-                      },
+                              if (pickedDate != null) {
+                                setState(() {
+                                  nextDate = pickedDate;
+                                  repeatType = 'none';
+                                  repeatInterval = null;
+                                });
+                              }
+                            },
                       borderRadius: BorderRadius.circular(12),
                       child: Container(
                         padding: const EdgeInsets.symmetric(
@@ -345,57 +350,78 @@ class _MedicationRegisterScreen extends State<MedicationRegisterScreen> {
                           vertical: 14,
                         ),
                         decoration: BoxDecoration(
-                          border: Border.all(color: Colors.grey.shade700),
+                          border: Border.all(
+                            color: isRepeatMedication
+                                ? Colors.grey.shade300
+                                : Colors.grey.shade700,
+                          ),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Row(
                           children: [
-                            const Icon(Icons.event_repeat_outlined),
+                            Icon(
+                              Icons.event_repeat_outlined,
+                              color: isRepeatMedication ? Colors.grey : null,
+                            ),
                             const SizedBox(width: 16),
-                            const Text(
+                            Text(
                               '다음 복용일',
                               style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w500,
+                                color: isRepeatMedication ? Colors.grey : null,
                               ),
                             ),
+
                             const Spacer(),
+
                             if (nextDate != null) ...[
                               Text(
                                 '${nextDate!.year}.${nextDate!.month.toString().padLeft(2, '0')}.${nextDate!.day.toString().padLeft(2, '0')}',
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.bold,
+                                  color: isRepeatMedication
+                                      ? Colors.grey.shade400
+                                      : null,
                                 ),
                               ),
+
                               const SizedBox(width: 6),
-                              GestureDetector(
-                                // GestureDetector는 화면에서 사용자의 터치 동작을 감지하는 위젯
-                                onTap: () {
-                                  setState(() {
-                                    nextDate = null;
-                                  });
-                                },
-                                child: const Icon(
-                                  Icons.close,
-                                  size: 16,
-                                  color: Colors.grey,
+
+                              if (!isRepeatMedication)
+                                GestureDetector(
+                                  // GestureDetector는 화면에서 사용자의 터치 동작을 감지하는 위젯
+                                  onTap: () {
+                                    setState(() {
+                                      nextDate = null;
+                                    });
+                                  },
+                                  child: const Icon(
+                                    Icons.close,
+                                    size: 16,
+                                    color: Colors.grey,
+                                  ),
                                 ),
-                              ),
+
                               const SizedBox(width: 3),
                             ] else ...[
-                              const Text(
-                                '날짜 선택 (선택사항)',
+                              Text(
+                                isRepeatMedication ? '반복 복용 중' : '날짜 선택 (선택사항)',
                                 style: TextStyle(
                                   fontSize: 16,
                                   color: Colors.grey,
                                 ),
                               ),
                               const SizedBox(width: 4),
-                              const Icon(
-                                Icons.arrow_drop_down,
-                                color: Colors.grey,
-                              ),
+
+                              if (!isRepeatMedication) ...[
+                                const SizedBox(width: 4),
+                                const Icon(
+                                  Icons.arrow_drop_down,
+                                  color: Colors.grey,
+                                ),
+                              ],
                             ],
                           ],
                         ),
@@ -533,11 +559,13 @@ class _MedicationRegisterScreen extends State<MedicationRegisterScreen> {
                           setState(() {
                             repeatType = 'interval';
                             repeatInterval = interval;
+                            nextDate = null;
                           });
                         } else {
                           setState(() {
                             repeatType = selectedType;
                             repeatInterval = null;
+                            nextDate = null;
                           });
                         }
                       },
@@ -635,7 +663,7 @@ class _MedicationRegisterScreen extends State<MedicationRegisterScreen> {
                       medicationTime: medicationTime,
                       repeatType: repeatType,
                       repeatInterval: repeatInterval,
-                      nextDate: nextDate,
+                      nextDate: repeatType == 'none' ? nextDate : null,
                       memo: memoController.text.trim().isEmpty
                           ? null
                           : memoController.text.trim(),
