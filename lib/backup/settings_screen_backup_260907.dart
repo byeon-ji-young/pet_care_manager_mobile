@@ -1,58 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import '../services/backup_service.dart';
 
-class SettingsScreen extends StatefulWidget {
-  const SettingsScreen({super.key});
-
-  @override
-  State<SettingsScreen> createState() => _SettingsScreenState();
-}
-
-class _SettingsScreenState extends State<SettingsScreen> {
-  DateTime? lastBackupTime;
-
-  @override
-  void initState() {
-    super.initState();
-
-    _loadLastBackupTime();
-  }
-
-  // 마지막 백업 시간 조회
-  Future<void> _loadLastBackupTime() async {
-    final prefs = await SharedPreferences.getInstance();
-
-    final savedTime = prefs.getString('last_backup_time');
-
-    if (savedTime == null) {
-      return;
-    }
-
-    if (!mounted) {
-      return;
-    }
-
-    setState(() {
-      lastBackupTime = DateTime.tryParse(savedTime);
-    });
-  }
-
-  // 마지막 백업 시간 표시용
-  String _formatLastBackupTime() {
-    if (lastBackupTime == null) {
-      return '마지막 백업: 없음';
-    }
-
-    final year = lastBackupTime!.year;
-    final month = lastBackupTime!.month;
-    final day = lastBackupTime!.day;
-    final hour = lastBackupTime!.hour.toString().padLeft(2, '0');
-    final minute = lastBackupTime!.minute.toString().padLeft(2, '0');
-
-    return '마지막 백업: $year.$month.$day $hour:$minute';
-  }
+class SettingsScreenBackup extends StatelessWidget {
+  const SettingsScreenBackup({super.key});
 
   // 데이터 백업
   Future<void> _backupData(BuildContext context) async {
@@ -62,8 +13,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
         return AlertDialog(
           // title: const Text('데이터 백업'),
           content: const Text(
-            '현재 저장된 반려동물 데이터를\n'
-            '백업 파일로 저장할까요?',
+            '현재 저장된 반려동물 데이터와\n'
+            '건강 기록 사진을 백업 파일로 저장할까요?',
           ),
           actions: [
             TextButton(
@@ -86,9 +37,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
     try {
       final success = await BackupService.instance.createBackup();
-
-      // 마지막 백업 시간 다시 조회
-      await _loadLastBackupTime();
 
       if (!context.mounted) return;
 
@@ -201,7 +149,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 '데이터 백업',
                 style: TextStyle(fontWeight: FontWeight.w600),
               ),
-              subtitle: Text(_formatLastBackupTime()),
+              subtitle: const Text('반려동물 데이터를 파일로 저장해요.'),
               trailing: const Icon(Icons.chevron_right, color: Colors.grey),
               onTap: () => _backupData(context),
             ),

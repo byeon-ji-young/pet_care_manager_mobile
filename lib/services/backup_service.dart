@@ -6,6 +6,7 @@ import 'package:file_picker/file_picker.dart'; // 어디에 백업 파일을 저
 import 'package:path/path.dart' as p; // 파일 경로를 안전하게 조합하거나 확장자를 가져올 때 사용
 import 'package:path_provider/path_provider.dart';
 import 'package:flutter/foundation.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../database/database_helper.dart';
 
@@ -79,7 +80,9 @@ class BackupService {
         'petcare_backup_'
         '${now.year}'
         '${now.month.toString().padLeft(2, '0')}'
-        '${now.day.toString().padLeft(2, '0')}'
+        '${now.day.toString().padLeft(2, '0')}_'
+        '${now.hour.toString().padLeft(2, '0')}'
+        '${now.minute.toString().padLeft(2, '0')}'
         '.zip';
 
     // 5. 사용자에게 저장 위치 선택하도록 요청
@@ -94,6 +97,11 @@ class BackupService {
     if (result == null) {
       return false;
     }
+
+    // 마지막 백업 시간 저장
+    final prefs = await SharedPreferences.getInstance();
+
+    await prefs.setString('last_backup_time', now.toIso8601String());
 
     return true;
   }
