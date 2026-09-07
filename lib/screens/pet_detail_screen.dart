@@ -1078,6 +1078,13 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
   builder: (context) {} 여기의 context는 바텀시트의 context
   */
   void _showAddRecordBottomSheet() {
+    // 기록 추가를 누르면 검색 모드 종료
+    setState(() {
+      isSearching = false;
+      searchQuery = '';
+      searchController.clear();
+    });
+
     final petId = currentPet!.id!;
     final parentContext = context;
 
