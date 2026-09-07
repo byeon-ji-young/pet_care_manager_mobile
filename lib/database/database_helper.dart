@@ -882,49 +882,63 @@ class DatabaseHelper {
     return medications.first;
   }
 
-  // 반복 복용 약의 실제 다음 복용일 계산 - 오늘 복용해야 하는 약은 getTodayMedications()에서 처리. 이 함수에서는 "오늘 이후"의 가장 가까운 복용일만 반환
+  /*
+  반복 복용 약의 실제 다음 복용일 계산
+  - 오늘 복용해야 하는 약은 getTodayMedications()에서 처리
+  - 이 함수에서는 "오늘 이후"의 가장 가까운 복용일 1개만 반환
+  */
   DateTime? _calculateNextMedicationDate(Medication medication) {
-    final today = DateTimeUtils.todayKst();
     // final todayOnly = DateTime(today.year, today.month, today.day);
+    final today = DateTimeUtils.todayKst();
 
-    // 1. 반복하지 않는 약 - 오늘이거나 이미 지난 경우 오늘 일정 또는 과거 기록이므로 예정일에서는 제외
+    // 반복 기준 날짜 (nextDate가 있으면 nextDate 기준, nextDate가 없으면 최초 복용일 기준)
+    DateTime baseDate = medication.nextDate ?? medication.medicationDate;
+
+    // 날짜만 비교하도록 정리
+    baseDate = DateTime(baseDate.year, baseDate.month, baseDate.day);
+
+    // 1. 반복하지 않는 약 (오늘이거나 이미 지난 경우 오늘 일정 또는 과거 기록이므로 예정일에서는 제외)
     if (medication.repeatType == 'none') {
       if (medication.nextDate == null) {
         return null;
       }
 
-      final nextDate = DateTime(
-        medication.nextDate!.year,
-        medication.nextDate!.month,
-        medication.nextDate!.day,
-      );
-
-      if (!nextDate.isAfter(today)) {
-        return null;
-      }
-
-      return nextDate;
-    }
-    // 2. 반복 복용 약 - 매일 / 매주 / N일마다 복용하는 약은 오늘 해야 할 일에서 관리
-    // 단, nextDate가 명시되어 있고 아직 미래라면 "첫 다음 복용일"만 다가오는 건강 관리에 표시
-    else if (medication.repeatType == 'daily' ||
-        medication.repeatType == 'weekly' ||
-        medication.repeatType == 'interval') {
-      if (medication.nextDate == null) {
-        return null;
-      }
-
-      final nextDate = DateTime(
-        medication.nextDate!.year,
-        medication.nextDate!.month,
-        medication.nextDate!.day,
-      );
-
-      if (nextDate.isAfter(today)) {
-        return nextDate;
+      if (baseDate.isAfter(today)) {
+        return baseDate;
       }
 
       return null;
+    }
+    // 2. 매일
+    else if (medication.repeatType == 'daily') {
+      // 오늘이거나 지난 날짜라면 오늘 이후의 가장 가까운 날짜까지 하루씩 이동
+      while (!baseDate.isAfter(today)) {
+        baseDate = baseDate.add(const Duration(days: 1));
+      }
+
+      return baseDate;
+    }
+    // 3. 매주
+    else if (medication.repeatType == 'weekly') {
+      // 오늘이거나 지난 날짜라면 다음주 같은 요일까지 이동
+      while (!baseDate.isAfter(today)) {
+        baseDate = baseDate.add(const Duration(days: 7));
+      }
+
+      return baseDate;
+    }
+    // 4. N일마다
+    else if (medication.repeatType == 'interval' &&
+        medication.repeatInterval != null &&
+        medication.repeatInterval! > 0) {
+      final interval = medication.repeatInterval!;
+
+      // 오늘이거나 지난 날짜라면 다음 반복 날짜까지 interval만큼 이동
+      while (!baseDate.isAfter(today)) {
+        baseDate = baseDate.add(Duration(days: interval));
+      }
+
+      return baseDate;
     }
 
     return null;
