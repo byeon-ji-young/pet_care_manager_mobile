@@ -302,7 +302,12 @@ class _HealthSummaryScreenState extends State<HealthSummaryScreen> {
 
             _buildCard(
               child: latestHealthRecord == null
-                  ? _buildEmptyState('등록된 병원 기록이 없어요.')
+                  ? _buildEmptyState(
+                      '등록된 병원 기록이 없어요.',
+                      icon: Icons.local_hospital_outlined,
+                      bgColor: const Color(0xFFE3F2FD),
+                      iconColor: Colors.blue,
+                    )
                   : Row(
                       children: [
                         _buildIconBox(
@@ -376,7 +381,12 @@ class _HealthSummaryScreenState extends State<HealthSummaryScreen> {
 
             _buildCard(
               child: nextVaccination == null
-                  ? _buildEmptyState('예정된 예방접종이 없어요.')
+                  ? _buildEmptyState(
+                      '예정된 예방접종이 없어요.',
+                      icon: Icons.vaccines_outlined,
+                      bgColor: const Color(0xFFE8F5E9),
+                      iconColor: Colors.green,
+                    )
                   : Row(
                       children: [
                         _buildIconBox(
@@ -496,7 +506,12 @@ class _HealthSummaryScreenState extends State<HealthSummaryScreen> {
 
             _buildCard(
               child: latestWeightRecord == null
-                  ? _buildEmptyState('등록된 체중 기록이 없어요.')
+                  ? _buildEmptyState(
+                      '등록된 체중 기록이 없어요.',
+                      icon: Icons.monitor_weight_outlined,
+                      bgColor: const Color(0xFFF3E5F5),
+                      iconColor: Colors.purple,
+                    )
                   : Row(
                       children: [
                         _buildIconBox(
@@ -647,13 +662,23 @@ class _HealthSummaryScreenState extends State<HealthSummaryScreen> {
     );
   }
 
-  Widget _buildEmptyState(String text) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0),
-      child: Text(
-        text,
-        style: TextStyle(fontSize: 13, color: Colors.grey[400]),
-      ),
+  Widget _buildEmptyState(
+    String text, {
+    required IconData icon,
+    required Color bgColor,
+    required Color iconColor,
+  }) {
+    return Row(
+      children: [
+        _buildIconBox(icon, bgColor, iconColor),
+        const SizedBox(width: 14),
+        Expanded(
+          child: Text(
+            text,
+            style: TextStyle(fontSize: 13, color: Colors.grey[500]),
+          ),
+        ),
+      ],
     );
   }
 }
