@@ -963,7 +963,6 @@ class DatabaseHelper {
     final medications = await getMedicationsByPetId(petId);
 
     final today = DateTimeUtils.todayKst();
-    // final todayOnly = DateTime(today.year, today.month, today.day);
 
     return medications.where((medication) {
       // 복용 시작일
@@ -979,17 +978,23 @@ class DatabaseHelper {
       }
       // 1. 반복 없음
       else if (medication.repeatType == 'none') {
-        if (medication.nextDate == null) {
-          return false;
+        // 복용 시작일이 오늘이면 오늘 복용해야 하는 약
+        if (medicationDate == today) {
+          return true;
         }
 
-        final nextDate = DateTime(
-          medication.nextDate!.year,
-          medication.nextDate!.month,
-          medication.nextDate!.day,
-        );
+        // 다음 복용일이 오늘이면 오늘 복용해야 하는 약
+        if (medication.nextDate != null) {
+          final nextDate = DateTime(
+            medication.nextDate!.year,
+            medication.nextDate!.month,
+            medication.nextDate!.day,
+          );
 
-        return nextDate == today;
+          return nextDate == today;
+        }
+
+        return false;
       }
       // 2. 매일
       else if (medication.repeatType == 'daily') {
