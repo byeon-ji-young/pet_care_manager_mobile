@@ -30,6 +30,7 @@ class _HealthSummaryScreenState extends State<HealthSummaryScreen> {
   HealthRecord? latestHealthRecord;
 
   Vaccination? nextVaccination;
+  List<Vaccination> upcomingVaccinations = [];
 
   int medicationScheduledCount = 0;
   int medicationCompletedCount = 0;
@@ -299,6 +300,91 @@ class _HealthSummaryScreenState extends State<HealthSummaryScreen> {
     return result;
   }
 
+  // 예정된 예방접종 보기
+  void _showUpcomingVaccinations() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        return SafeArea(
+          child: SizedBox(
+            height: MediaQuery.of(context).size.height * 0.5,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // 상단 핸들
+                  Center(
+                    child: Container(
+                      width: 40,
+                      height: 4,
+                      margin: const EdgeInsets.only(bottom: 16),
+                      decoration: BoxDecoration(
+                        color: Colors.grey[300],
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 16),
+
+                  const Text(
+                    '접종 예정 내역',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+
+                  const SizedBox(height: 10),
+
+                  Expanded(
+                    child: ListView.builder(
+                      itemCount: upcomingVaccinations.length,
+                      itemBuilder: (context, index) {
+                        final vaccination = upcomingVaccinations[index];
+                        return ListTile(
+                          contentPadding: EdgeInsets.zero,
+                          leading: Container(
+                            width: 42,
+                            height: 42,
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFE8F5E9),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: const Icon(
+                              Icons.vaccines_outlined,
+                              color: Colors.green,
+                            ),
+                          ),
+                          title: Text(
+                            vaccination.vaccineName,
+                            style: const TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          subtitle: Text(
+                            _formatDate(vaccination.nextDate!),
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: Colors.grey[600],
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   // 약 복용 상세 보기
   void _showMedicationCompletionDetail() {
     final missedCount = medicationScheduledCount - medicationCompletedCount;
@@ -336,7 +422,7 @@ class _HealthSummaryScreenState extends State<HealthSummaryScreen> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     const Text(
-                      '약 복용 이행률',
+                      '복용 현황',
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
@@ -608,15 +694,17 @@ class _HealthSummaryScreenState extends State<HealthSummaryScreen> {
     if (vaccinations.isEmpty) {
       setState(() {
         nextVaccination = null;
+        upcomingVaccinations = [];
       });
       return;
     }
 
     // 가장 가까운 예정 접종 찾기
-    vaccinations.sort((a, b) => a.vaccinationDate.compareTo(b.vaccinationDate));
+    vaccinations.sort((a, b) => a.nextDate!.compareTo(b.nextDate!));
 
     setState(() {
       nextVaccination = vaccinations.first;
+      upcomingVaccinations = vaccinations;
     });
   }
 
@@ -945,6 +1033,29 @@ class _HealthSummaryScreenState extends State<HealthSummaryScreen> {
                       ],
                     ),
             ),
+
+            if (upcomingVaccinations.length >= 2) ...[
+              Align(
+                alignment: Alignment.centerRight,
+                child: TextButton.icon(
+                  onPressed: _showUpcomingVaccinations,
+                  icon: const Icon(Icons.analytics_outlined, size: 16),
+                  label: const Text(
+                    '접종 예정 내역',
+                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                  ),
+                  style: TextButton.styleFrom(
+                    foregroundColor: Colors.green,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 5,
+                    ),
+                    minimumSize: Size.zero,
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
+                ),
+              ),
+            ],
 
             const SizedBox(height: 20),
 
