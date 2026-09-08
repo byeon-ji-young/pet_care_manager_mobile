@@ -763,9 +763,9 @@ class _HealthSummaryScreenState extends State<HealthSummaryScreen> {
           if (medication.repeatType == 'none') {
             if (medication.nextDate != null) {
               final scheduledDate = DateTime(
-                medication.nextDate!.year,
-                medication.nextDate!.month,
-                medication.nextDate!.day,
+                (medication.nextDate ?? medication.medicationDate).year,
+                (medication.nextDate ?? medication.medicationDate).month,
+                (medication.nextDate ?? medication.medicationDate).day,
               );
 
               isScheduled = currentDate == scheduledDate;
@@ -1056,7 +1056,7 @@ class _HealthSummaryScreenState extends State<HealthSummaryScreen> {
                 alignment: Alignment.centerRight,
                 child: TextButton.icon(
                   onPressed: _showUpcomingVaccinations,
-                  icon: const Icon(Icons.analytics_outlined, size: 16),
+                  icon: const Icon(Icons.list_outlined, size: 16),
                   label: const Text(
                     '접종 예정 내역',
                     style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
@@ -1079,7 +1079,7 @@ class _HealthSummaryScreenState extends State<HealthSummaryScreen> {
             // 3. 약
             _buildSectionHeader('약', medicationRecordCount),
 
-            const SizedBox(height: 10),
+            const SizedBox(height: 5),
 
             _buildCard(
               child: Row(
@@ -1094,12 +1094,25 @@ class _HealthSummaryScreenState extends State<HealthSummaryScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          '등록된 약 $medicationRecordCount개',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Colors.grey[600],
-                          ),
+                        Row(
+                          children: [
+                            Text(
+                              '복용 이행률',
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.orange[700],
+                              ),
+                            ),
+                            const SizedBox(width: 6),
+                            Text(
+                              '${_formatDate(DateTimeUtils.todayKst())} 기준',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey[600],
+                              ),
+                            ),
+                          ],
                         ),
                         const SizedBox(height: 2),
                         if (medicationScheduledCount == 0)
@@ -1111,7 +1124,7 @@ class _HealthSummaryScreenState extends State<HealthSummaryScreen> {
                           Row(
                             children: [
                               const Text(
-                                '최근 30일 이행률',
+                                '최근 30일',
                                 style: TextStyle(
                                   fontSize: 14,
                                   fontWeight: FontWeight.w600,
@@ -1294,15 +1307,15 @@ class _HealthSummaryScreenState extends State<HealthSummaryScreen> {
           title,
           style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
         ),
-        if (title != '약')
-          Text(
-            '$count건',
-            style: TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w500,
-              color: Colors.grey[600],
-            ),
+
+        Text(
+          title == '약' ? '$count개' : '$count건',
+          style: TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w500,
+            color: Colors.grey[600],
           ),
+        ),
       ],
     );
   }
