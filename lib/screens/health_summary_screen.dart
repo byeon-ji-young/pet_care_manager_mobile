@@ -942,34 +942,35 @@ class _HealthSummaryScreenState extends State<HealthSummaryScreen> {
                     ),
             ),
 
-            Align(
-              alignment: Alignment.centerRight,
-              child: TextButton.icon(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) =>
-                          HospitalStatisticsScreen(petId: widget.pet.id!),
-                    ),
-                  );
-                },
-                icon: const Icon(Icons.bar_chart_outlined, size: 16),
-                label: const Text(
-                  '병원 기록 통계',
-                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
-                ),
-                style: TextButton.styleFrom(
-                  foregroundColor: Colors.blue,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 5,
+            if (hospitalRecordCount > 0)
+              Align(
+                alignment: Alignment.centerRight,
+                child: TextButton.icon(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) =>
+                            HospitalStatisticsScreen(petId: widget.pet.id!),
+                      ),
+                    );
+                  },
+                  icon: const Icon(Icons.bar_chart_outlined, size: 16),
+                  label: const Text(
+                    '병원 기록 통계',
+                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
                   ),
-                  minimumSize: Size.zero,
-                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  style: TextButton.styleFrom(
+                    foregroundColor: Colors.blue,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 5,
+                    ),
+                    minimumSize: Size.zero,
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
                 ),
               ),
-            ),
 
             const SizedBox(height: 20),
 
@@ -1119,26 +1120,27 @@ class _HealthSummaryScreenState extends State<HealthSummaryScreen> {
               ),
             ),
 
-            Align(
-              alignment: Alignment.centerRight,
-              child: TextButton.icon(
-                onPressed: _showMedicationCompletionDetail,
-                icon: const Icon(Icons.analytics_outlined, size: 16),
-                label: const Text(
-                  '복용 현황',
-                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
-                ),
-                style: TextButton.styleFrom(
-                  foregroundColor: Colors.orange,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 5,
+            if (medicationRecordCount > 0)
+              Align(
+                alignment: Alignment.centerRight,
+                child: TextButton.icon(
+                  onPressed: _showMedicationCompletionDetail,
+                  icon: const Icon(Icons.analytics_outlined, size: 16),
+                  label: const Text(
+                    '복용 현황',
+                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
                   ),
-                  minimumSize: Size.zero,
-                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  style: TextButton.styleFrom(
+                    foregroundColor: Colors.orange,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 5,
+                    ),
+                    minimumSize: Size.zero,
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
                 ),
               ),
-            ),
 
             const SizedBox(height: 20),
 
