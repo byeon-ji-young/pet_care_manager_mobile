@@ -176,6 +176,104 @@ class _HealthSummaryScreenState extends State<HealthSummaryScreen> {
     );
   }
 
+  // 날짜별 복용 현황 데이터 조회
+  Future<List<Map<String, dynamic>>> _getMedicationMissedRecords() async {
+    final medications = await DatabaseHelper.instance.getMedicationsByPetId(
+      widget.pet.id!,
+    );
+
+    final today = DateTimeUtils.todayKst();
+    final startDate = today.subtract(
+      const Duration(days: 29), // Duration(days: 29): 29일이라는 기간 생성
+    ); // subtract는 날짜에서 기간을 빼는 함수
+
+    final result = <Map<String, dynamic>>[];
+
+    for (final medication in medications) {
+      if (medication.id == null) {
+        continue;
+      }
+
+      final logs = await DatabaseHelper.instance.getMedicationLog(
+        medication.id!,
+      );
+
+      final missedDates = <DateTime>[];
+
+      final medicationStartDate = DateTime(
+        medication.medicationDate.year,
+        medication.medicationDate.month,
+        medication.medicationDate.day,
+      );
+
+      DateTime currentDate = startDate;
+
+      // currentDate가 today보다 뒤 날짜가 아닌지 판단. 즉, currentDate가 today보다 같거나 이전이면 반복
+      while (!currentDate.isAfter(today)) {
+        bool isScheduled = false; // 약을 먹어야 하는지 판단하는 용
+
+        if (!currentDate.isBefore(medicationStartDate)) {
+          if (medication.repeatType == 'none') {
+            if (medication.nextDate != null) {
+              final scheduledDate = DateTime(
+                medication.nextDate!.year,
+                medication.nextDate!.month,
+                medication.nextDate!.day,
+              );
+
+              isScheduled = currentDate == scheduledDate;
+            }
+          } else if (medication.repeatType == 'daily') {
+            isScheduled = true;
+          } else if (medication.repeatType == 'weekly') {
+            isScheduled = currentDate.weekday == medicationStartDate.weekday;
+          } else if (medication.repeatType == 'interval' &&
+              medication.repeatInterval != null &&
+              medication.repeatInterval! > 0) {
+            final difference = currentDate
+                .difference(medicationStartDate)
+                .inDays;
+
+            isScheduled = difference % medication.repeatInterval! == 0;
+          }
+        }
+
+        if (isScheduled) {
+          bool isCompleted = false;
+
+          for (final log in logs) {
+            final logDate = DateTime(
+              log.medicationDate.year,
+              log.medicationDate.month,
+              log.medicationDate.day,
+            );
+
+            if (logDate == currentDate && log.completedAt != null) {
+              isCompleted = true;
+
+              break;
+            }
+          }
+
+          if (!isCompleted) {
+            missedDates.add(currentDate);
+          }
+        }
+
+        currentDate = currentDate.add(const Duration(days: 1));
+      }
+
+      if (missedDates.isNotEmpty) {
+        result.add({
+          'medicationName': medication.medicationName,
+          'dates': missedDates.reversed.toList(),
+        });
+      }
+    }
+
+    return result;
+  }
+
   // 약 복용 상세 보기
   void _showMedicationCompletionDetail() {
     final missedCount = medicationScheduledCount - medicationCompletedCount;
@@ -292,6 +390,117 @@ class _HealthSummaryScreenState extends State<HealthSummaryScreen> {
                       ),
                     ),
                   ],
+                ),
+
+                const SizedBox(height: 20),
+
+                const Text(
+                  '복용 누락 기록',
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                  ),
+                ),
+
+                const SizedBox(height: 5),
+
+                FutureBuilder<List<Map<String, dynamic>>>(
+                  // FutureBuilder는 비동기로 데이터를 가져오는 동안 화면을 알아서 상태별로 그려주는 위젯
+                  future: _getMedicationMissedRecords(), // 실제로 데이터를 가져오는 함수 실행
+                  builder: (context, snapshot) {
+                    // builder: (context, snapshot): 데이터 상태가 바뀔 때마다 이 부분에서 무엇을 화면에 보여줄지 결정. snapshot에는 현재 데이터 상태가 들어 있음
+
+                    // 로딩 중인 경우
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 16),
+                        child: Center(child: CircularProgressIndicator()),
+                      );
+                    }
+                    // 에러 또는 데이터가 없는 경우
+                    if (snapshot.hasError || !snapshot.hasData) {
+                      return const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 12),
+                        child: Text(
+                          '복용 누락 기록을 불러오지 못했어요.',
+                          style: TextStyle(fontSize: 13, color: Colors.grey),
+                        ),
+                      );
+                    }
+
+                    final missedRecords = snapshot.data!;
+
+                    if (missedRecords.isEmpty) {
+                      return Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 5,
+                        ),
+                        // decoration: BoxDecoration(
+                        //   color: Colors.green.withValues(alpha: 0.06),
+                        //   borderRadius: BorderRadius.circular(10),
+                        // ),
+                        child: const Row(
+                          children: [
+                            Icon(
+                              Icons.check_circle_outline,
+                              size: 18,
+                              color: Colors.green,
+                            ),
+                            SizedBox(width: 8),
+                            Text(
+                              '최근 30일 동안 복용 누락이 없어요.',
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: Colors.green,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    }
+
+                    return Column(
+                      children: missedRecords.map((record) {
+                        final medicationName =
+                            record['medicationName'] as String;
+
+                        final dates = record['dates'] as List<DateTime>;
+
+                        final dateText = dates
+                            .map((date) {
+                              return '${date.month.toString().padLeft(2, '0')}.'
+                                  '${date.day.toString().padLeft(2, '0')}';
+                            })
+                            .join(' · ');
+
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 8),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  medicationName,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Text(
+                                dateText,
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.grey[600],
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      }).toList(),
+                    );
+                  },
                 ),
               ],
             ),
