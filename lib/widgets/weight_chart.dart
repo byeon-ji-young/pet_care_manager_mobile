@@ -6,21 +6,16 @@ import '../models/weight_record.dart';
 class WeightChart extends StatelessWidget {
   final List<WeightRecord> records;
 
-  const WeightChart({
-    super.key,
-    required this.records
-  });
+  const WeightChart({super.key, required this.records});
 
   @override
   Widget build(BuildContext context) {
-    if(records.length < 2) {
+    if (records.length < 2) {
       return const Center(
         child: Text(
           '체중 기록이 2개 이상 있어야\n변화 그래프를 볼 수 있습니다.',
           textAlign: TextAlign.center,
-          style: TextStyle(
-            color: Colors.grey
-          ),
+          style: TextStyle(color: Colors.grey),
         ),
       );
     }
@@ -35,8 +30,9 @@ class WeightChart extends StatelessWidget {
     (a, b) => b.date.compareTo(a.date): 최신 날짜 → 오래된 날짜 순으로 정렬
     */
     // 오래된 날짜 → 최근 날짜 순서
-    final sortedRecords = [...records] ..sort((a, b) => a.date.compareTo(b.date));
-    
+    final sortedRecords = [...records]
+      ..sort((a, b) => a.date.compareTo(b.date));
+
     /*
     sortedRecords.asMap(): index 번호를 붙여서 Map처럼 사용할 수 있게 함
     .asMap().entries: 각각의 key, value를 가져올 수 있게 함 (key: index, value: WeightRecord객체)
@@ -56,15 +52,20 @@ class WeightChart extends StatelessWidget {
 
     // 체중 최솟값 / 최댓값
     final weights = sortedRecords.map((record) => record.weight).toList();
-    final minWeight = weights.reduce((a, b) => a < b ? a : b); // reduce()는 리스트의 데이터를 두 개씩 비교하면서 하나의 값으로 합치는 함수
+    final minWeight = weights.reduce(
+      (a, b) => a < b ? a : b,
+    ); // reduce()는 리스트의 데이터를 두 개씩 비교하면서 하나의 값으로 합치는 함수
     final maxWeight = weights.reduce((a, b) => a > b ? a : b);
 
     // 그래프 위아래 여백 (Y축 최소/최대 범위 계산)
-    final chartMinY = (minWeight - 0.5).clamp(0, double.infinity).toDouble(); // clamp(최소값, 최대값). 즉, 값을 0 이상 ~ 무한대 이하로 제한. 최소값이 0보다 작아지지 않도록 함
+    final chartMinY = (minWeight - 0.5)
+        .clamp(0, double.infinity)
+        .toDouble(); // clamp(최소값, 최대값). 즉, 값을 0 이상 ~ 무한대 이하로 제한. 최소값이 0보다 작아지지 않도록 함
     final chartMaxY = maxWeight + 0.5;
 
     // 추후에 기간 설정하는 기능 추가. 지금은 최대 6개만 보여주는걸로 작업
-    final maxChartX = (sortedRecords.length > 6 ? 6 : sortedRecords.length - 1).toDouble();
+    final maxChartX = (sortedRecords.length > 6 ? 6 : sortedRecords.length - 1)
+        .toDouble();
 
     return SizedBox(
       height: 230,
@@ -78,28 +79,22 @@ class WeightChart extends StatelessWidget {
             maxY: chartMaxY,
 
             // 테두리 선 제거
-            borderData: FlBorderData(
-              show: false
-            ),
+            borderData: FlBorderData(show: false),
 
             // 배경 격자
             gridData: FlGridData(
               show: true,
               drawVerticalLine: false,
-              horizontalInterval: 0.5
+              horizontalInterval: 0.5,
             ),
 
             // 축 라벨 설정
             titlesData: FlTitlesData(
               topTitles: const AxisTitles(
-                sideTitles: SideTitles(
-                  showTitles: false
-                )
+                sideTitles: SideTitles(showTitles: false),
               ),
               rightTitles: const AxisTitles(
-                sideTitles: SideTitles(
-                  showTitles: false
-                )
+                sideTitles: SideTitles(showTitles: false),
               ),
               // y축 (체중)
               leftTitles: AxisTitles(
@@ -107,8 +102,10 @@ class WeightChart extends StatelessWidget {
                   showTitles: true,
                   reservedSize: 45, // reservedSize: 확보할 공간의 크기
                   interval: 0.5, // 0.5kg 단위로 정돈
-                  getTitlesWidget: (value, meta) { // getTitlesWidget: Y축의 숫자를 어떻게 표시할지 직접 정하는 함수
-                    if (value == chartMinY || value == chartMaxY) { // 경계선에 걸친 숫자는 화면에 그리지 않고 빈 공간 처리
+                  getTitlesWidget: (value, meta) {
+                    // getTitlesWidget: Y축의 숫자를 어떻게 표시할지 직접 정하는 함수
+                    if (value == chartMinY || value == chartMaxY) {
+                      // 경계선에 걸친 숫자는 화면에 그리지 않고 빈 공간 처리
                       return const SizedBox();
                     }
 
@@ -120,8 +117,8 @@ class WeightChart extends StatelessWidget {
                         fontWeight: FontWeight.w500,
                       ),
                     );
-                  }
-                )
+                  },
+                ),
               ),
               // x축 (날짜)
               bottomTitles: AxisTitles(
@@ -129,15 +126,17 @@ class WeightChart extends StatelessWidget {
                   showTitles: true,
                   reservedSize: 35, // reservedSize: 확보할 공간의 크기
                   interval: 1, // X축을 1칸 간격으로만 표시
-                  getTitlesWidget: (value, meta) { // getTitlesWidget: X축의 각 위치에 무엇을 표시할지 직접 결정하는 함수
+                  getTitlesWidget: (value, meta) {
+                    // getTitlesWidget: X축의 각 위치에 무엇을 표시할지 직접 결정하는 함수
                     final index = value.toInt(); // toInt(): index로 변환
 
                     // 정수가 아니면 표시하지 않기
-                    if(value != index.toDouble()) { // toDouble(): X축 위치 번호 0, 1, 2를 0.0, 1.0, 2.0이라는 double 타입으로 바꾸는 것
+                    if (value != index.toDouble()) {
+                      // toDouble(): X축 위치 번호 0, 1, 2를 0.0, 1.0, 2.0이라는 double 타입으로 바꾸는 것
                       return const SizedBox();
                     }
-                    
-                    if(index < 0 || index >= sortedRecords.length) {
+
+                    if (index < 0 || index >= sortedRecords.length) {
                       return const SizedBox();
                     }
 
@@ -153,9 +152,9 @@ class WeightChart extends StatelessWidget {
                         ),
                       ),
                     );
-                  }
-                )
-              )
+                  },
+                ),
+              ),
             ),
 
             // 실제 선 그래프
@@ -178,24 +177,29 @@ class WeightChart extends StatelessWidget {
                   },
                 ),
                 // 그래프 아래 영역
-                belowBarData: BarAreaData(
-                  show: false,
-                ),
+                belowBarData: BarAreaData(show: false),
               ),
             ],
 
             // 점을 눌렀을 때
             lineTouchData: LineTouchData(
               touchTooltipData: LineTouchTooltipData(
-                getTooltipColor: (touchedSpot) => Theme.of(context).primaryColor,
-                tooltipPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                getTooltipColor: (touchedSpot) =>
+                    Theme.of(context).primaryColor,
+                tooltipPadding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 6,
+                ),
                 getTooltipItems: (touchedSpots) {
                   return touchedSpots.map((spot) {
                     // x값을 반올림한 뒤, 인덱스 범위를 [0 ~ 마지막인덱스]로 안전하게 고정(clamp)
                     final rawIndex = spot.x.round();
-                    final index = rawIndex.clamp(0, sortedRecords.length - 1); // clamp(min, max) : 값이 특정 범위를 벗어나지 않도록 제한하는 함수 ex 10.clamp(0, 5) => 5 반환
+                    final index = rawIndex.clamp(
+                      0,
+                      sortedRecords.length - 1,
+                    ); // clamp(min, max) : 값이 특정 범위를 벗어나지 않도록 제한하는 함수 ex 10.clamp(0, 5) => 5 반환
 
-                    if(index < 0 || index >= sortedRecords.length) {
+                    if (index < 0 || index >= sortedRecords.length) {
                       return null;
                     }
 
@@ -203,10 +207,7 @@ class WeightChart extends StatelessWidget {
 
                     return LineTooltipItem(
                       '${record.date.month.toString().padLeft(2, '0')}.${record.date.day.toString().padLeft(2, '0')}\n',
-                      const TextStyle(
-                        color: Colors.white70,
-                        fontSize: 11,
-                      ),
+                      const TextStyle(color: Colors.white70, fontSize: 11),
                       children: [
                         TextSpan(
                           text: '${record.weight.toStringAsFixed(1)} kg',
@@ -219,12 +220,12 @@ class WeightChart extends StatelessWidget {
                       ],
                     );
                   }).toList();
-                }
-              )
-            )
-          )
+                },
+              ),
+            ),
+          ),
         ),
-      )
+      ),
     );
   }
 }
