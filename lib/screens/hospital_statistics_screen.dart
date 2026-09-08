@@ -2,6 +2,10 @@ import 'package:flutter/material.dart';
 
 import '../database/database_helper.dart';
 
+import '../utils/date_time_utils.dart';
+
+import '../widgets/hospital_visit_chart.dart';
+
 class HospitalStatisticsScreen extends StatefulWidget {
   final int petId;
 
@@ -16,6 +20,7 @@ class _HospitalStatisticsScreenState extends State<HospitalStatisticsScreen> {
   bool isLoading = true;
 
   int totalCount = 0;
+
   int completedCount = 0;
   int scheduledCount = 0;
   int cancelledCount = 0;
@@ -23,6 +28,8 @@ class _HospitalStatisticsScreenState extends State<HospitalStatisticsScreen> {
   int totalCost = 0;
   int costRecordCount = 0;
   int averageCost = 0;
+
+  final List<Map<String, dynamic>> monthlyVisitCounts = [];
 
   @override
   void initState() {
@@ -66,7 +73,35 @@ class _HospitalStatisticsScreenState extends State<HospitalStatisticsScreen> {
       }
     }
 
+    final now = DateTimeUtils.todayKst();
+    final monthlyCounts = <DateTime, int>{};
+
+    for (int i = 5; i >= 0; i--) {
+      final month = DateTime(
+        now.year,
+        now.month - i,
+        1,
+      ); // DateTime(now.year, now.month - i, 1)은 now.month - i가 0 이하가 되는 경우에도 Dart가 전년도 날짜로 자동 보정
+
+      monthlyCounts[month] =
+          0; // 병원에 한번도 안갔던 month도 그래프에 표시는 해야되기 때문에 값을 일단 0으로 초기화 시킴
+    }
+
+    for (final record in records) {
+      if (record.status != 'completed') {
+        continue;
+      }
+
+      final recordMonth = DateTime(record.date.year, record.date.month, 1);
+
+      if (monthlyCounts.containsKey(recordMonth)) {
+        monthlyCounts[recordMonth] = monthlyCounts[recordMonth]! + 1;
+      }
+    }
+
     setState(() {
+      isLoading = false;
+
       totalCount = records.length;
 
       completedCount = completed;
@@ -75,12 +110,16 @@ class _HospitalStatisticsScreenState extends State<HospitalStatisticsScreen> {
 
       totalCost = totalCostValue;
       costRecordCount = costCount;
-
       averageCost = costCount == 0
           ? 0
           : (totalCostValue / costCount).round(); // round(): 반올림
 
-      isLoading = false;
+      monthlyVisitCounts.clear();
+      monthlyVisitCounts.addAll(
+        monthlyCounts.entries.map(
+          (entry) => {'month': entry.key, 'count': entry.value},
+        ),
+      );
     });
   }
 
@@ -127,6 +166,11 @@ class _HospitalStatisticsScreenState extends State<HospitalStatisticsScreen> {
 
                   // 진료비
                   _buildCostCard(),
+
+                  const SizedBox(height: 16),
+
+                  // 최근 6개월 방문 그래프
+                  _buildMonthlyVisitCard(),
                 ],
               ),
             ),
@@ -319,6 +363,39 @@ class _HospitalStatisticsScreenState extends State<HospitalStatisticsScreen> {
             ),
             textAlign: TextAlign.center,
           ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMonthlyVisitCard() {
+    final totalVisits = monthlyVisitCounts.fold<int>(
+      0,
+      (sum, item) => sum + (item['count'] as int),
+    );
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.grey.shade200),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            '최근 6개월 방문 추이',
+            style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            '최근 6개월 동안 총 $totalVisits회 방문했어요.',
+            style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+          ),
+
+          HospitalVisitChart(monthlyVisitCounts: monthlyVisitCounts),
         ],
       ),
     );
