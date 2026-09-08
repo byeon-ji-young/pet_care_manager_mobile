@@ -224,30 +224,18 @@ class _HospitalStatisticsScreenState extends State<HospitalStatisticsScreen> {
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: Colors.grey.shade200),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
         children: [
+          Icon(Icons.local_hospital_outlined, size: 20, color: Colors.blue),
+          const SizedBox(width: 10),
           const Text(
-            '병원 기록',
+            '전체 병원 기록',
             style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
           ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              const Icon(
-                Icons.local_hospital_outlined,
-                size: 32,
-                color: Colors.blue,
-              ),
-              const SizedBox(width: 12),
-              Text(
-                '$totalCount건',
-                style: const TextStyle(
-                  fontSize: 28,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ],
+          const Spacer(),
+          Text(
+            '$totalCount건',
+            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
           ),
         ],
       ),
