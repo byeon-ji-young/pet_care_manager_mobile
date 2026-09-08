@@ -31,6 +31,8 @@ class _HospitalStatisticsScreenState extends State<HospitalStatisticsScreen> {
 
   final List<Map<String, dynamic>> monthlyVisitCounts = [];
 
+  final List<Map<String, dynamic>> examinationTypeCounts = [];
+
   @override
   void initState() {
     super.initState();
@@ -73,6 +75,7 @@ class _HospitalStatisticsScreenState extends State<HospitalStatisticsScreen> {
       }
     }
 
+    // 6개월 방문 횟수
     final now = DateTimeUtils.todayKst();
     final monthlyCounts = <DateTime, int>{};
 
@@ -99,6 +102,27 @@ class _HospitalStatisticsScreenState extends State<HospitalStatisticsScreen> {
       }
     }
 
+    // 검사 종류별 횟수
+    final examinationCounts = <String, int>{};
+
+    for (final record in records) {
+      final examinationType = record.examinationType?.trim().isEmpty ?? true
+          ? '검사 종류 미입력'
+          : record.examinationType!.trim();
+
+      examinationCounts[examinationType] =
+          (examinationCounts[examinationType] ?? 0) + 1;
+    }
+
+    debugPrint('전체 병원 기록 수: ${records.length}');
+
+    /*
+    b.value.compareTo(a.value) - 내림차순
+    a.value.compareTo(b.value) - 오름차순
+    */
+    final sortedExaminationCounts = examinationCounts.entries.toList()
+      ..sort((a, b) => b.value.compareTo(a.value));
+
     setState(() {
       isLoading = false;
 
@@ -118,6 +142,13 @@ class _HospitalStatisticsScreenState extends State<HospitalStatisticsScreen> {
       monthlyVisitCounts.addAll(
         monthlyCounts.entries.map(
           (entry) => {'month': entry.key, 'count': entry.value},
+        ),
+      );
+
+      examinationTypeCounts.clear();
+      examinationTypeCounts.addAll(
+        sortedExaminationCounts.map(
+          (entry) => {'type': entry.key, 'count': entry.value},
         ),
       );
     });
@@ -171,6 +202,11 @@ class _HospitalStatisticsScreenState extends State<HospitalStatisticsScreen> {
 
                   // 최근 6개월 방문 그래프
                   _buildMonthlyVisitCard(),
+
+                  const SizedBox(height: 16),
+
+                  // 검사 종류별 건수
+                  _buildExaminationTypeCard(),
                 ],
               ),
             ),
@@ -396,6 +432,88 @@ class _HospitalStatisticsScreenState extends State<HospitalStatisticsScreen> {
           ),
 
           HospitalVisitChart(monthlyVisitCounts: monthlyVisitCounts),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildExaminationTypeCard() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.grey.shade200),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment:
+                CrossAxisAlignment.center, // crossAxisAlignment: 세로 방향 정렬
+            children: [
+              const Text(
+                '검사 종류별 통계',
+                style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+              ),
+              Text(
+                '※ 등록된 병원 기록 기준',
+                style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 16),
+
+          if (examinationTypeCounts.isEmpty)
+            Center(
+              child: Padding(
+                padding: const EdgeInsetsGeometry.only(top: 20),
+                child: Text(
+                  '검사 기록이 없습니다.',
+                  style: TextStyle(fontSize: 13, color: Colors.grey[600]),
+                ),
+              ),
+            )
+          else
+            ...examinationTypeCounts.map((item) {
+              final type = item['type'] as String;
+              final count = item['count'] as int;
+
+              return Padding(
+                padding: const EdgeInsetsGeometry.only(bottom: 12),
+                child: Row(
+                  children: [
+                    const Icon(
+                      Icons.biotech_outlined,
+                      size: 20,
+                      color: Colors.teal,
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        type,
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      '$count회',
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }),
         ],
       ),
     );
