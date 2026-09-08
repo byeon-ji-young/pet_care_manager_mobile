@@ -233,10 +233,15 @@ class _HomeScreenState extends State<HomeScreen> {
                 final pet = pets[index];
 
                 return Card(
-                  elevation: 1,
+                  elevation: 0,
+                  // color: Colors.white,
                   margin: const EdgeInsets.only(bottom: 12, top: 2),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(16),
+                    side: BorderSide(
+                      color: Colors.grey.withValues(alpha: 0.3),
+                      width: 1,
+                    ),
                   ),
                   child: InkWell(
                     borderRadius: BorderRadius.circular(16),
