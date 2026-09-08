@@ -777,8 +777,8 @@ class _HealthSummaryScreenState extends State<HealthSummaryScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // 1. 병원 기록
-            _buildSectionHeader('병원 기록', hospitalRecordCount),
+            // 1. 건강
+            _buildSectionHeader('건강', hospitalRecordCount),
 
             const SizedBox(height: 5),
 
@@ -868,7 +868,7 @@ class _HealthSummaryScreenState extends State<HealthSummaryScreen> {
                 },
                 icon: const Icon(Icons.bar_chart_outlined, size: 16),
                 label: const Text(
-                  '통계 보기',
+                  '병원 기록 통계',
                   style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
                 ),
                 style: TextButton.styleFrom(
@@ -883,7 +883,7 @@ class _HealthSummaryScreenState extends State<HealthSummaryScreen> {
               ),
             ),
 
-            const SizedBox(height: 24),
+            const SizedBox(height: 20),
 
             // 2. 예방접종
             _buildSectionHeader('예방접종', vaccinationRecordCount),
@@ -946,10 +946,10 @@ class _HealthSummaryScreenState extends State<HealthSummaryScreen> {
                     ),
             ),
 
-            const SizedBox(height: 24),
+            const SizedBox(height: 20),
 
-            // 3. 약 복용
-            _buildSectionHeader('약 복용', medicationRecordCount),
+            // 3. 약
+            _buildSectionHeader('약', medicationRecordCount),
 
             const SizedBox(height: 10),
 
@@ -1014,7 +1014,7 @@ class _HealthSummaryScreenState extends State<HealthSummaryScreen> {
                 onPressed: _showMedicationCompletionDetail,
                 icon: const Icon(Icons.analytics_outlined, size: 16),
                 label: const Text(
-                  '상세 보기',
+                  '복용 현황',
                   style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
                 ),
                 style: TextButton.styleFrom(
@@ -1029,10 +1029,10 @@ class _HealthSummaryScreenState extends State<HealthSummaryScreen> {
               ),
             ),
 
-            const SizedBox(height: 24),
+            const SizedBox(height: 20),
 
-            // 4. 체중 기록
-            _buildSectionHeader('체중 기록', weightRecordCount),
+            // 4. 체중
+            _buildSectionHeader('체중', weightRecordCount),
 
             const SizedBox(height: 5),
 
@@ -1135,7 +1135,7 @@ class _HealthSummaryScreenState extends State<HealthSummaryScreen> {
                   onPressed: _showWeightChart,
                   icon: const Icon(Icons.show_chart_outlined, size: 16),
                   label: const Text(
-                    '체중 변화 보기',
+                    '체중 변화 그래프',
                     style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
                   ),
                   style: TextButton.styleFrom(
@@ -1165,7 +1165,7 @@ class _HealthSummaryScreenState extends State<HealthSummaryScreen> {
           title,
           style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
         ),
-        if (title != '약 복용')
+        if (title != '약')
           Text(
             '$count건',
             style: TextStyle(
