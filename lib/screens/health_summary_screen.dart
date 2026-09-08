@@ -366,7 +366,12 @@ class _HealthSummaryScreenState extends State<HealthSummaryScreen> {
                             ),
                           ),
                           subtitle: Text(
-                            _formatDate(vaccination.nextDate!),
+                            [
+                              if (vaccination.hospital != null &&
+                                  vaccination.hospital!.isNotEmpty)
+                                vaccination.hospital!,
+                              _formatDate(vaccination.nextDate!),
+                            ].join(' · '),
                             style: TextStyle(
                               fontSize: 13,
                               color: Colors.grey[600],
@@ -1028,6 +1033,17 @@ class _HealthSummaryScreenState extends State<HealthSummaryScreen> {
                                   color: Colors.black87,
                                 ),
                               ),
+                              if (nextVaccination!.hospital?.isNotEmpty ??
+                                  false) ...[
+                                const SizedBox(height: 1),
+                                Text(
+                                  nextVaccination!.hospital!,
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: Colors.grey[600],
+                                  ),
+                                ),
+                              ],
                             ],
                           ),
                         ),
