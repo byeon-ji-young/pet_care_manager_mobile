@@ -180,34 +180,36 @@ class _HospitalStatisticsScreenState extends State<HospitalStatisticsScreen> {
       ),
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
-          : SingleChildScrollView(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // 병원 기록 건수
-                  _buildSummaryCard(),
+          : SafeArea(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // 병원 기록 건수
+                    _buildSummaryCard(),
 
-                  const SizedBox(height: 16),
+                    const SizedBox(height: 16),
 
-                  // 병원 진료 상태
-                  _buildStatusCard(),
+                    // 병원 진료 상태
+                    _buildStatusCard(),
 
-                  const SizedBox(height: 16),
+                    const SizedBox(height: 16),
 
-                  // 진료비
-                  _buildCostCard(),
+                    // 진료비
+                    _buildCostCard(),
 
-                  const SizedBox(height: 16),
+                    const SizedBox(height: 16),
 
-                  // 최근 6개월 방문 그래프
-                  _buildMonthlyVisitCard(),
+                    // 최근 6개월 방문 그래프
+                    _buildMonthlyVisitCard(),
 
-                  const SizedBox(height: 16),
+                    const SizedBox(height: 16),
 
-                  // 검사 종류별 건수
-                  _buildExaminationTypeCard(),
-                ],
+                    // 검사 종류별 건수
+                    _buildExaminationTypeCard(),
+                  ],
+                ),
               ),
             ),
     );
