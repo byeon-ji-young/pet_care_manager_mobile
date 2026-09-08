@@ -11,6 +11,8 @@ import '../utils/date_time_utils.dart';
 
 import '../widgets/weight_chart.dart';
 
+import 'hospital_statistics_screen.dart';
+
 class HealthSummaryScreen extends StatefulWidget {
   final Pet pet;
 
@@ -850,6 +852,35 @@ class _HealthSummaryScreenState extends State<HealthSummaryScreen> {
                         ),
                       ],
                     ),
+            ),
+
+            Align(
+              alignment: Alignment.centerRight,
+              child: TextButton.icon(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) =>
+                          HospitalStatisticsScreen(petId: widget.pet.id!),
+                    ),
+                  );
+                },
+                icon: const Icon(Icons.bar_chart_outlined, size: 16),
+                label: const Text(
+                  '통계 보기',
+                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                ),
+                style: TextButton.styleFrom(
+                  foregroundColor: Colors.blue,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 5,
+                  ),
+                  minimumSize: Size.zero,
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
+              ),
             ),
 
             const SizedBox(height: 24),
