@@ -259,16 +259,6 @@ class _HomeScreenState extends State<HomeScreen> {
                             children: [
                               // 반려동물 프로필 카드
                               _PetHomeProfileHeader(pet: pet),
-
-                              const Positioned(
-                                top: 20,
-                                right: 0,
-                                child: Icon(
-                                  Icons.chevron_right,
-                                  size: 24,
-                                  color: Colors.grey,
-                                ),
-                              ),
                             ],
                           ),
 
@@ -463,6 +453,8 @@ class _PetHomeProfileHeader extends StatelessWidget {
             ],
           ),
         ),
+
+        const Icon(Icons.chevron_right, color: Colors.grey), // 중앙 자동 정렬
       ],
     );
   }
