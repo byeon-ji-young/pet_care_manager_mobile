@@ -154,8 +154,6 @@ class _HealthSummaryScreenState extends State<HealthSummaryScreen> {
                   ],
                 ),
 
-                const SizedBox(height: 10),
-
                 // 3. 차트를 감싸는 깔끔한 메인 카드
                 Card(
                   elevation: 0,
@@ -210,19 +208,17 @@ class _HealthSummaryScreenState extends State<HealthSummaryScreen> {
 
       // currentDate가 today보다 뒤 날짜가 아닌지 판단. 즉, currentDate가 today보다 같거나 이전이면 반복
       while (!currentDate.isAfter(today)) {
-        bool isScheduled = false; // 약을 먹어야 하는지 판단하는 용
+        bool isScheduled = false;
 
         if (!currentDate.isBefore(medicationStartDate)) {
           if (medication.repeatType == 'none') {
-            if (medication.nextDate != null) {
-              final scheduledDate = DateTime(
-                medication.nextDate!.year,
-                medication.nextDate!.month,
-                medication.nextDate!.day,
-              );
+            final scheduledDate = DateTime(
+              (medication.nextDate ?? medication.medicationDate).year,
+              (medication.nextDate ?? medication.medicationDate).month,
+              (medication.nextDate ?? medication.medicationDate).day,
+            );
 
-              isScheduled = currentDate == scheduledDate;
-            }
+            isScheduled = currentDate == scheduledDate;
           } else if (medication.repeatType == 'daily') {
             isScheduled = true;
           } else if (medication.repeatType == 'weekly') {
@@ -250,13 +246,40 @@ class _HealthSummaryScreenState extends State<HealthSummaryScreen> {
 
             if (logDate == currentDate && log.completedAt != null) {
               isCompleted = true;
-
               break;
             }
           }
 
+          // 이미 복용 완료한 경우
           if (!isCompleted) {
-            missedDates.add(currentDate);
+            bool isMissed = true;
+
+            // 오늘 복용하는 약이라면 시간까지 확인
+            if (currentDate == today) {
+              // 복용 시간이 없으면 아직 누락으로 판단하지 않음
+              if (medication.medicationTime == null) {
+                isMissed = false;
+              } else {
+                final now = DateTimeUtils.nowKst();
+
+                final medicationDateTime = DateTime(
+                  today.year,
+                  today.month,
+                  today.day,
+                  medication.medicationTime!.hour,
+                  medication.medicationTime!.minute,
+                );
+
+                // 아직 복용 시간이 지나지 않았으면 누락 아님
+                if (now.isBefore(medicationDateTime)) {
+                  isMissed = false;
+                }
+              }
+            }
+
+            if (isMissed) {
+              missedDates.add(currentDate);
+            }
           }
         }
 
@@ -361,7 +384,7 @@ class _HealthSummaryScreenState extends State<HealthSummaryScreen> {
                   ),
                 ),
 
-                const SizedBox(height: 8),
+                // const SizedBox(height: 8),
 
                 // 복용 통계
                 Row(
@@ -392,7 +415,7 @@ class _HealthSummaryScreenState extends State<HealthSummaryScreen> {
                   ],
                 ),
 
-                const SizedBox(height: 20),
+                const SizedBox(height: 24),
 
                 const Text(
                   '복용 누락 기록',
@@ -403,7 +426,7 @@ class _HealthSummaryScreenState extends State<HealthSummaryScreen> {
                   ),
                 ),
 
-                const SizedBox(height: 5),
+                const SizedBox(height: 8),
 
                 FutureBuilder<List<Map<String, dynamic>>>(
                   // FutureBuilder는 비동기로 데이터를 가져오는 동안 화면을 알아서 상태별로 그려주는 위젯
@@ -1081,7 +1104,7 @@ class _HealthSummaryScreenState extends State<HealthSummaryScreen> {
                   onPressed: _showWeightChart,
                   icon: const Icon(Icons.show_chart_outlined, size: 16),
                   label: const Text(
-                    '체중 변화 그래프',
+                    '체중 변화 보기',
                     style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
                   ),
                   style: TextButton.styleFrom(

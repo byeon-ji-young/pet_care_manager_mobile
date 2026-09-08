@@ -736,8 +736,6 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
                   ],
                 ),
 
-                const SizedBox(height: 10),
-
                 // 3. 차트를 감싸는 깔끔한 메인 카드
                 Card(
                   elevation: 0,
