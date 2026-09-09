@@ -269,6 +269,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
                           const SizedBox(height: 20),
 
+                          // 오늘 예정된 건강관리 요약
                           _buildTodayHealthSummary(pet),
                         ],
                       ),
