@@ -6,7 +6,11 @@ import '../models/medication.dart';
 
 import '../utils/date_time_utils.dart';
 
+import '../screens/upcoming_health_tasks_screen.dart';
+
 class UpcomingHealthTasks extends StatelessWidget {
+  final int petId;
+
   final List<HealthRecord> healthRecords;
   final List<Vaccination> vaccinations;
   final List<Medication> medications;
@@ -17,6 +21,7 @@ class UpcomingHealthTasks extends StatelessWidget {
 
   const UpcomingHealthTasks({
     super.key,
+    required this.petId,
     required this.healthRecords,
     required this.vaccinations,
     required this.medications,
@@ -27,237 +32,284 @@ class UpcomingHealthTasks extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        if (healthRecords.isNotEmpty) _buildHealthRecordGroupCard(context),
+    final tasks = <_UpcomingTask>[]; // _UpcomingTask 객체를 담을 수 있는 빈 리스트 생성
 
-        if (vaccinations.isNotEmpty) _buildVaccinationGroupCard(context),
+    // 병원 기록
+    for (final record in healthRecords) {
+      tasks.add(
+        _UpcomingTask(
+          date: record.date,
+          title: record.title,
+          subtitle: record.hospital,
+          icon: Icons.local_hospital_outlined,
+          color: Colors.blue,
+          onTap: () => onHealthRecordTap(record),
+        ),
+      );
+    }
 
-        if (medications.isNotEmpty) _buildMedicationGroupCard(context),
-      ],
-    );
-  }
+    // 예방접종
+    for (final vaccination in vaccinations) {
+      if (vaccination.nextDate == null) {
+        continue;
+      }
 
-  // 공통 예정 알림 아이템 (병원기록, 예방접종, 약 복용 알림 카드)
-  Widget _buildBannerItem({
-    required BuildContext context,
-    required String title,
-    required DateTime targetDate,
-    required String categoryType, // 'hospital', 'vaccine', 'medication'
-    VoidCallback? onTap,
-  }) {
-    final today = DateTimeUtils.todayKst();
-    final todayDate = DateTime(today.year, today.month, today.day);
-    final tDate = DateTime(targetDate.year, targetDate.month, targetDate.day);
+      tasks.add(
+        _UpcomingTask(
+          date: vaccination.nextDate!,
+          title: vaccination.vaccineName,
+          subtitle: vaccination.hospital,
+          icon: Icons.vaccines_outlined,
+          color: Colors.green,
+          onTap: () => onVaccinationTap(vaccination),
+        ),
+      );
+    }
 
-    final difference = tDate.difference(todayDate).inDays;
+    // 약
+    for (final medication in medications) {
+      if (medication.nextDate == null) {
+        continue;
+      }
 
-    Color textColor;
-    IconData iconData;
-    String message;
+      tasks.add(
+        _UpcomingTask(
+          date: medication.nextDate!,
+          title: medication.medicationName,
+          subtitle: medication.medicationTime?.format(
+            context,
+          ), // ?.은 null-safety 연산자 - null이면 format() 실행 안하고 null 반환 / null이 아니면 format() 실행
+          icon: Icons.medication_outlined,
+          color: Colors.orange,
+          onTap: () => onMedicationTap(medication),
+        ),
+      );
+    }
+
+    // 날짜가 가까운 순서대로 정렬
+    /*
+    b.date.compareTo(a.date) - 내림차순
+    a.date.compareTo(b.date) - 오름차순
+    */
+    tasks.sort((a, b) => a.date.compareTo(b.date));
+
+    final visibleTasks = tasks.take(3).toList();
+
+    // 예정 일정이 없으면 표시하지 않음
+    if (tasks.isEmpty) {
+      return const SizedBox.shrink(); // shrink()는 가능한 한 크기를 작게 줄인다는 의미. 즉, 여기에 아무것도 그리지 말고 공간도 차지하지 않게 하라는 뜻
+    }
 
     final primaryColor = Theme.of(context).primaryColor;
 
-    if (difference == 0) {
-      textColor = Colors.red.shade900;
-      iconData = Icons.notifications_active_outlined;
-
-      if (categoryType == 'vaccine') {
-        message = '오늘은 $title 예방접종 날이에요!';
-      } else if (categoryType == 'medication') {
-        message = '오늘은 $title 복용일이에요!';
-      } else {
-        message = '오늘은 $title 병원 방문일이에요!';
-      }
-    } else if (difference > 0) {
-      textColor = primaryColor.withValues(alpha: 0.9);
-      iconData = Icons.event_available_rounded;
-
-      if (categoryType == 'vaccine') {
-        message = '$title 예방접종까지 $difference일 남았어요.';
-      } else if (categoryType == 'medication') {
-        message = '$title 복용까지 $difference일 남았어요.';
-      } else {
-        message = '$title 병원 방문까지 $difference일 남았어요.';
-      }
-    } else {
-      textColor = Colors.red.shade900;
-      iconData = Icons.warning_amber_rounded;
-
-      if (categoryType == 'vaccine') {
-        message = '$title 예방접종 예정일이 ${difference.abs()}일 지났어요!';
-      } else if (categoryType == 'medication') {
-        message = '$title 복용 예정일이 ${difference.abs()}일 지났어요!';
-      } else {
-        message = '$title 병원 방문 예정일이 ${difference.abs()}일 지났어요!';
-      }
-    }
-
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(8),
-        child: Row(
-          children: [
-            Icon(iconData, color: textColor, size: 20),
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: Theme.of(context).primaryColor.withValues(alpha: 0.3),
+          ),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(Icons.today_outlined, color: primaryColor, size: 20),
 
-            const SizedBox(width: 12),
+                  const SizedBox(width: 8),
 
-            Expanded(
-              child: Text(
-                message,
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: textColor,
-                ),
+                  const Text(
+                    '다가오는 건강 관리',
+                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+                  ),
+
+                  const SizedBox(width: 6),
+
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 7,
+                      vertical: 2,
+                    ),
+                    decoration: BoxDecoration(
+                      color: primaryColor.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Text(
+                      '${tasks.length}',
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.bold,
+                        color: primaryColor,
+                      ),
+                    ),
+                  ),
+                ],
               ),
-            ),
 
-            if (onTap != null)
-              Icon(Icons.chevron_right, color: Colors.grey[400], size: 20),
-          ],
+              const SizedBox(height: 8),
+
+              ...visibleTasks.map(
+                (task) => _buildUpcomingTaskItem(context, task),
+              ),
+
+              // 전체 일정이 3개보다 많을 때만 전체 보기 표시
+              if (tasks.length > 3) ...[
+                Container(
+                  margin: const EdgeInsets.only(top: 4),
+                  decoration: BoxDecoration(
+                    border: Border(
+                      top: BorderSide(
+                        color: Colors.grey.withValues(alpha: 0.15),
+                      ),
+                    ),
+                  ),
+                  child: InkWell(
+                    onTap: () async {
+                      await Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) =>
+                              UpcomingHealthTasksScreen(petId: petId),
+                        ),
+                      );
+                    },
+                    borderRadius: const BorderRadius.vertical(
+                      bottom: Radius.circular(16),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            '전체 일정 보기',
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                              color: Theme.of(context).primaryColor,
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                          Icon(
+                            Icons.chevron_right,
+                            size: 18,
+                            color: Theme.of(context).primaryColor,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ],
+          ),
         ),
       ),
     );
   }
 
-  // 병원 방문 알림 카드 그룹화
-  Widget _buildHealthRecordGroupCard(BuildContext context) {
-    final items = healthRecords.take(2).toList();
+  Widget _buildUpcomingTaskItem(BuildContext context, _UpcomingTask task) {
+    final today = DateTimeUtils.todayKst();
 
-    final primaryColor = Theme.of(context).primaryColor;
+    final taskDate = DateTime(task.date.year, task.date.month, task.date.day);
 
-    return Container(
-      width: double.infinity,
-      margin: const EdgeInsets.only(bottom: 12),
-      decoration: BoxDecoration(
-        color: primaryColor.withValues(alpha: 0.05),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: primaryColor.withValues(alpha: 0.3)),
-      ),
-      child: Column(
-        children: List.generate(items.length, (index) {
-          // List.generate: items의 개수만큼 UI 생성
-          final item = items[index];
+    final todayDate = DateTime(today.year, today.month, today.day);
 
-          return Column(
-            children: [
-              _buildBannerItem(
-                context: context,
-                title: item.title,
-                targetDate: item.date,
-                categoryType: 'hospital',
-                onTap: () {
-                  onHealthRecordTap(item);
-                },
+    final difference = taskDate.difference(todayDate).inDays;
+
+    final dateText = '${task.date.month}월 ${task.date.day}일';
+
+    final remainingText = difference == 1 ? '내일' : '$difference일 후';
+
+    return InkWell(
+      onTap: task.onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        child: Row(
+          children: [
+            // 아이콘
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: task.color.withValues(alpha: 0.1),
+                shape: BoxShape.circle,
               ),
+              child: Icon(task.icon, color: task.color, size: 21),
+            ),
 
-              if (index < items.length - 1)
-                Divider(
-                  height: 1,
-                  thickness: 1,
-                  color: primaryColor.withValues(alpha: 0.2),
-                  indent: 16,
-                  endIndent: 16,
-                ),
-            ],
-          );
-        }),
+            const SizedBox(width: 12),
+
+            // 일정 정보
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    task.title,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+
+                  const SizedBox(height: 4),
+
+                  Text(
+                    [
+                      dateText,
+                      if (task.subtitle != null && task.subtitle!.isNotEmpty)
+                        task.subtitle!,
+                    ].join(' · '),
+                    style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(width: 8),
+
+            // 남은 날짜
+            Text(
+              remainingText,
+              style: TextStyle(
+                fontSize: 12,
+                color: task.color,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+
+            const SizedBox(width: 4),
+
+            // 상세 화면 이동
+            Icon(Icons.chevron_right, size: 20, color: Colors.grey[400]),
+          ],
+        ),
       ),
     );
   }
+}
 
-  // 예방 접종 알림 카드 그룹화
-  Widget _buildVaccinationGroupCard(BuildContext context) {
-    final items = vaccinations.take(2).toList();
+class _UpcomingTask {
+  final DateTime date;
+  final String title;
+  final String? subtitle;
+  final IconData icon;
+  final Color color;
+  final Future<void> Function() onTap;
 
-    final primaryColor = Theme.of(context).primaryColor;
-
-    return Container(
-      width: double.infinity,
-      margin: const EdgeInsets.only(bottom: 12),
-      decoration: BoxDecoration(
-        color: primaryColor.withValues(alpha: 0.05),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: primaryColor.withValues(alpha: 0.3)),
-      ),
-      child: Column(
-        children: List.generate(items.length, (index) {
-          final item = items[index];
-
-          return Column(
-            children: [
-              if (item.nextDate != null)
-                _buildBannerItem(
-                  context: context,
-                  title: item.vaccineName,
-                  targetDate: item.nextDate!,
-                  categoryType: 'vaccine',
-                  onTap: () {
-                    onVaccinationTap(item);
-                  },
-                ),
-
-              if (index < items.length - 1)
-                Divider(
-                  height: 1,
-                  thickness: 1,
-                  color: primaryColor.withValues(alpha: 0.2),
-                  indent: 16,
-                  endIndent: 16,
-                ),
-            ],
-          );
-        }),
-      ),
-    );
-  }
-
-  // 약 복용 알림 카드 그룹화
-  Widget _buildMedicationGroupCard(BuildContext context) {
-    final items = medications.take(2).toList();
-
-    final primaryColor = Theme.of(context).primaryColor;
-
-    return Container(
-      width: double.infinity,
-      margin: const EdgeInsets.only(bottom: 12),
-      decoration: BoxDecoration(
-        color: primaryColor.withValues(alpha: 0.05),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: primaryColor.withValues(alpha: 0.3)),
-      ),
-      child: Column(
-        children: List.generate(items.length, (index) {
-          final item = items[index];
-
-          return Column(
-            children: [
-              if (item.nextDate != null)
-                _buildBannerItem(
-                  context: context,
-                  title: item.medicationName,
-                  targetDate: item.nextDate!,
-                  categoryType: 'medication',
-                  onTap: () {
-                    onMedicationTap(item);
-                  },
-                ),
-
-              if (index < items.length - 1)
-                Divider(
-                  height: 1,
-                  thickness: 1,
-                  color: primaryColor.withValues(alpha: 0.2),
-                  indent: 16,
-                  endIndent: 16,
-                ),
-            ],
-          );
-        }),
-      ),
-    );
-  }
+  _UpcomingTask({
+    required this.date,
+    required this.title,
+    required this.subtitle,
+    required this.icon,
+    required this.color,
+    required this.onTap,
+  });
 }

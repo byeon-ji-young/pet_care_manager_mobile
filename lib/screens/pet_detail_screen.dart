@@ -1554,7 +1554,7 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
 
               const SizedBox(height: 10),
 
-              // 3. 오늘 해야 할 일
+              // 3. 오늘의 건강 관리
               TodayHealthTasks(
                 petId: pet.id!,
                 healthRecords: todayHealthRecords,
@@ -1580,8 +1580,9 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
 
               const SizedBox(height: 4),
 
-              // 4. 예정 알림
+              // 4. 다가오는 건강 관리
               UpcomingHealthTasks(
+                petId: pet.id!,
                 healthRecords: upcomingHealthRecords,
                 vaccinations: upcomingVaccinations,
                 medications: upcomingMedications,
