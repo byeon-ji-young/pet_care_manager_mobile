@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../models/health_record.dart';
 import '../models/vaccination.dart';
+import '../models/past_medication_history.dart';
 
 import '../utils/date_time_utils.dart';
 
@@ -10,6 +11,7 @@ import '../database/database_helper.dart';
 import '../screens/health_record_register_screen.dart';
 import '../screens/vaccination_register_screen.dart';
 import '../screens/past_health_tasks_screen.dart';
+import '../screens/medication_history_screen.dart';
 
 class PastHealthTasks extends StatefulWidget {
   final int petId;
@@ -23,6 +25,7 @@ class PastHealthTasks extends StatefulWidget {
 class _PastHealthTasksState extends State<PastHealthTasks> {
   List<HealthRecord> healthRecords = [];
   List<Vaccination> vaccinations = [];
+  List<PastMedicationHistory> medicationHistories = [];
 
   bool isLoading = true;
 
@@ -40,6 +43,9 @@ class _PastHealthTasksState extends State<PastHealthTasks> {
     final vaccinations = await DatabaseHelper.instance.getPastVaccinations(
       widget.petId,
     );
+
+    final medicationHistories = await DatabaseHelper.instance
+        .getPastMedicationHistory(widget.petId);
 
     final tasks = <_PastTask>[];
 
@@ -99,6 +105,30 @@ class _PastHealthTasksState extends State<PastHealthTasks> {
       );
     }
 
+    // 약 복용
+    for (final history in medicationHistories) {
+      tasks.add(
+        _PastTask(
+          date: history.medicationDate,
+          title: history.medication.medicationName,
+          subtitle: history.isCompleted ? '복용 완료' : '복용 누락',
+          icon: Icons.medication_outlined,
+          color: Colors.orange,
+          onTap: () async {
+            await Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) =>
+                    MedicationHistoryScreen(medication: history.medication),
+              ),
+            );
+
+            await _loadPastTasks();
+          },
+        ),
+      );
+    }
+
     // 최신 날짜가 위로 오도록 정렬
     tasks.sort((a, b) => b.date.compareTo(a.date));
 
@@ -109,6 +139,8 @@ class _PastHealthTasksState extends State<PastHealthTasks> {
     setState(() {
       this.healthRecords = healthRecords;
       this.vaccinations = vaccinations;
+      this.medicationHistories = medicationHistories;
+
       _tasks = tasks;
       isLoading = false;
     });

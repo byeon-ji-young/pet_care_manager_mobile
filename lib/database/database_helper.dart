@@ -11,6 +11,7 @@ import '../models/vaccination.dart';
 import '../models/weight_record.dart';
 import '../models/medication.dart';
 import '../models/medication_log.dart';
+import '../models/past_medication_history.dart';
 
 import '../utils/date_time_utils.dart';
 
@@ -1261,6 +1262,108 @@ class DatabaseHelper {
 
       rethrow;
     }
+  }
+
+  // ========================================================= past_medication_hisptory =========================================================
+  // 지난 약 복용 조회
+  Future<List<PastMedicationHistory>> getPastMedicationHistory(
+    int petId,
+  ) async {
+    final medications = await getMedicationsByPetId(petId);
+
+    final today = DateTimeUtils.todayKst();
+
+    final items = <PastMedicationHistory>[];
+
+    for (final medication in medications) {
+      if (medication.id == null) {
+        continue;
+      }
+
+      // 이 약의 실제 복용 완료 로그 조회
+      final logs = await getMedicationLog(medication.id!);
+
+      final startDate = DateTime(
+        medication.medicationDate.year,
+        medication.medicationDate.month,
+        medication.medicationDate.day,
+      );
+
+      DateTime currentDate = startDate;
+
+      while (currentDate.isBefore(today)) {
+        bool isScheduled = false;
+
+        // 반복 없음
+        if (medication.repeatType == 'none') {
+          // 최초 복용일
+          if (currentDate == startDate) {
+            isScheduled = true;
+          }
+
+          // 다음 복용일이 지정되어 있는 경우
+          if (medication.nextDate != null) {
+            final scheduledDate = DateTime(
+              medication.nextDate!.year,
+              medication.nextDate!.month,
+              medication.nextDate!.day,
+            );
+
+            if (currentDate == scheduledDate) {
+              isScheduled = true;
+            }
+          }
+        }
+        // 매일
+        else if (medication.repeatType == 'daily') {
+          isScheduled = true;
+        }
+        // 매주
+        else if (medication.repeatType == 'weekly') {
+          isScheduled = currentDate.weekday == startDate.weekday;
+        }
+        // N일마다
+        else if (medication.repeatType == 'interval' &&
+            medication.repeatInterval != null &&
+            medication.repeatInterval! > 0) {
+          final difference = currentDate.difference(startDate).inDays;
+
+          isScheduled = difference % medication.repeatInterval! == 0;
+        }
+
+        if (isScheduled) {
+          MedicationLog? matchingLog;
+
+          for (final log in logs) {
+            final logDate = DateTime(
+              log.medicationDate.year,
+              log.medicationDate.month,
+              log.medicationDate.day,
+            );
+
+            if (logDate == currentDate) {
+              matchingLog = log;
+              break;
+            }
+          }
+
+          items.add(
+            PastMedicationHistory(
+              medication: medication,
+              medicationDate: currentDate,
+              completedAt: matchingLog?.completedAt,
+            ),
+          );
+        }
+
+        currentDate = currentDate.add(const Duration(days: 1));
+      }
+    }
+
+    // 최신 날짜가 위로 오도록 정렬
+    items.sort((a, b) => b.medicationDate.compareTo(a.medicationDate));
+
+    return items;
   }
 
   // ========================================================= backup =========================================================

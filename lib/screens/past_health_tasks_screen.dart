@@ -4,6 +4,7 @@ import '../database/database_helper.dart';
 
 import '../screens/health_record_register_screen.dart';
 import '../screens/vaccination_register_screen.dart';
+import '../screens/medication_history_screen.dart';
 
 class PastHealthTasksScreen extends StatefulWidget {
   final int petId;
@@ -33,6 +34,9 @@ class _PastHealthTasksScreenState extends State<PastHealthTasksScreen> {
     final vaccinations = await DatabaseHelper.instance.getPastVaccinations(
       widget.petId,
     );
+
+    final medicationHistories = await DatabaseHelper.instance
+        .getPastMedicationHistory(widget.petId);
 
     final pastTasks = <_PastTask>[];
 
@@ -87,6 +91,32 @@ class _PastHealthTasksScreenState extends State<PastHealthTasksScreen> {
             if (result != null) {
               await _loadPastTasks();
             }
+          },
+        ),
+      );
+    }
+
+    // 약 복용
+    for (final history in medicationHistories) {
+      pastTasks.add(
+        _PastTask(
+          title: history.medication.medicationName,
+          subtitle: null,
+          date: history.medicationDate,
+          icon: Icons.medication_outlined,
+          color: Colors.orange,
+          statusText: history.isCompleted ? '복용 완료' : '복용 누락',
+          statusColor: history.isCompleted ? Colors.green : Colors.redAccent,
+          onTap: () async {
+            await Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) =>
+                    MedicationHistoryScreen(medication: history.medication),
+              ),
+            );
+
+            await _loadPastTasks();
           },
         ),
       );
@@ -189,6 +219,19 @@ class _PastHealthTasksScreenState extends State<PastHealthTasksScreen> {
                 ),
               ),
 
+              // 약 복용 상태
+              if (task.statusText != null) ...[
+                const SizedBox(width: 8),
+                Text(
+                  task.statusText!,
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: task.statusColor,
+                  ),
+                ),
+              ],
+
               const SizedBox(width: 8),
 
               Icon(Icons.chevron_right, color: Colors.grey[400]),
@@ -211,6 +254,9 @@ class _PastTask {
   final IconData icon;
   final Color color;
 
+  final String? statusText;
+  final Color statusColor;
+
   final Future<void> Function() onTap;
 
   _PastTask({
@@ -219,6 +265,8 @@ class _PastTask {
     required this.date,
     required this.icon,
     required this.color,
+    this.statusText,
+    this.statusColor = Colors.grey,
     required this.onTap,
   });
 }
