@@ -176,7 +176,7 @@ class _TodayHealthTasksState extends State<TodayHealthTasks> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Text(
-                          '오늘 일정 전체 보기',
+                          '전체 일정 보기',
                           style: TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.w600,
