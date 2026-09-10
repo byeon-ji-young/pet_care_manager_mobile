@@ -725,10 +725,19 @@ class DatabaseHelper {
       'vaccinations',
       where: '''
         pet_id = ?
-        AND vaccination_date >= ?
-        AND vaccination_date < ?
+        AND (
+          (vaccination_date >= ? AND vaccination_date < ?)
+          OR
+          (next_date >= ? AND next_date < ?)
+        )
       ''',
-      whereArgs: [petId, today.toIso8601String(), tomorrow.toIso8601String()],
+      whereArgs: [
+        petId,
+        today.toIso8601String(),
+        tomorrow.toIso8601String(),
+        today.toIso8601String(),
+        tomorrow.toIso8601String(),
+      ],
       orderBy: 'next_date ASC',
     );
 
