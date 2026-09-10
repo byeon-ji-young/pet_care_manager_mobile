@@ -466,7 +466,7 @@ class _TodayHealthTasksState extends State<TodayHealthTasks> {
         case 'passed':
           icon = Icons.notifications_active_outlined;
           color = Colors.redAccent;
-          statusText = '복용 시간이 지났어요';
+          statusText = '복용 누락';
           break;
 
         case 'upcoming':

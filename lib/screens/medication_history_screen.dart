@@ -109,6 +109,7 @@ class _MedicationHistoryScreenState extends State<MedicationHistoryScreen> {
         items.add(
           MedicationHistoryItem(
             medicationDate: currentDate,
+            medicationTime: medication.medicationTime,
             completedAt: matchingLog?.completedAt,
           ),
         );
@@ -202,10 +203,20 @@ class _MedicationHistoryScreenState extends State<MedicationHistoryScreen> {
               radius: 22,
               backgroundColor: completed
                   ? Colors.green.withValues(alpha: 0.1)
+                  : item.isMissed
+                  ? Colors.redAccent.withValues(alpha: 0.1)
                   : Colors.grey.withValues(alpha: 0.1),
               child: Icon(
-                completed ? Icons.check_circle : Icons.schedule_outlined,
-                color: completed ? Colors.green : Colors.grey,
+                completed
+                    ? Icons.check_circle
+                    : item.isMissed
+                    ? Icons.error_outline
+                    : Icons.schedule_outlined,
+                color: completed
+                    ? Colors.green
+                    : item.isMissed
+                    ? Colors.redAccent
+                    : Colors.grey,
                 size: 24,
               ),
             ),
@@ -230,11 +241,15 @@ class _MedicationHistoryScreenState extends State<MedicationHistoryScreen> {
                   Text(
                     completed && item.completedAt != null
                         ? '복용 완료 ${_formatTime(item.completedAt!)}'
-                        : '복용하지 않음',
+                        : item.isMissed
+                        ? '복용 누락'
+                        : '복용 예정',
                     style: TextStyle(
                       fontSize: 13,
                       color: completed
                           ? Colors.green.shade700
+                          : item.isMissed
+                          ? Colors.redAccent
                           : Colors.grey[600],
                     ),
                   ),
