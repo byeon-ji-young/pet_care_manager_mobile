@@ -109,7 +109,11 @@ class _TodayHealthTasksState extends State<TodayHealthTasks> {
           children: [
             Row(
               children: [
-                Icon(Icons.today_outlined, color: primaryColor, size: 20),
+                Icon(
+                  Icons.event_available_outlined,
+                  color: primaryColor,
+                  size: 20,
+                ),
 
                 const SizedBox(width: 8),
 
@@ -232,10 +236,10 @@ class _TodayHealthTasksState extends State<TodayHealthTasks> {
             children: [
               CircleAvatar(
                 radius: 18,
-                backgroundColor: color.withValues(alpha: 0.1),
+                backgroundColor: Colors.blue.withValues(alpha: 0.1),
                 child: Icon(
                   Icons.local_hospital_outlined,
-                  color: color,
+                  color: Colors.blue,
                   size: 20,
                 ),
               ),
@@ -360,8 +364,12 @@ class _TodayHealthTasksState extends State<TodayHealthTasks> {
             children: [
               CircleAvatar(
                 radius: 18,
-                backgroundColor: color.withValues(alpha: 0.1),
-                child: Icon(Icons.vaccines_outlined, color: color, size: 20),
+                backgroundColor: Colors.green.withValues(alpha: 0.1),
+                child: Icon(
+                  Icons.vaccines_outlined,
+                  color: Colors.green,
+                  size: 20,
+                ),
               ),
               const SizedBox(width: 12),
               Expanded(

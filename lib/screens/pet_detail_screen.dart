@@ -13,6 +13,7 @@ import '../widgets/weight_chart.dart';
 import '../widgets/pet_profile_header.dart';
 import '../widgets/today_health_tasks.dart';
 import '../widgets/upcoming_health_tasks.dart';
+import '../widgets/past_health_tasks.dart';
 
 import 'pet_register_screen.dart';
 import 'health_record_register_screen.dart';
@@ -1663,7 +1664,10 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
                 },
               ),
 
-              // 5. 건강 기록 카드 (+캘린더)
+              // 5. 지난 건강 관리
+              PastHealthTasks(petId: pet.id!),
+
+              // 6. 건강 기록 카드 (+캘린더)
               Card(
                 elevation: 0,
                 shape: RoundedRectangleBorder(

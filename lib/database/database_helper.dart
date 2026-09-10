@@ -625,6 +625,22 @@ class DatabaseHelper {
     return maps.map((map) => HealthRecordImage.fromMap(map)).toList();
   }
 
+  // 지난 병원 기록 조회
+  Future<List<HealthRecord>> getPastHealthRecords(int petId) async {
+    final db = await database;
+
+    final today = DateTimeUtils.todayKst();
+
+    final maps = await db.query(
+      'health_records',
+      where: 'pet_id = ? AND date < ?',
+      whereArgs: [petId, today.toIso8601String()],
+      orderBy: 'date DESC, time DESC',
+    );
+
+    return maps.map((map) => HealthRecord.fromMap(map)).toList();
+  }
+
   // ========================================================= vaccination =========================================================
   // 예방접종 등록
   Future<int> insertVaccination(Vaccination vaccination) async {
@@ -776,6 +792,22 @@ class DatabaseHelper {
       debugPrint('예방접종 완료 취소 실패: $e');
       rethrow;
     }
+  }
+
+  // 지난 예방접종 조회
+  Future<List<Vaccination>> getPastVaccinations(int petId) async {
+    final db = await database;
+
+    final today = DateTimeUtils.todayKst();
+
+    final maps = await db.query(
+      'vaccinations',
+      where: 'pet_id = ? AND vaccination_date < ?',
+      whereArgs: [petId, today.toIso8601String()],
+      orderBy: 'vaccination_date DESC',
+    );
+
+    return maps.map((map) => Vaccination.fromMap(map)).toList();
   }
 
   // ========================================================= weight_records =========================================================
