@@ -23,8 +23,6 @@ class TodayHealthTasks extends StatefulWidget {
 
   final Future<void> Function()? onDataChanged;
 
-  final bool showEmptyMessage;
-
   const TodayHealthTasks({
     super.key,
     required this.petId,
@@ -33,7 +31,6 @@ class TodayHealthTasks extends StatefulWidget {
     required this.medications,
     required this.completedMedicationIds,
     this.onDataChanged,
-    this.showEmptyMessage = false,
   });
 
   @override
@@ -50,30 +47,27 @@ class _TodayHealthTasksState extends State<TodayHealthTasks> {
   Widget build(BuildContext context) {
     // 오늘 해야 할 일이 없으면 카드 숨김
     if (totalCount == 0) {
-      if (!widget.showEmptyMessage) {
-        return const SizedBox.shrink(); // 아무것도 차지하지 않는 빈 공간을 만드는 위젯. 가로 0, 세로 0인 SizedBox라고 생각하면 됨
-      }
-
-      return Container(
-        width: double.infinity,
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-        margin: const EdgeInsets.only(top: 24),
-        decoration: BoxDecoration(
-          color: Colors.grey.withValues(alpha: 0.08),
-          borderRadius: BorderRadius.circular(10),
-        ),
-        child: Text(
-          '🐾 오늘 예정된 건강 관리가 없어요.',
-          style: TextStyle(
-            fontSize: 13,
-            color: Colors.grey[700],
-            fontWeight: FontWeight.w500,
+      return Padding(
+        padding: const EdgeInsets.all(10),
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          // decoration: BoxDecoration(
+          //   color: Colors.grey.withValues(alpha: 0.08),
+          //   borderRadius: BorderRadius.circular(10),
+          // ),
+          child: Text(
+            '오늘 예정된 건강 관리가 없어요.',
+            style: TextStyle(
+              fontSize: 13,
+              color: Colors.grey[700],
+              fontWeight: FontWeight.w500,
+            ),
+            textAlign: TextAlign.center,
           ),
         ),
       );
     }
-
-    final primaryColor = Theme.of(context).primaryColor;
 
     final taskWidgets = <Widget>[
       // 병원
@@ -94,59 +88,12 @@ class _TodayHealthTasksState extends State<TodayHealthTasks> {
 
     return Container(
       width: double.infinity,
-      margin: widget.showEmptyMessage
-          ? const EdgeInsets.only(top: 24)
-          : const EdgeInsets.only(bottom: 12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: primaryColor.withValues(alpha: 0.35)),
-      ),
+      margin: const EdgeInsets.only(bottom: 0),
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+        padding: const EdgeInsets.fromLTRB(10, 0, 10, 5),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              children: [
-                Icon(
-                  Icons.event_available_outlined,
-                  color: primaryColor,
-                  size: 20,
-                ),
-
-                const SizedBox(width: 8),
-
-                const Text(
-                  '오늘의 건강 관리',
-                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
-                ),
-
-                const SizedBox(width: 6),
-
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 7,
-                    vertical: 2,
-                  ),
-                  decoration: BoxDecoration(
-                    color: primaryColor.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Text(
-                    '$totalCount',
-                    style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.bold,
-                      color: primaryColor,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 12),
-
             ...taskWidgets.take(3),
 
             if (totalCount > 3) ...[
@@ -234,6 +181,7 @@ class _TodayHealthTasksState extends State<TodayHealthTasks> {
           padding: const EdgeInsets.symmetric(vertical: 4),
           child: Row(
             children: [
+              /*
               CircleAvatar(
                 radius: 18,
                 backgroundColor: Colors.blue.withValues(alpha: 0.1),
@@ -241,6 +189,20 @@ class _TodayHealthTasksState extends State<TodayHealthTasks> {
                   Icons.local_hospital_outlined,
                   color: Colors.blue,
                   size: 20,
+                ),
+              ),
+              */
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: Colors.blue.withValues(alpha: 0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Icons.local_hospital_outlined,
+                  color: Colors.blue,
+                  size: 21,
                 ),
               ),
 
@@ -362,6 +324,7 @@ class _TodayHealthTasksState extends State<TodayHealthTasks> {
           padding: const EdgeInsets.symmetric(vertical: 4),
           child: Row(
             children: [
+              /*
               CircleAvatar(
                 radius: 18,
                 backgroundColor: Colors.green.withValues(alpha: 0.1),
@@ -369,6 +332,20 @@ class _TodayHealthTasksState extends State<TodayHealthTasks> {
                   Icons.vaccines_outlined,
                   color: Colors.green,
                   size: 20,
+                ),
+              ),
+              */
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: Colors.green.withValues(alpha: 0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Icons.vaccines_outlined,
+                  color: Colors.green,
+                  size: 21,
                 ),
               ),
               const SizedBox(width: 12),
@@ -496,10 +473,21 @@ class _TodayHealthTasksState extends State<TodayHealthTasks> {
           padding: const EdgeInsets.symmetric(vertical: 4),
           child: Row(
             children: [
+              /*
               CircleAvatar(
                 radius: 18,
                 backgroundColor: Colors.orange.withValues(alpha: 0.1),
                 child: Icon(icon, color: Colors.orange, size: 20),
+              ),
+              */
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: Colors.orange.withValues(alpha: 0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(icon, color: Colors.orange, size: 21),
               ),
 
               const SizedBox(width: 12),

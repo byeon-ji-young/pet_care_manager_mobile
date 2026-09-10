@@ -97,118 +97,81 @@ class UpcomingHealthTasks extends StatelessWidget {
 
     // 예정 일정이 없으면 표시하지 않음
     if (tasks.isEmpty) {
-      return const SizedBox.shrink(); // shrink()는 가능한 한 크기를 작게 줄인다는 의미. 즉, 여기에 아무것도 그리지 말고 공간도 차지하지 않게 하라는 뜻
+      // return const SizedBox.shrink(); // shrink()는 가능한 한 크기를 작게 줄인다는 의미. 즉, 여기에 아무것도 그리지 말고 공간도 차지하지 않게 하라는 뜻
+      return Padding(
+        padding: const EdgeInsets.all(10),
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          // decoration: BoxDecoration(
+          //   color: Colors.grey.withValues(alpha: 0.08),
+          //   borderRadius: BorderRadius.circular(10),
+          // ),
+          child: Text(
+            '예정된 건강 관리가 없어요.',
+            style: TextStyle(
+              fontSize: 13,
+              color: Colors.grey[700],
+              fontWeight: FontWeight.w500,
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ),
+      );
     }
 
-    final primaryColor = Theme.of(context).primaryColor;
-
     return Padding(
-      padding: const EdgeInsets.only(bottom: 16),
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: Theme.of(context).primaryColor.withValues(alpha: 0.3),
-          ),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Icon(Icons.update_outlined, color: primaryColor, size: 20),
+      padding: const EdgeInsets.fromLTRB(10, 0, 10, 5),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          ...visibleTasks.map((task) => _buildUpcomingTaskItem(context, task)),
 
-                  const SizedBox(width: 8),
-
-                  const Text(
-                    '다가오는 건강 관리',
-                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
-                  ),
-
-                  const SizedBox(width: 6),
-
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 7,
-                      vertical: 2,
-                    ),
-                    decoration: BoxDecoration(
-                      color: primaryColor.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Text(
-                      '${tasks.length}',
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.bold,
-                        color: primaryColor,
-                      ),
-                    ),
-                  ),
-                ],
+          // 전체 일정이 3개보다 많을 때만 전체 보기 표시
+          if (tasks.length > 3) ...[
+            Container(
+              margin: const EdgeInsets.only(top: 4),
+              decoration: BoxDecoration(
+                border: Border(
+                  top: BorderSide(color: Colors.grey.withValues(alpha: 0.15)),
+                ),
               ),
-
-              const SizedBox(height: 8),
-
-              ...visibleTasks.map(
-                (task) => _buildUpcomingTaskItem(context, task),
-              ),
-
-              // 전체 일정이 3개보다 많을 때만 전체 보기 표시
-              if (tasks.length > 3) ...[
-                Container(
-                  margin: const EdgeInsets.only(top: 4),
-                  decoration: BoxDecoration(
-                    border: Border(
-                      top: BorderSide(
-                        color: Colors.grey.withValues(alpha: 0.15),
-                      ),
+              child: InkWell(
+                onTap: () async {
+                  await Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) =>
+                          UpcomingHealthTasksScreen(petId: petId),
                     ),
-                  ),
-                  child: InkWell(
-                    onTap: () async {
-                      await Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) =>
-                              UpcomingHealthTasksScreen(petId: petId),
+                  );
+                },
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        '전체 일정 보기',
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: Theme.of(context).primaryColor,
                         ),
-                      );
-                    },
-                    borderRadius: const BorderRadius.vertical(
-                      bottom: Radius.circular(16),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 8),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            '전체 일정 보기',
-                            style: TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w600,
-                              color: Theme.of(context).primaryColor,
-                            ),
-                          ),
-                          const SizedBox(width: 4),
-                          Icon(
-                            Icons.chevron_right,
-                            size: 18,
-                            color: Theme.of(context).primaryColor,
-                          ),
-                        ],
                       ),
-                    ),
+                      const SizedBox(width: 4),
+                      Icon(
+                        Icons.chevron_right,
+                        size: 18,
+                        color: Theme.of(context).primaryColor,
+                      ),
+                    ],
                   ),
                 ),
-              ],
-            ],
-          ),
-        ),
+              ),
+            ),
+          ],
+        ],
       ),
     );
   }

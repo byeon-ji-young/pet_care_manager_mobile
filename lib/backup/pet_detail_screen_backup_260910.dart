@@ -15,19 +15,19 @@ import '../widgets/today_health_tasks.dart';
 import '../widgets/upcoming_health_tasks.dart';
 import '../widgets/past_health_tasks.dart';
 
-import 'pet_register_screen.dart';
-import 'health_record_register_screen.dart';
-import 'vaccination_register_screen.dart';
-import 'weight_record_register_screen.dart';
-import 'medication_register_screen.dart';
-import 'health_summary_screen.dart';
+import '../screens/pet_register_screen.dart';
+import '../screens/health_record_register_screen.dart';
+import '../screens/vaccination_register_screen.dart';
+import '../screens/weight_record_register_screen.dart';
+import '../screens/medication_register_screen.dart';
+import '../screens/health_summary_screen.dart';
 
 import '../utils/date_time_utils.dart';
 
-class PetDetailScreen extends StatefulWidget {
+class PetDetailScreenBackup3 extends StatefulWidget {
   final Pet pet;
 
-  const PetDetailScreen({super.key, required this.pet});
+  const PetDetailScreenBackup3({super.key, required this.pet});
 
   /*
     StatefulWidget 자체는 화면의 상태를 직접 저장하는 역할을 하지 않기 때문에 실제 상태를 관리할 state 객체를 만들어야 함.
@@ -38,10 +38,10 @@ class PetDetailScreen extends StatefulWidget {
     그리고 아래에 class _PetDetailScreenState extends State<PetDetailScreen> { ... } 이게 실제로 상태를 관리하는 부분이 됨
   */
   @override
-  State<PetDetailScreen> createState() => _PetDetailScreenState();
+  State<PetDetailScreenBackup3> createState() => _PetDetailScreenState();
 }
 
-class _PetDetailScreenState extends State<PetDetailScreen> {
+class _PetDetailScreenState extends State<PetDetailScreenBackup3> {
   Pet? currentPet;
 
   List<HealthRecord> healthRecords = [];
@@ -67,10 +67,6 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
   // 기록 화면에서 현재 선택한 탭
   // 0 = 전체, 1 = 건강, 2 = 예방접종, 3 = 약, 4 = 체중
   int selectedRecordTab = 0;
-
-  // 건강 관리 일정에서 현재 선택한 탭
-  // 0 = 오늘, 1 = 예정, 2 = 기록
-  int selectedHealthTaskTab = 0;
 
   bool isSearching = false;
   String searchQuery = '';
@@ -758,195 +754,6 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
           ),
         );
       },
-    );
-  }
-
-  // 선택한 탭에 해당하는 일정만 가져오기
-  Widget _buildSelectedHealthTaskTab(Pet pet) {
-    switch (selectedHealthTaskTab) {
-      case 0:
-        return TodayHealthTasks(
-          petId: pet.id!,
-          healthRecords: todayHealthRecords,
-          vaccinations: todayVaccinations,
-          medications: todayMedications,
-          completedMedicationIds: completedMedicationIds,
-          onDataChanged: () async {
-            await loadHealthRecords();
-            await loadUpcomingHealthRecords();
-            await loadTodayHealthRecords();
-
-            await loadVaccinations();
-            await loadUpcomingVaccinations();
-            await loadTodayVaccinations();
-
-            await loadMedications();
-            await loadUpcomingMedications();
-            await loadTodayMedications();
-
-            await loadTodayMedicationLogs();
-          },
-        );
-
-      case 1:
-        return UpcomingHealthTasks(
-          petId: pet.id!,
-          healthRecords: upcomingHealthRecords,
-          vaccinations: upcomingVaccinations,
-          medications: upcomingMedications,
-          onHealthRecordTap: (record) async {
-            final result = await Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) =>
-                    HealthRecordRegisterScreen(petId: pet.id!, record: record),
-              ),
-            );
-
-            if (result != null && mounted) {
-              if (result is DateTime) {
-                setState(() {
-                  selectedDay = result;
-                  focusedDay = result;
-                });
-              }
-
-              await loadHealthRecords();
-              await loadUpcomingHealthRecords();
-              await loadTodayHealthRecords();
-            }
-          },
-          onVaccinationTap: (vaccination) async {
-            final result = await Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => VaccinationRegisterScreen(
-                  petId: pet.id!,
-                  vaccination: vaccination,
-                ),
-              ),
-            );
-
-            if (result != null && mounted) {
-              if (result is DateTime) {
-                setState(() {
-                  selectedDay = result;
-                  focusedDay = result;
-                });
-              }
-
-              await loadVaccinations();
-              await loadUpcomingVaccinations();
-              await loadTodayVaccinations();
-            }
-          },
-          onMedicationTap: (medication) async {
-            final result = await Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => MedicationRegisterScreen(
-                  petId: pet.id!,
-                  medication: medication,
-                ),
-              ),
-            );
-
-            if (result != null && mounted) {
-              if (result is DateTime) {
-                setState(() {
-                  selectedDay = result;
-                  focusedDay = result;
-                });
-              }
-
-              await loadMedications();
-              await loadUpcomingMedications();
-              await loadTodayMedications();
-            }
-          },
-        );
-
-      case 2:
-        return PastHealthTasks(petId: pet.id!);
-
-      default:
-        return const SizedBox.shrink();
-    }
-  }
-
-  Widget _buildHealthTaskTabButton({
-    required String title,
-    int? count,
-    required int index,
-  }) {
-    final isSelected = selectedHealthTaskTab == index;
-    final primaryColor = Theme.of(context).primaryColor;
-
-    return InkWell(
-      onTap: () {
-        setState(() {
-          selectedHealthTaskTab = index;
-        });
-      },
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 10),
-        child: Column(
-          children: [
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  title,
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-                    color: isSelected ? primaryColor : Colors.grey[600],
-                  ),
-                ),
-                // 건수가 있을 때만 숫자 뱃지 표시
-                if (count != null && count > 0) ...[
-                  const SizedBox(width: 5),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 6,
-                      vertical: 2,
-                    ),
-                    decoration: BoxDecoration(
-                      color: isSelected
-                          ? primaryColor.withValues(alpha: 0.12)
-                          : Colors.grey.withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Text(
-                      '$count',
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.bold,
-                        color: isSelected ? primaryColor : Colors.grey[600],
-                      ),
-                    ),
-                  ),
-                ],
-              ],
-            ),
-
-            const SizedBox(height: 7),
-
-            AnimatedContainer(
-              duration: const Duration(
-                milliseconds: 200,
-              ), // 값이 변경될 때 200ms 동안 애니메이션 효과
-              curve: Curves.easeOut,
-              width: isSelected ? 30 : 0,
-              height: 3,
-              decoration: BoxDecoration(
-                color: primaryColor,
-                borderRadius: BorderRadius.circular(3),
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 
@@ -1748,90 +1555,119 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
 
               const SizedBox(height: 10),
 
-              // 3. 건강 관리 일정
-              Container(
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(
-                    color: Theme.of(
-                      context,
-                    ).primaryColor.withValues(alpha: 0.25),
-                  ),
-                ),
-                child: Column(
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 18, 16, 0),
-                      child: Row(
-                        children: [
-                          Icon(
-                            Icons.event_available_outlined,
-                            color: Theme.of(context).primaryColor,
-                            size: 20,
-                          ),
-                          const SizedBox(width: 8),
-                          const Text(
-                            '건강 관리 일정',
-                            style: TextStyle(
-                              fontSize: 15,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
+              // 3. 오늘의 건강 관리
+              TodayHealthTasks(
+                petId: pet.id!,
+                healthRecords: todayHealthRecords,
+                vaccinations: todayVaccinations,
+                medications: todayMedications,
+                completedMedicationIds: completedMedicationIds,
+                onDataChanged: () async {
+                  await loadHealthRecords();
+                  await loadUpcomingHealthRecords();
+                  await loadTodayHealthRecords();
 
-                    const SizedBox(height: 8),
+                  await loadVaccinations();
+                  await loadUpcomingVaccinations();
+                  await loadTodayVaccinations();
 
-                    // 탭
-                    Row(
-                      children: [
-                        Expanded(
-                          child: _buildHealthTaskTabButton(
-                            title: '오늘',
-                            count:
-                                todayHealthRecords.length +
-                                todayVaccinations.length +
-                                todayMedications.length,
-                            index: 0,
-                          ),
-                        ),
-                        Expanded(
-                          child: _buildHealthTaskTabButton(
-                            title: '예정',
-                            count:
-                                upcomingHealthRecords.length +
-                                upcomingVaccinations.length +
-                                upcomingMedications.length,
-                            index: 1,
-                          ),
-                        ),
-                        /*
-                        나중에 할 예정. 일단 주석 처리
-                        Expanded(
-                          child: _buildHealthTaskTabButton(
-                            title: '기록',
-                            index: 2,
-                          ),
-                        ),
-                        */
-                      ],
-                    ),
+                  await loadMedications();
+                  await loadUpcomingMedications();
+                  await loadTodayMedications();
 
-                    // 선택된 탭 내용
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
-                      child: _buildSelectedHealthTaskTab(pet),
-                    ),
-                  ],
-                ),
+                  await loadTodayMedicationLogs();
+                },
               ),
 
-              const SizedBox(height: 12),
+              const SizedBox(height: 4),
 
-              // 4. 건강 기록 카드 (+캘린더)
+              // 4. 다가오는 건강 관리
+              UpcomingHealthTasks(
+                petId: pet.id!,
+                healthRecords: upcomingHealthRecords,
+                vaccinations: upcomingVaccinations,
+                medications: upcomingMedications,
+
+                onHealthRecordTap: (record) async {
+                  final result = await Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => HealthRecordRegisterScreen(
+                        petId: pet.id!,
+                        record: record,
+                      ),
+                    ),
+                  );
+
+                  if (result != null && mounted) {
+                    if (result is DateTime) {
+                      setState(() {
+                        selectedDay = result;
+                        focusedDay = result;
+                      });
+                    }
+
+                    await loadHealthRecords();
+                    await loadUpcomingHealthRecords();
+                    await loadTodayHealthRecords();
+                  }
+                },
+
+                onVaccinationTap: (vaccination) async {
+                  final result = await Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => VaccinationRegisterScreen(
+                        petId: pet.id!,
+                        vaccination: vaccination,
+                      ),
+                    ),
+                  );
+
+                  if (result != null && mounted) {
+                    if (result is DateTime) {
+                      setState(() {
+                        selectedDay = result;
+                        focusedDay = result;
+                      });
+                    }
+
+                    await loadVaccinations();
+                    await loadUpcomingVaccinations();
+                    await loadTodayVaccinations();
+                  }
+                },
+
+                onMedicationTap: (medication) async {
+                  final result = await Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => MedicationRegisterScreen(
+                        petId: pet.id!,
+                        medication: medication,
+                      ),
+                    ),
+                  );
+
+                  if (result != null && mounted) {
+                    if (result is DateTime) {
+                      setState(() {
+                        selectedDay = result;
+                        focusedDay = result;
+                      });
+                    }
+
+                    await loadMedications();
+                    await loadUpcomingMedications();
+                    await loadTodayMedications();
+                  }
+                },
+              ),
+
+              // 5. 지난 건강 관리
+              PastHealthTasks(petId: pet.id!),
+
+              // 6. 건강 기록 카드 (+캘린더)
               Card(
                 elevation: 0,
                 shape: RoundedRectangleBorder(

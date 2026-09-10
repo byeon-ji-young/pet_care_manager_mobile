@@ -159,119 +159,62 @@ class _PastHealthTasksState extends State<PastHealthTasks> {
       return const Center(child: CircularProgressIndicator());
     }
 
-    final primaryColor = Theme.of(context).primaryColor;
-
     final visibleTasks = _tasks.take(3).toList();
 
     return Padding(
-      padding: const EdgeInsets.only(bottom: 16),
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: Theme.of(context).primaryColor.withValues(alpha: 0.3),
-          ),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Icon(Icons.history_outlined, color: primaryColor, size: 20),
+      padding: const EdgeInsets.fromLTRB(10, 0, 10, 5),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          ...visibleTasks.map((task) => _buildPastTaskItem(context, task)),
 
-                  const SizedBox(width: 8),
-
-                  const Text(
-                    '지난 건강 관리',
-                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
-                  ),
-
-                  const SizedBox(width: 6),
-
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 7,
-                      vertical: 2,
-                    ),
-                    decoration: BoxDecoration(
-                      color: primaryColor.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Text(
-                      '${_tasks.length}',
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.bold,
-                        color: primaryColor,
-                      ),
-                    ),
-                  ),
-                ],
+          // 전체 일정이 3개보다 많을 때만 전체 보기 표시
+          if (_tasks.length > 3) ...[
+            Container(
+              margin: const EdgeInsets.only(top: 4),
+              decoration: BoxDecoration(
+                border: Border(
+                  top: BorderSide(color: Colors.grey.withValues(alpha: 0.15)),
+                ),
               ),
-
-              const SizedBox(height: 8),
-
-              ...visibleTasks.map((task) => _buildPastTaskItem(context, task)),
-
-              // 전체 일정이 3개보다 많을 때만 전체 보기 표시
-              if (_tasks.length > 3) ...[
-                Container(
-                  margin: const EdgeInsets.only(top: 4),
-                  decoration: BoxDecoration(
-                    border: Border(
-                      top: BorderSide(
-                        color: Colors.grey.withValues(alpha: 0.15),
-                      ),
+              child: InkWell(
+                onTap: () async {
+                  await Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) =>
+                          PastHealthTasksScreen(petId: widget.petId),
                     ),
-                  ),
-                  child: InkWell(
-                    onTap: () async {
-                      await Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) =>
-                              PastHealthTasksScreen(petId: widget.petId),
+                  );
+
+                  await _loadPastTasks();
+                },
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        '전체 일정 보기',
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: Theme.of(context).primaryColor,
                         ),
-                      );
-
-                      await _loadPastTasks();
-                    },
-                    borderRadius: const BorderRadius.vertical(
-                      bottom: Radius.circular(16),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 8),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            '전체 일정 보기',
-                            style: TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w600,
-                              color: Theme.of(context).primaryColor,
-                            ),
-                          ),
-
-                          const SizedBox(width: 4),
-
-                          Icon(
-                            Icons.chevron_right,
-                            size: 18,
-                            color: Theme.of(context).primaryColor,
-                          ),
-                        ],
                       ),
-                    ),
+                      const SizedBox(width: 4),
+                      Icon(
+                        Icons.chevron_right,
+                        size: 18,
+                        color: Theme.of(context).primaryColor,
+                      ),
+                    ],
                   ),
                 ),
-              ],
-            ],
-          ),
-        ),
+              ),
+            ),
+          ],
+        ],
       ),
     );
   }
