@@ -455,27 +455,22 @@ class _TodayHealthTasksState extends State<TodayHealthTasks> {
         widget.completedMedicationIds.contains(medication.id);
 
     IconData icon = Icons.medication_outlined;
-    Color color;
     String statusText;
 
     if (isCompleted) {
-      color = Colors.grey;
       statusText = '복용 완료';
     } else {
       switch (medication.scheduleStatus) {
         case 'passed':
-          icon = Icons.notifications_active_outlined;
-          color = Colors.redAccent;
+          // icon = Icons.notifications_active_outlined;
           statusText = '복용 누락';
           break;
 
         case 'upcoming':
-          color = Colors.orange;
           statusText = '복용 예정';
           break;
 
         default:
-          color = Colors.orange;
           statusText = '복용 시간 미정';
       }
     }
@@ -503,8 +498,8 @@ class _TodayHealthTasksState extends State<TodayHealthTasks> {
             children: [
               CircleAvatar(
                 radius: 18,
-                backgroundColor: color.withValues(alpha: 0.1),
-                child: Icon(icon, color: color, size: 20),
+                backgroundColor: Colors.orange.withValues(alpha: 0.1),
+                child: Icon(icon, color: Colors.orange, size: 20),
               ),
 
               const SizedBox(width: 12),
@@ -515,9 +510,10 @@ class _TodayHealthTasksState extends State<TodayHealthTasks> {
                   children: [
                     Text(
                       medication.medicationName,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
+                        color: isCompleted ? Colors.black87 : Colors.redAccent,
                       ),
                     ),
 
@@ -525,7 +521,12 @@ class _TodayHealthTasksState extends State<TodayHealthTasks> {
 
                     Text(
                       medication.medicationTime?.format(context) ?? '복용 시간 미정',
-                      style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: isCompleted
+                            ? Colors.grey[600]
+                            : Colors.redAccent,
+                      ),
                     ),
                   ],
                 ),
@@ -541,7 +542,7 @@ class _TodayHealthTasksState extends State<TodayHealthTasks> {
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
-                      color: color,
+                      color: isCompleted ? Colors.grey : Colors.orange,
                     ),
                   ),
 
