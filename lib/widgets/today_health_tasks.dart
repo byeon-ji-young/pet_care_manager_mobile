@@ -8,6 +8,7 @@ import '../database/database_helper.dart';
 import '../screens/health_record_register_screen.dart';
 import '../screens/vaccination_register_screen.dart';
 import '../screens/medication_history_screen.dart';
+import '../screens/today_health_tasks_screen.dart';
 
 import '../utils/date_time_utils.dart';
 
@@ -74,6 +75,23 @@ class _TodayHealthTasksState extends State<TodayHealthTasks> {
 
     final primaryColor = Theme.of(context).primaryColor;
 
+    final taskWidgets = <Widget>[
+      // 병원
+      ...widget.healthRecords.map(
+        (record) => _buildTodayHealthRecordItem(record),
+      ),
+
+      // 예방접종
+      ...widget.vaccinations.map(
+        (vaccination) => _buildTodayVaccinationItem(vaccination),
+      ),
+
+      // 약
+      ...widget.medications.map(
+        (medication) => _buildTodayMedicationItem(medication),
+      ),
+    ];
+
     return Container(
       width: double.infinity,
       margin: widget.showEmptyMessage
@@ -85,7 +103,7 @@ class _TodayHealthTasksState extends State<TodayHealthTasks> {
         border: Border.all(color: primaryColor.withValues(alpha: 0.35)),
       ),
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -125,20 +143,58 @@ class _TodayHealthTasksState extends State<TodayHealthTasks> {
 
             const SizedBox(height: 12),
 
-            // 병원
-            ...widget.healthRecords.map(
-              (record) => _buildTodayHealthRecordItem(record),
-            ),
+            ...taskWidgets.take(3),
 
-            // 예방접종
-            ...widget.vaccinations.map(
-              (vaccination) => _buildTodayVaccinationItem(vaccination),
-            ),
+            if (totalCount > 3) ...[
+              Container(
+                margin: const EdgeInsets.only(top: 4),
+                decoration: BoxDecoration(
+                  border: Border(
+                    top: BorderSide(color: Colors.grey.withValues(alpha: 0.15)),
+                  ),
+                ),
+                child: InkWell(
+                  onTap: () async {
+                    await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) =>
+                            TodayHealthTasksScreen(petId: widget.petId),
+                      ),
+                    );
 
-            // 약
-            ...widget.medications.map(
-              (medication) => _buildTodayMedicationItem(medication),
-            ),
+                    if (widget.onDataChanged != null) {
+                      await widget.onDataChanged!();
+                    }
+                  },
+                  borderRadius: const BorderRadius.vertical(
+                    bottom: Radius.circular(16),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          '오늘 일정 전체 보기',
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color: Theme.of(context).primaryColor,
+                          ),
+                        ),
+                        const SizedBox(width: 4),
+                        Icon(
+                          Icons.chevron_right,
+                          size: 18,
+                          color: Theme.of(context).primaryColor,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ],
         ),
       ),
@@ -418,34 +474,34 @@ class _TodayHealthTasksState extends State<TodayHealthTasks> {
 
     return Padding(
       padding: const EdgeInsets.only(top: 5, bottom: 2),
-      child: Row(
-        children: [
-          CircleAvatar(
-            radius: 18,
-            backgroundColor: color.withValues(alpha: 0.1),
-            child: Icon(icon, color: color, size: 20),
-          ),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(8),
+        onTap: () async {
+          if (medication.id == null) return;
 
-          const SizedBox(width: 12),
+          await Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) =>
+                  MedicationHistoryScreen(medication: medication),
+            ),
+          );
 
-          Expanded(
-            child: InkWell(
-              borderRadius: BorderRadius.circular(8),
-              onTap: () async {
-                if (medication.id == null) return;
+          await widget.onDataChanged?.call();
+        },
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 4),
+          child: Row(
+            children: [
+              CircleAvatar(
+                radius: 18,
+                backgroundColor: color.withValues(alpha: 0.1),
+                child: Icon(icon, color: color, size: 20),
+              ),
 
-                await Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) =>
-                        MedicationHistoryScreen(medication: medication),
-                  ),
-                );
+              const SizedBox(width: 12),
 
-                await widget.onDataChanged?.call();
-              },
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 4),
+              Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -466,63 +522,67 @@ class _TodayHealthTasksState extends State<TodayHealthTasks> {
                   ],
                 ),
               ),
-            ),
-          ),
 
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                statusText,
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  color: color,
-                ),
-              ),
+              const SizedBox(width: 8),
 
-              const SizedBox(width: 6),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    statusText,
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: color,
+                    ),
+                  ),
 
-              IconButton(
-                onPressed: () async {
-                  if (medication.id == null) return;
+                  const SizedBox(width: 6),
 
-                  try {
-                    if (isCompleted) {
-                      await DatabaseHelper.instance.cancelMedicationToday(
-                        medication.id!,
-                      );
-                    } else {
-                      await DatabaseHelper.instance.completeMedication(
-                        medicationId: medication.id!,
-                        petId: widget.petId,
-                        medicationDate: DateTimeUtils.nowKst(),
-                      );
-                    }
+                  IconButton(
+                    onPressed: () async {
+                      if (medication.id == null) return;
 
-                    await widget.onDataChanged?.call();
-                  } catch (e) {
-                    debugPrint('복용 상태 변경 실패: $e');
+                      try {
+                        if (isCompleted) {
+                          await DatabaseHelper.instance.cancelMedicationToday(
+                            medication.id!,
+                          );
+                        } else {
+                          await DatabaseHelper.instance.completeMedication(
+                            medicationId: medication.id!,
+                            petId: widget.petId,
+                            medicationDate: DateTimeUtils.nowKst(),
+                          );
+                        }
 
-                    if (!mounted) return;
+                        await widget.onDataChanged?.call();
+                      } catch (e) {
+                        debugPrint('복용 상태 변경 실패: $e');
 
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('복용 상태를 변경하지 못했어요.')),
-                    );
-                  }
-                },
-                icon: Icon(
-                  isCompleted ? Icons.check_circle : Icons.check_circle_outline,
-                  size: 22,
-                ),
-                color: isCompleted ? Colors.grey : Colors.orange,
-                tooltip: isCompleted ? '복용 완료 취소' : '복용 완료 처리',
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(),
+                        if (!mounted) return;
+
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('복용 상태를 변경하지 못했어요.')),
+                        );
+                      }
+                    },
+                    icon: Icon(
+                      isCompleted
+                          ? Icons.check_circle
+                          : Icons.check_circle_outline,
+                      size: 22,
+                    ),
+                    color: isCompleted ? Colors.grey : Colors.orange,
+                    tooltip: isCompleted ? '복용 완료 취소' : '복용 완료 처리',
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                  ),
+                ],
               ),
             ],
           ),
-        ],
+        ),
       ),
     );
   }
