@@ -40,7 +40,11 @@ class UpcomingHealthTasks extends StatelessWidget {
         _UpcomingTask(
           date: record.date,
           title: record.title,
-          subtitle: record.hospital,
+          subtitle: [
+            if (record.time != null) record.time!.format(context),
+            if (record.hospital != null && record.hospital!.isNotEmpty)
+              record.hospital!,
+          ].join(' · '),
           icon: Icons.local_hospital_outlined,
           color: Colors.blue,
           onTap: () => onHealthRecordTap(record),
