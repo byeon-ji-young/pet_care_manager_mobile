@@ -64,7 +64,7 @@ class PetProfileHeader extends StatelessWidget {
       children: [
         // 1. 원형 사진
         CircleAvatar(
-          radius: 52,
+          radius: 60,
           // backgroundColor: Colors.grey[200],
           backgroundImage: pet.imagePath != null
               ? FileImage(File(pet.imagePath!))
