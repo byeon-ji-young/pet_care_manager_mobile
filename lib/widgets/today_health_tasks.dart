@@ -155,143 +155,161 @@ class _TodayHealthTasksState extends State<TodayHealthTasks> {
   // 오늘 병원 방문 하나
   Widget _buildTodayHealthRecordItem(HealthRecord record) {
     final isCompleted = record.status == 'completed';
-
     final color = isCompleted ? Colors.grey : Colors.blue;
 
-    return Padding(
-      padding: const EdgeInsets.only(top: 5, bottom: 2),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(8),
-        onTap: () async {
-          final result = await Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => HealthRecordRegisterScreen(
-                petId: widget.petId,
-                record: record,
+    return InkWell(
+      borderRadius: BorderRadius.circular(12),
+      onTap: () async {
+        final result = await Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) =>
+                HealthRecordRegisterScreen(petId: widget.petId, record: record),
+          ),
+        );
+
+        if (result != null && mounted) {
+          await widget.onDataChanged?.call();
+        }
+      },
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        child: Row(
+          children: [
+            /*
+            CircleAvatar(
+              radius: 18,
+              backgroundColor: Colors.blue.withValues(alpha: 0.1),
+              child: Icon(
+                Icons.local_hospital_outlined,
+                color: Colors.blue,
+                size: 20,
               ),
             ),
-          );
-
-          if (result != null && mounted) {
-            await widget.onDataChanged?.call();
-          }
-        },
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 4),
-          child: Row(
-            children: [
-              /*
-              CircleAvatar(
-                radius: 18,
-                backgroundColor: Colors.blue.withValues(alpha: 0.1),
-                child: Icon(
-                  Icons.local_hospital_outlined,
-                  color: Colors.blue,
-                  size: 20,
-                ),
+            */
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: Colors.blue.withValues(alpha: 0.1),
+                shape: BoxShape.circle,
               ),
-              */
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: Colors.blue.withValues(alpha: 0.1),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  Icons.local_hospital_outlined,
-                  color: Colors.blue,
-                  size: 21,
-                ),
+              child: const Icon(
+                Icons.local_hospital_outlined,
+                color: Colors.blue,
+                size: 21,
               ),
-
-              const SizedBox(width: 12),
-
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      record.title,
-                      style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-
-                    const SizedBox(height: 3),
-
-                    Text(
-                      [
-                        if (record.hospital != null &&
-                            record.hospital!.isNotEmpty)
-                          record.hospital!,
-                        if (record.time != null) record.time!.format(context),
-                      ].join(' · '),
-                      style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-                    ),
-                  ],
-                ),
-              ),
-
-              const SizedBox(width: 8),
-
-              Row(
-                mainAxisSize: MainAxisSize.min,
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    isCompleted ? '방문 완료' : '방문 예정',
-                    style: TextStyle(
-                      fontSize: 12,
+                    record.title,
+                    style: const TextStyle(
+                      fontSize: 14,
                       fontWeight: FontWeight.w600,
-                      color: color,
                     ),
                   ),
-
-                  const SizedBox(width: 6),
-
-                  IconButton(
-                    onPressed: () async {
-                      if (record.id == null) return;
-
-                      try {
-                        if (isCompleted) {
-                          await DatabaseHelper.instance.cancelHealthRecord(
-                            record.id!,
-                          );
-                        } else {
-                          await DatabaseHelper.instance.completeHealthRecord(
-                            record.id!,
-                          );
-                        }
-
-                        await widget.onDataChanged?.call();
-                      } catch (e) {
-                        debugPrint('병원 방문 상태 변경 실패: $e');
-
-                        if (!mounted) return;
-
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('병원 방문 상태를 변경하지 못했어요.')),
-                        );
-                      }
-                    },
-                    icon: Icon(
-                      isCompleted
-                          ? Icons.check_circle
-                          : Icons.check_circle_outline,
-                      size: 22,
-                    ),
-                    color: isCompleted ? Colors.grey : Colors.blue,
-                    tooltip: isCompleted ? '방문 완료 취소' : '방문 완료 처리',
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(),
+                  const SizedBox(height: 4),
+                  Text(
+                    [
+                      if (record.hospital != null &&
+                          record.hospital!.isNotEmpty)
+                        record.hospital!,
+                      if (record.time != null) record.time!.format(context),
+                    ].join(' · '),
+                    style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                   ),
                 ],
               ),
-            ],
-          ),
+            ),
+            const SizedBox(width: 8),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  isCompleted ? '방문 완료' : '방문 예정',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: color,
+                  ),
+                ),
+                const SizedBox(width: 6),
+                /*
+                IconButton(
+                  onPressed: () async {
+                    if (record.id == null) return;
+
+                    try {
+                      if (isCompleted) {
+                        await DatabaseHelper.instance.cancelHealthRecord(
+                          record.id!,
+                        );
+                      } else {
+                        await DatabaseHelper.instance.completeHealthRecord(
+                          record.id!,
+                        );
+                      }
+
+                      await widget.onDataChanged?.call();
+                    } catch (e) {
+                      debugPrint('병원 방문 상태 변경 실패: $e');
+
+                      if (!mounted) return;
+
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('병원 방문 상태를 변경하지 못했어요.')),
+                      );
+                    }
+                  },
+                  icon: Icon(
+                    isCompleted
+                        ? Icons.check_circle
+                        : Icons.check_circle_outline,
+                    size: 22,
+                  ),
+                  color: isCompleted ? Colors.grey : Colors.blue,
+                  tooltip: isCompleted ? '방문 완료 취소' : '방문 완료 처리',
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
+                ),
+                */
+                GestureDetector(
+                  onTap: () async {
+                    if (record.id == null) return;
+                    try {
+                      if (isCompleted) {
+                        await DatabaseHelper.instance.cancelHealthRecord(
+                          record.id!,
+                        );
+                      } else {
+                        await DatabaseHelper.instance.completeHealthRecord(
+                          record.id!,
+                        );
+                      }
+                      await widget.onDataChanged?.call();
+                    } catch (e) {
+                      debugPrint('병원 방문 상태 변경 실패: $e');
+                      if (!mounted) return;
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('병원 방문 상태를 변경하지 못했어요.')),
+                      );
+                    }
+                  },
+                  child: Icon(
+                    isCompleted
+                        ? Icons.check_circle
+                        : Icons.check_circle_outline,
+                    size: 22,
+                    color: isCompleted ? Colors.grey : Colors.blue,
+                  ),
+                ),
+              ],
+            ),
+          ],
         ),
       ),
     );
@@ -302,124 +320,153 @@ class _TodayHealthTasksState extends State<TodayHealthTasks> {
     final isCompleted = vaccination.status == 'completed';
     final color = isCompleted ? Colors.grey : Colors.green;
 
-    return Padding(
-      padding: const EdgeInsets.only(top: 5, bottom: 2),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(8),
-        onTap: () async {
-          final result = await Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => VaccinationRegisterScreen(
-                petId: widget.petId,
-                vaccination: vaccination,
+    return InkWell(
+      borderRadius: BorderRadius.circular(12),
+      onTap: () async {
+        final result = await Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => VaccinationRegisterScreen(
+              petId: widget.petId,
+              vaccination: vaccination,
+            ),
+          ),
+        );
+        if (result != null && mounted) {
+          await widget.onDataChanged?.call();
+        }
+      },
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        child: Row(
+          children: [
+            /*
+            CircleAvatar(
+              radius: 18,
+              backgroundColor: Colors.green.withValues(alpha: 0.1),
+              child: Icon(
+                Icons.vaccines_outlined,
+                color: Colors.green,
+                size: 20,
               ),
             ),
-          );
-          if (result != null && mounted) {
-            await widget.onDataChanged?.call();
-          }
-        },
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 4),
-          child: Row(
-            children: [
-              /*
-              CircleAvatar(
-                radius: 18,
-                backgroundColor: Colors.green.withValues(alpha: 0.1),
-                child: Icon(
-                  Icons.vaccines_outlined,
-                  color: Colors.green,
-                  size: 20,
-                ),
+            */
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: Colors.green.withValues(alpha: 0.1),
+                shape: BoxShape.circle,
               ),
-              */
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: Colors.green.withValues(alpha: 0.1),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  Icons.vaccines_outlined,
-                  color: Colors.green,
-                  size: 21,
-                ),
+              child: const Icon(
+                Icons.vaccines_outlined,
+                color: Colors.green,
+                size: 21,
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      vaccination.vaccineName,
-                      style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const SizedBox(height: 3),
-                    Text(
-                      vaccination.hospital?.isNotEmpty == true
-                          ? vaccination.hospital!
-                          : '접종 병원 미정',
-                      style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 8),
-              Row(
-                mainAxisSize: MainAxisSize.min,
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    isCompleted ? '접종 완료' : '접종 예정',
-                    style: TextStyle(
-                      fontSize: 12,
+                    vaccination.vaccineName,
+                    style: const TextStyle(
+                      fontSize: 14,
                       fontWeight: FontWeight.w600,
-                      color: color,
                     ),
                   ),
-                  const SizedBox(width: 6),
-                  IconButton(
-                    onPressed: () async {
-                      if (vaccination.id == null) return;
-                      try {
-                        if (isCompleted) {
-                          await DatabaseHelper.instance.cancelVaccination(
-                            vaccination.id!,
-                          );
-                        } else {
-                          await DatabaseHelper.instance.completeVaccination(
-                            vaccination.id!,
-                          );
-                        }
-                        await widget.onDataChanged?.call();
-                      } catch (e) {
-                        debugPrint('예방접종 상태 변경 실패: $e');
-                        if (!mounted) return;
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('예방접종 상태를 변경하지 못했어요.')),
-                        );
-                      }
-                    },
-                    icon: Icon(
-                      isCompleted
-                          ? Icons.check_circle
-                          : Icons.check_circle_outline,
-                      size: 22,
-                    ),
-                    color: isCompleted ? Colors.grey : Colors.green,
-                    tooltip: isCompleted ? '접종 완료 취소' : '접종 완료 처리',
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(),
+                  const SizedBox(height: 4),
+                  Text(
+                    vaccination.hospital?.isNotEmpty == true
+                        ? vaccination.hospital!
+                        : '접종 병원 미정',
+                    style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                   ),
                 ],
               ),
-            ],
-          ),
+            ),
+            const SizedBox(width: 8),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  isCompleted ? '접종 완료' : '접종 예정',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: color,
+                  ),
+                ),
+                const SizedBox(width: 6),
+                /*
+                IconButton(
+                  onPressed: () async {
+                    if (vaccination.id == null) return;
+                    try {
+                      if (isCompleted) {
+                        await DatabaseHelper.instance.cancelVaccination(
+                          vaccination.id!,
+                        );
+                      } else {
+                        await DatabaseHelper.instance.completeVaccination(
+                          vaccination.id!,
+                        );
+                      }
+                      await widget.onDataChanged?.call();
+                    } catch (e) {
+                      debugPrint('예방접종 상태 변경 실패: $e');
+                      if (!mounted) return;
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('예방접종 상태를 변경하지 못했어요.')),
+                      );
+                    }
+                  },
+                  icon: Icon(
+                    isCompleted
+                        ? Icons.check_circle
+                        : Icons.check_circle_outline,
+                    size: 22,
+                  ),
+                  color: isCompleted ? Colors.grey : Colors.green,
+                  tooltip: isCompleted ? '접종 완료 취소' : '접종 완료 처리',
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
+                ),
+                */
+                GestureDetector(
+                  onTap: () async {
+                    if (vaccination.id == null) return;
+                    try {
+                      if (isCompleted) {
+                        await DatabaseHelper.instance.cancelVaccination(
+                          vaccination.id!,
+                        );
+                      } else {
+                        await DatabaseHelper.instance.completeVaccination(
+                          vaccination.id!,
+                        );
+                      }
+                      await widget.onDataChanged?.call();
+                    } catch (e) {
+                      debugPrint('예방접종 상태 변경 실패: $e');
+                      if (!mounted) return;
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('예방접종 상태를 변경하지 못했어요.')),
+                      );
+                    }
+                  },
+                  child: Icon(
+                    isCompleted
+                        ? Icons.check_circle
+                        : Icons.check_circle_outline,
+                    size: 22,
+                    color: isCompleted ? Colors.grey : Colors.green,
+                  ),
+                ),
+              ],
+            ),
+          ],
         ),
       ),
     );
@@ -431,160 +478,182 @@ class _TodayHealthTasksState extends State<TodayHealthTasks> {
         medication.id != null &&
         widget.completedMedicationIds.contains(medication.id);
 
-    IconData icon = Icons.medication_outlined;
     String statusText;
-
     if (isCompleted) {
       statusText = '복용 완료';
     } else {
       switch (medication.scheduleStatus) {
         case 'passed':
-          // icon = Icons.notifications_active_outlined;
           statusText = '복용 누락';
           break;
-
         case 'upcoming':
           statusText = '복용 예정';
           break;
-
         default:
           statusText = '복용 시간 미정';
       }
     }
 
-    return Padding(
-      padding: const EdgeInsets.only(top: 5, bottom: 2),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(8),
-        onTap: () async {
-          if (medication.id == null) return;
+    return InkWell(
+      borderRadius: BorderRadius.circular(12),
+      onTap: () async {
+        if (medication.id == null) return;
 
-          await Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) =>
-                  MedicationHistoryScreen(medication: medication),
+        await Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) =>
+                MedicationHistoryScreen(medication: medication),
+          ),
+        );
+
+        await widget.onDataChanged?.call();
+      },
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        child: Row(
+          children: [
+            /*
+            CircleAvatar(
+              radius: 18,
+              backgroundColor: Colors.orange.withValues(alpha: 0.1),
+              child: Icon(icon, color: Colors.orange, size: 20),
             ),
-          );
-
-          await widget.onDataChanged?.call();
-        },
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 4),
-          child: Row(
-            children: [
-              /*
-              CircleAvatar(
-                radius: 18,
-                backgroundColor: Colors.orange.withValues(alpha: 0.1),
-                child: Icon(icon, color: Colors.orange, size: 20),
+            */
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: Colors.orange.withValues(alpha: 0.1),
+                shape: BoxShape.circle,
               ),
-              */
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: Colors.orange.withValues(alpha: 0.1),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(icon, color: Colors.orange, size: 21),
+              child: const Icon(
+                Icons.medication_outlined,
+                color: Colors.orange,
+                size: 21,
               ),
-
-              const SizedBox(width: 12),
-
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      medication.medicationName,
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: isCompleted
-                            ? Colors.black87
-                            : medication.scheduleStatus == 'passed'
-                            ? Colors.redAccent
-                            : Colors.black87,
-                      ),
-                    ),
-
-                    const SizedBox(height: 3),
-
-                    Text(
-                      medication.medicationTime?.format(context) ?? '복용 시간 미정',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: isCompleted
-                            ? Colors.grey[600]
-                            : medication.scheduleStatus == 'passed'
-                            ? Colors.redAccent
-                            : Colors.grey[600],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              const SizedBox(width: 8),
-
-              Row(
-                mainAxisSize: MainAxisSize.min,
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    statusText,
+                    medication.medicationName,
                     style: TextStyle(
-                      fontSize: 12,
+                      fontSize: 14,
                       fontWeight: FontWeight.w600,
-                      color: isCompleted ? Colors.grey : Colors.orange,
+                      color: isCompleted
+                          ? Colors.black87
+                          : medication.scheduleStatus == 'passed'
+                          ? Colors.redAccent
+                          : Colors.black87,
                     ),
                   ),
-
-                  const SizedBox(width: 6),
-
-                  IconButton(
-                    onPressed: () async {
-                      if (medication.id == null) return;
-
-                      try {
-                        if (isCompleted) {
-                          await DatabaseHelper.instance.cancelMedicationToday(
-                            medication.id!,
-                          );
-                        } else {
-                          await DatabaseHelper.instance.completeMedication(
-                            medicationId: medication.id!,
-                            petId: widget.petId,
-                            medicationDate: DateTimeUtils.nowKst(),
-                          );
-                        }
-
-                        await widget.onDataChanged?.call();
-                      } catch (e) {
-                        debugPrint('복용 상태 변경 실패: $e');
-
-                        if (!mounted) return;
-
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('복용 상태를 변경하지 못했어요.')),
-                        );
-                      }
-                    },
-                    icon: Icon(
-                      isCompleted
-                          ? Icons.check_circle
-                          : Icons.check_circle_outline,
-                      size: 22,
+                  const SizedBox(height: 4),
+                  Text(
+                    medication.medicationTime?.format(context) ?? '복용 시간 미정',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: isCompleted
+                          ? Colors.grey[600]
+                          : medication.scheduleStatus == 'passed'
+                          ? Colors.redAccent
+                          : Colors.grey[600],
                     ),
-                    color: isCompleted ? Colors.grey : Colors.orange,
-                    tooltip: isCompleted ? '복용 완료 취소' : '복용 완료 처리',
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(),
                   ),
                 ],
               ),
-            ],
-          ),
+            ),
+            const SizedBox(width: 8),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  statusText,
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: isCompleted ? Colors.grey : Colors.orange,
+                  ),
+                ),
+                const SizedBox(width: 6),
+                /*
+                IconButton(
+                  onPressed: () async {
+                    if (medication.id == null) return;
+
+                    try {
+                      if (isCompleted) {
+                        await DatabaseHelper.instance.cancelMedicationToday(
+                          medication.id!,
+                        );
+                      } else {
+                        await DatabaseHelper.instance.completeMedication(
+                          medicationId: medication.id!,
+                          petId: widget.petId,
+                          medicationDate: DateTimeUtils.nowKst(),
+                        );
+                      }
+
+                      await widget.onDataChanged?.call();
+                    } catch (e) {
+                      debugPrint('복용 상태 변경 실패: $e');
+
+                      if (!mounted) return;
+
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('복용 상태를 변경하지 못했어요.')),
+                      );
+                    }
+                  },
+                  icon: Icon(
+                    isCompleted
+                        ? Icons.check_circle
+                        : Icons.check_circle_outline,
+                    size: 22,
+                  ),
+                  color: isCompleted ? Colors.grey : Colors.orange,
+                  tooltip: isCompleted ? '복용 완료 취소' : '복용 완료 처리',
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
+                ),
+                */
+                GestureDetector(
+                  onTap: () async {
+                    if (medication.id == null) return;
+                    try {
+                      if (isCompleted) {
+                        await DatabaseHelper.instance.cancelMedicationToday(
+                          medication.id!,
+                        );
+                      } else {
+                        await DatabaseHelper.instance.completeMedication(
+                          medicationId: medication.id!,
+                          petId: widget.petId,
+                          medicationDate: DateTimeUtils.nowKst(),
+                        );
+                      }
+                      await widget.onDataChanged?.call();
+                    } catch (e) {
+                      debugPrint('복용 상태 변경 실패: $e');
+                      if (!mounted) return;
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('복용 상태를 변경하지 못했어요.')),
+                      );
+                    }
+                  },
+                  child: Icon(
+                    isCompleted
+                        ? Icons.check_circle
+                        : Icons.check_circle_outline,
+                    size: 22,
+                    color: isCompleted ? Colors.grey : Colors.orange,
+                  ),
+                ),
+              ],
+            ),
+          ],
         ),
       ),
     );
