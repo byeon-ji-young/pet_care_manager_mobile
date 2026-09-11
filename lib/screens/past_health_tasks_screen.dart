@@ -20,6 +20,9 @@ class _PastHealthTasksScreenState extends State<PastHealthTasksScreen> {
 
   bool isLoading = true;
 
+  // 0 = 전체, 1 = 건강, 2 = 예방접종, 3 = 약
+  int selectedTab = 0;
+
   @override
   void initState() {
     super.initState();
@@ -49,6 +52,7 @@ class _PastHealthTasksScreenState extends State<PastHealthTasksScreen> {
           date: record.date,
           icon: Icons.local_hospital_outlined,
           color: Colors.blue,
+          type: 0,
           onTap: () async {
             final result = await Navigator.push(
               context,
@@ -77,6 +81,7 @@ class _PastHealthTasksScreenState extends State<PastHealthTasksScreen> {
           date: vaccination.vaccinationDate,
           icon: Icons.vaccines_outlined,
           color: Colors.green,
+          type: 1,
           onTap: () async {
             final result = await Navigator.push(
               context,
@@ -105,6 +110,7 @@ class _PastHealthTasksScreenState extends State<PastHealthTasksScreen> {
           date: history.medicationDate,
           icon: Icons.medication_outlined,
           color: Colors.orange,
+          type: 2,
           statusText: history.isCompleted ? '복용 완료' : '복용 누락',
           statusColor: history.isCompleted ? Colors.green : Colors.redAccent,
           onTap: () async {
@@ -149,15 +155,84 @@ class _PastHealthTasksScreenState extends State<PastHealthTasksScreen> {
       ),
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
-          : tasks.isEmpty
-          ? const Center(child: Text('지난 건강 관리 기록이 없어요.'))
-          : ListView.builder(
-              padding: const EdgeInsets.all(16),
-              itemCount: tasks.length,
-              itemBuilder: (context, index) {
-                return _buildPastTaskItem(context, tasks[index]);
-              },
+          : Column(
+              children: [
+                // 탭
+                _buildTabBar(),
+
+                // 탭 내용
+                Expanded(child: _buildTaskList()),
+              ],
             ),
+    );
+  }
+
+  Widget _buildTabBar() {
+    const tabs = ['전체', '건강', '예방접종', '약'];
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+      child: Row(
+        children: [
+          for (int index = 0; index < tabs.length; index++)
+            Expanded(
+              child: GestureDetector(
+                // Flutter에서 사용자의 터치/제스처를 감지하는 위젯
+                onTap: () {
+                  setState(() {
+                    selectedTab = index;
+                  });
+                },
+                child: Container(
+                  padding: const EdgeInsets.symmetric(vertical: 10),
+                  decoration: BoxDecoration(
+                    border: Border(
+                      bottom: BorderSide(
+                        color: selectedTab == index
+                            ? Theme.of(context).primaryColor
+                            : Colors.transparent,
+                        width: 3,
+                      ),
+                    ),
+                  ),
+                  child: Text(
+                    tabs[index],
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: selectedTab == index
+                          ? FontWeight.bold
+                          : FontWeight.w500,
+                      color: selectedTab == index
+                          ? Theme.of(context).primaryColor
+                          : Colors.grey[600],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTaskList() {
+    final filteredTasks = selectedTab == 0
+        ? tasks
+        : tasks.where((task) => task.type == selectedTab - 1).toList();
+
+    if (filteredTasks.isEmpty) {
+      return const Center(
+        child: Text('해당 기록이 없어요.', style: TextStyle(color: Colors.grey)),
+      );
+    }
+
+    return ListView.builder(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+      itemCount: filteredTasks.length,
+      itemBuilder: (context, index) {
+        return _buildPastTaskItem(context, filteredTasks[index]);
+      },
     );
   }
 
@@ -254,6 +329,8 @@ class _PastTask {
   final IconData icon;
   final Color color;
 
+  final int type;
+
   final String? statusText;
   final Color statusColor;
 
@@ -265,6 +342,7 @@ class _PastTask {
     required this.date,
     required this.icon,
     required this.color,
+    required this.type,
     this.statusText,
     this.statusColor = Colors.grey,
     required this.onTap,

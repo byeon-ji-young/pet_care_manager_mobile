@@ -1808,15 +1808,12 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
                             index: 1,
                           ),
                         ),
-                        /*
-                        나중에 할 예정. 일단 주석 처리
                         Expanded(
                           child: _buildHealthTaskTabButton(
                             title: '기록',
                             index: 2,
                           ),
                         ),
-                        */
                       ],
                     ),
 
