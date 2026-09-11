@@ -501,7 +501,11 @@ class _TodayHealthTasksState extends State<TodayHealthTasks> {
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
-                        color: isCompleted ? Colors.black87 : Colors.redAccent,
+                        color: isCompleted
+                            ? Colors.black87
+                            : medication.scheduleStatus == 'passed'
+                            ? Colors.redAccent
+                            : Colors.black87,
                       ),
                     ),
 
@@ -513,7 +517,9 @@ class _TodayHealthTasksState extends State<TodayHealthTasks> {
                         fontSize: 12,
                         color: isCompleted
                             ? Colors.grey[600]
-                            : Colors.redAccent,
+                            : medication.scheduleStatus == 'passed'
+                            ? Colors.redAccent
+                            : Colors.grey[600],
                       ),
                     ),
                   ],
