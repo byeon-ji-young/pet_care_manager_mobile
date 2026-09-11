@@ -194,27 +194,27 @@ class _UpcomingHealthTasksScreenState extends State<UpcomingHealthTasksScreen> {
     final remainingText = difference == 1 ? '내일' : '$difference일 후';
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
+      margin: const EdgeInsets.only(bottom: 8),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: task.color.withValues(alpha: 0.25)),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: Colors.grey.shade200),
       ),
       child: InkWell(
         onTap: task.onTap,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(14),
         child: Padding(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
           child: Row(
             children: [
               Container(
-                width: 44,
-                height: 44,
+                width: 42,
+                height: 42,
                 decoration: BoxDecoration(
                   color: task.color.withValues(alpha: 0.1),
                   shape: BoxShape.circle,
                 ),
-                child: Icon(task.icon, color: task.color, size: 22),
+                child: Icon(task.icon, color: task.color, size: 21),
               ),
 
               const SizedBox(width: 12),
@@ -225,13 +225,15 @@ class _UpcomingHealthTasksScreenState extends State<UpcomingHealthTasksScreen> {
                   children: [
                     Text(
                       task.title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
-                        fontSize: 15,
+                        fontSize: 14,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
 
-                    const SizedBox(height: 5),
+                    const SizedBox(height: 4),
 
                     Text(
                       [
@@ -239,6 +241,8 @@ class _UpcomingHealthTasksScreenState extends State<UpcomingHealthTasksScreen> {
                         if (task.subtitle != null && task.subtitle!.isNotEmpty)
                           task.subtitle!,
                       ].join(' · '),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                       style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                     ),
                   ],
@@ -256,9 +260,9 @@ class _UpcomingHealthTasksScreenState extends State<UpcomingHealthTasksScreen> {
                 ),
               ),
 
-              const SizedBox(width: 4),
+              const SizedBox(width: 8),
 
-              Icon(Icons.chevron_right, size: 20, color: Colors.grey[400]),
+              Icon(Icons.chevron_right, color: Colors.grey[400], size: 20),
             ],
           ),
         ),

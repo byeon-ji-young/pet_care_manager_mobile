@@ -226,27 +226,27 @@ class _TodayHealthTasksScreen extends State<TodayHealthTasksScreen> {
 
   Widget _buildTodayTaskItem(BuildContext context, _TodayTask task) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
+      margin: const EdgeInsets.only(bottom: 8),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: task.color.withValues(alpha: 0.25)),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: Colors.grey.shade200),
       ),
       child: InkWell(
         onTap: task.onTap,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(14),
         child: Padding(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
           child: Row(
             children: [
               Container(
-                width: 44,
-                height: 44,
+                width: 42,
+                height: 42,
                 decoration: BoxDecoration(
                   color: task.color.withValues(alpha: 0.1),
                   shape: BoxShape.circle,
                 ),
-                child: Icon(task.icon, color: task.color, size: 22),
+                child: Icon(task.icon, color: task.color, size: 21),
               ),
 
               const SizedBox(width: 12),
@@ -257,20 +257,20 @@ class _TodayHealthTasksScreen extends State<TodayHealthTasksScreen> {
                   children: [
                     Text(
                       task.title,
-                      style: TextStyle(
-                        fontSize: 15,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: 14,
                         fontWeight: FontWeight.w600,
-                        // decoration: task.isCompleted
-                        //     ? TextDecoration.lineThrough
-                        //     : null,
-                        color: Colors.black87,
                       ),
                     ),
 
                     if (task.subtitle != null && task.subtitle!.isNotEmpty) ...[
-                      const SizedBox(height: 5),
+                      const SizedBox(height: 4),
                       Text(
                         task.subtitle!,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                         style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                       ),
                     ],
@@ -289,7 +289,7 @@ class _TodayHealthTasksScreen extends State<TodayHealthTasksScreen> {
                 ),
               ),
 
-              const SizedBox(width: 6),
+              const SizedBox(width: 8),
 
               IconButton(
                 onPressed: task.onToggle,
@@ -298,7 +298,10 @@ class _TodayHealthTasksScreen extends State<TodayHealthTasksScreen> {
                       ? Icons.check_circle
                       : Icons.check_circle_outline,
                   color: task.isCompleted ? Colors.grey : task.color,
+                  size: 24,
                 ),
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
               ),
             ],
           ),
