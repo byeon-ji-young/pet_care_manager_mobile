@@ -912,6 +912,7 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
     }
   }
 
+  // 탭 버튼
   Widget _buildHealthTaskTabButton({
     required String title,
     int? count,
@@ -920,72 +921,112 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
     final isSelected = selectedHealthTaskTab == index;
     final primaryColor = Theme.of(context).primaryColor;
 
-    return InkWell(
-      onTap: () {
-        setState(() {
-          selectedHealthTaskTab = index;
-        });
-      },
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 10),
-        child: Column(
-          children: [
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  title,
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-                    color: isSelected ? primaryColor : Colors.grey[600],
+    return Expanded(
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: () {
+          setState(() {
+            selectedHealthTaskTab = index;
+          });
+        },
+        child: SizedBox(
+          height: 38,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              Expanded(
+                child: Center(
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        title,
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: isSelected
+                              ? FontWeight.bold
+                              : FontWeight.w500,
+                          color: isSelected ? primaryColor : Colors.grey[600],
+                        ),
+                      ),
+
+                      // 건수가 있을 때만 숫자 뱃지 표시
+                      if (count != null && count > 0) ...[
+                        const SizedBox(width: 5),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 6,
+                            vertical: 2,
+                          ),
+                          decoration: BoxDecoration(
+                            color: isSelected
+                                ? primaryColor.withValues(alpha: 0.12)
+                                : Colors.grey.withValues(alpha: 0.12),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Text(
+                            '$count',
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.bold,
+                              color: isSelected
+                                  ? primaryColor
+                                  : Colors.grey[600],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ],
                   ),
                 ),
-                // 건수가 있을 때만 숫자 뱃지 표시
-                if (count != null && count > 0) ...[
-                  const SizedBox(width: 5),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 6,
-                      vertical: 2,
-                    ),
-                    decoration: BoxDecoration(
-                      color: isSelected
-                          ? primaryColor.withValues(alpha: 0.12)
-                          : Colors.grey.withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Text(
-                      '$count',
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.bold,
-                        color: isSelected ? primaryColor : Colors.grey[600],
-                      ),
-                    ),
-                  ),
-                ],
-              ],
-            ),
-
-            const SizedBox(height: 7),
-
-            AnimatedContainer(
-              duration: const Duration(
-                milliseconds: 200,
-              ), // 값이 변경될 때 200ms 동안 애니메이션 효과
-              curve: Curves.easeOut,
-              width: isSelected ? 30 : 0,
-              height: 3,
-              decoration: BoxDecoration(
-                color: primaryColor,
-                borderRadius: BorderRadius.circular(3),
               ),
-            ),
-          ],
+
+              // 선택된 탭 아래 표시
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                curve: Curves.easeOut,
+                width: isSelected ? 30 : 0,
+                height: 3,
+                decoration: BoxDecoration(
+                  color: primaryColor,
+                  borderRadius: BorderRadius.circular(3),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
+  }
+
+  // 과거 기록 개수 세기
+  int _getPastHealthTaskCount() {
+    final today = DateTimeUtils.todayKst();
+
+    final pastHealthCount = healthRecords.where((record) {
+      final date = DateTime(
+        record.date.year,
+        record.date.month,
+        record.date.day,
+      );
+
+      return date.isBefore(today);
+    }).length;
+
+    final pastVaccinationCount = vaccinations.where((vaccination) {
+      final date = DateTime(
+        vaccination.vaccinationDate.year,
+        vaccination.vaccinationDate.month,
+        vaccination.vaccinationDate.day,
+      );
+
+      return date.isBefore(today);
+    }).length;
+
+    return pastHealthCount +
+        pastVaccinationCount +
+        pastMedicationHistories.length;
   }
 
   // 검색어에 해당하는 기록 찾기
@@ -1849,6 +1890,7 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
                         Expanded(
                           child: _buildHealthTaskTabButton(
                             title: '기록',
+                            count: _getPastHealthTaskCount(),
                             index: 2,
                           ),
                         ),
