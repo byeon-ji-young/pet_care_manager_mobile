@@ -6,8 +6,6 @@ import '../models/past_medication_history.dart';
 
 import '../utils/date_time_utils.dart';
 
-import '../database/database_helper.dart';
-
 import '../screens/health_record_register_screen.dart';
 import '../screens/vaccination_register_screen.dart';
 import '../screens/past_health_tasks_screen.dart';
@@ -15,42 +13,42 @@ import '../screens/medication_history_screen.dart';
 
 class PastHealthTasks extends StatefulWidget {
   final int petId;
+  final List<HealthRecord> healthRecords;
+  final List<Vaccination> vaccinations;
+  final List<PastMedicationHistory> pastMedicationHistories;
+  final Future<void> Function() onDataChanged;
 
-  const PastHealthTasks({super.key, required this.petId});
+  const PastHealthTasks({
+    super.key,
+    required this.petId,
+    required this.healthRecords,
+    required this.vaccinations,
+    required this.pastMedicationHistories,
+    required this.onDataChanged,
+  });
 
   @override
   State<PastHealthTasks> createState() => _PastHealthTasksState();
 }
 
 class _PastHealthTasksState extends State<PastHealthTasks> {
-  List<HealthRecord> healthRecords = [];
-  List<Vaccination> vaccinations = [];
-  List<PastMedicationHistory> medicationHistories = [];
-
-  bool isLoading = true;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadPastTasks();
-  }
-
-  Future<void> _loadPastTasks() async {
-    final healthRecords = await DatabaseHelper.instance.getPastHealthRecords(
-      widget.petId,
-    );
-
-    final vaccinations = await DatabaseHelper.instance.getPastVaccinations(
-      widget.petId,
-    );
-
-    final medicationHistories = await DatabaseHelper.instance
-        .getPastMedicationHistory(widget.petId);
-
+  List<_PastTask> _buildTasks() {
     final tasks = <_PastTask>[];
 
+    final today = DateTimeUtils.todayKst();
+
     // 병원 기록
-    for (final record in healthRecords) {
+    for (final record in widget.healthRecords) {
+      final recordDate = DateTime(
+        record.date.year,
+        record.date.month,
+        record.date.day,
+      );
+
+      if (!recordDate.isBefore(today)) {
+        continue;
+      }
+
       tasks.add(
         _PastTask(
           date: record.date,
@@ -70,7 +68,7 @@ class _PastHealthTasksState extends State<PastHealthTasks> {
             );
 
             if (result != null) {
-              await _loadPastTasks();
+              await widget.onDataChanged();
             }
           },
         ),
@@ -78,7 +76,17 @@ class _PastHealthTasksState extends State<PastHealthTasks> {
     }
 
     // 예방접종
-    for (final vaccination in vaccinations) {
+    for (final vaccination in widget.vaccinations) {
+      final vaccinationDate = DateTime(
+        vaccination.vaccinationDate.year,
+        vaccination.vaccinationDate.month,
+        vaccination.vaccinationDate.day,
+      );
+
+      if (!vaccinationDate.isBefore(today)) {
+        continue;
+      }
+
       tasks.add(
         _PastTask(
           date: vaccination.vaccinationDate,
@@ -98,7 +106,7 @@ class _PastHealthTasksState extends State<PastHealthTasks> {
             );
 
             if (result != null) {
-              await _loadPastTasks();
+              await widget.onDataChanged();
             }
           },
         ),
@@ -106,7 +114,7 @@ class _PastHealthTasksState extends State<PastHealthTasks> {
     }
 
     // 약 복용
-    for (final history in medicationHistories) {
+    for (final history in widget.pastMedicationHistories) {
       tasks.add(
         _PastTask(
           date: history.medicationDate,
@@ -123,7 +131,7 @@ class _PastHealthTasksState extends State<PastHealthTasks> {
               ),
             );
 
-            await _loadPastTasks();
+            await widget.onDataChanged();
           },
         ),
       );
@@ -132,34 +140,19 @@ class _PastHealthTasksState extends State<PastHealthTasks> {
     // 최신 날짜가 위로 오도록 정렬
     tasks.sort((a, b) => b.date.compareTo(a.date));
 
-    if (!mounted) {
-      return;
-    }
-
-    setState(() {
-      this.healthRecords = healthRecords;
-      this.vaccinations = vaccinations;
-      this.medicationHistories = medicationHistories;
-
-      _tasks = tasks;
-      isLoading = false;
-    });
+    return tasks;
   }
-
-  List<_PastTask> _tasks = [];
 
   @override
   Widget build(BuildContext context) {
+    final tasks = _buildTasks();
+
     // 지난 일정이 없으면 표시하지 않음
-    if (!isLoading && _tasks.isEmpty) {
+    if (tasks.isEmpty) {
       return const SizedBox.shrink();
     }
 
-    if (isLoading) {
-      return const Center(child: CircularProgressIndicator());
-    }
-
-    final visibleTasks = _tasks.take(3).toList();
+    final visibleTasks = tasks.take(3).toList();
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(10, 0, 10, 5),
@@ -169,7 +162,7 @@ class _PastHealthTasksState extends State<PastHealthTasks> {
           ...visibleTasks.map((task) => _buildPastTaskItem(context, task)),
 
           // 전체 일정이 3개보다 많을 때만 전체 보기 표시
-          if (_tasks.length > 3) ...[
+          if (tasks.length > 3) ...[
             Container(
               margin: const EdgeInsets.only(top: 4),
               decoration: BoxDecoration(
@@ -187,7 +180,7 @@ class _PastHealthTasksState extends State<PastHealthTasks> {
                     ),
                   );
 
-                  await _loadPastTasks();
+                  await widget.onDataChanged();
                 },
                 child: Padding(
                   padding: const EdgeInsets.symmetric(vertical: 8),

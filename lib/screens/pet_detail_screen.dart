@@ -6,6 +6,7 @@ import '../models/health_record.dart';
 import '../models/vaccination.dart';
 import '../models/weight_record.dart';
 import '../models/medication.dart';
+import '../models/past_medication_history.dart';
 
 import '../database/database_helper.dart';
 
@@ -58,6 +59,8 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
   List<Medication> upcomingMedications = [];
   List<Medication> todayMedications = [];
 
+  List<PastMedicationHistory> pastMedicationHistories = [];
+
   // Set을 사용하는 이유는 복용 완료한 약의 ID만 중복 없이 가지고 있기 때문
   Set<int> completedMedicationIds = {};
 
@@ -101,6 +104,8 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
       loadMedications(),
       loadUpcomingMedications(),
       loadTodayMedications(),
+
+      loadPastMedicationHistories(),
     ]);
 
     await loadTodayMedicationLogs();
@@ -235,6 +240,18 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
 
     setState(() {
       completedMedicationIds = completedIds;
+    });
+  }
+
+  Future<void> loadPastMedicationHistories() async {
+    final data = await DatabaseHelper.instance.getPastMedicationHistory(
+      currentPet!.id!,
+    );
+
+    if (!mounted) return;
+
+    setState(() {
+      pastMedicationHistories = data;
     });
   }
 
@@ -867,7 +884,28 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
         );
 
       case 2:
-        return PastHealthTasks(petId: pet.id!);
+        return PastHealthTasks(
+          petId: pet.id!,
+          healthRecords: healthRecords,
+          vaccinations: vaccinations,
+          pastMedicationHistories: pastMedicationHistories,
+          onDataChanged: () async {
+            await loadHealthRecords();
+            await loadUpcomingHealthRecords();
+            await loadTodayHealthRecords();
+
+            await loadVaccinations();
+            await loadUpcomingVaccinations();
+            await loadTodayVaccinations();
+
+            await loadMedications();
+            await loadUpcomingMedications();
+            await loadTodayMedications();
+            await loadTodayMedicationLogs();
+
+            await loadPastMedicationHistories();
+          },
+        );
 
       default:
         return const SizedBox.shrink();
