@@ -235,7 +235,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 return Card(
                   elevation: 0,
                   // color: Colors.white,
-                  margin: const EdgeInsets.only(bottom: 12, top: 2),
+                  margin: const EdgeInsets.only(bottom: 10, top: 2),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(16),
                     side: BorderSide(
@@ -256,7 +256,10 @@ class _HomeScreenState extends State<HomeScreen> {
                       loadPets();
                     },
                     child: Padding(
-                      padding: const EdgeInsets.all(20),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 10,
+                      ),
                       child: Column(
                         children: [
                           // 반려동물 프로필 + 우측 상단 이동 아이콘
@@ -419,7 +422,7 @@ class _PetHomeProfileHeader extends StatelessWidget {
     return Row(
       children: [
         CircleAvatar(
-          radius: 36,
+          radius: 30,
           // backgroundColor: Colors.grey[100],
           backgroundImage: pet.imagePath != null
               ? FileImage(File(pet.imagePath!))
