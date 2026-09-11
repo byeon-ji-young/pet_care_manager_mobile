@@ -168,16 +168,22 @@ class _PastHealthTasksScreenState extends State<PastHealthTasksScreen> {
   }
 
   Widget _buildTabBar() {
-    const tabs = ['전체', '건강', '예방접종', '약'];
+    final tabTitles = ['전체', '건강', '예방접종', '약'];
+
+    final tabCounts = [
+      tasks.length,
+      tasks.where((task) => task.type == 0).length,
+      tasks.where((task) => task.type == 1).length,
+      tasks.where((task) => task.type == 2).length,
+    ];
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
       child: Row(
         children: [
-          for (int index = 0; index < tabs.length; index++)
+          for (int index = 0; index < tabTitles.length; index++)
             Expanded(
               child: GestureDetector(
-                // Flutter에서 사용자의 터치/제스처를 감지하는 위젯
                 onTap: () {
                   setState(() {
                     selectedTab = index;
@@ -195,18 +201,47 @@ class _PastHealthTasksScreenState extends State<PastHealthTasksScreen> {
                       ),
                     ),
                   ),
-                  child: Text(
-                    tabs[index],
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: selectedTab == index
-                          ? FontWeight.bold
-                          : FontWeight.w500,
-                      color: selectedTab == index
-                          ? Theme.of(context).primaryColor
-                          : Colors.grey[600],
-                    ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        tabTitles[index],
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: selectedTab == index
+                              ? FontWeight.bold
+                              : FontWeight.w500,
+                          color: selectedTab == index
+                              ? Theme.of(context).primaryColor
+                              : Colors.grey[600],
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 2,
+                        ),
+                        decoration: BoxDecoration(
+                          color: selectedTab == index
+                              ? Theme.of(
+                                  context,
+                                ).primaryColor.withValues(alpha: 0.1)
+                              : Colors.grey.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Text(
+                          '${tabCounts[index]}',
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                            color: selectedTab == index
+                                ? Theme.of(context).primaryColor
+                                : Colors.grey[600],
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),
