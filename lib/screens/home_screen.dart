@@ -29,7 +29,6 @@ class _HomeScreenState extends State<HomeScreen> {
   Map<int, List<HealthRecord>> todayHealthRecords = {};
   Map<int, List<Vaccination>> todayVaccinations = {};
   Map<int, List<Medication>> todayMedications = {};
-  Map<int, Set<int>> completedMedicationIds = {};
 
   @override
   void initState() {
@@ -45,7 +44,6 @@ class _HomeScreenState extends State<HomeScreen> {
     final Map<int, List<HealthRecord>> loadedTodayHealthRecords = {};
     final Map<int, List<Vaccination>> loadedTodayVaccinations = {};
     final Map<int, List<Medication>> loadedTodayMedications = {};
-    final Map<int, Set<int>> loadedCompletedMedicationIds = {};
 
     for (final pet in loadedPets) {
       final todayHealthRecords = await DatabaseHelper.instance
@@ -62,24 +60,6 @@ class _HomeScreenState extends State<HomeScreen> {
           .getTodayMedications(pet.id!);
 
       loadedTodayMedications[pet.id!] = todayMedications;
-
-      final completedIds = <int>{};
-
-      for (final medication in todayMedications) {
-        if (medication.id == null) {
-          continue;
-        }
-
-        final isTaken = await DatabaseHelper.instance.isMedicationTakenToday(
-          medication.id!,
-        );
-
-        if (isTaken) {
-          completedIds.add(medication.id!);
-        }
-      }
-
-      loadedCompletedMedicationIds[pet.id!] = completedIds;
     }
 
     if (!mounted) {
@@ -92,7 +72,6 @@ class _HomeScreenState extends State<HomeScreen> {
       todayHealthRecords = loadedTodayHealthRecords;
       todayVaccinations = loadedTodayVaccinations;
       todayMedications = loadedTodayMedications;
-      completedMedicationIds = loadedCompletedMedicationIds;
     });
   }
 
@@ -258,7 +237,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     child: Padding(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 20,
-                        vertical: 10,
+                        vertical: 15,
                       ),
                       child: Column(
                         children: [
@@ -270,7 +249,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             ],
                           ),
 
-                          const SizedBox(height: 20),
+                          const SizedBox(height: 15),
 
                           // 오늘 예정된 건강관리 요약
                           _buildTodayHealthSummary(pet),
@@ -312,57 +291,67 @@ class _HomeScreenState extends State<HomeScreen> {
     final totalCount =
         healthRecords.length + vaccinations.length + medications.length;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        /*
-        const Align(
-          alignment: Alignment.centerLeft,
-          child: Text(
-            '오늘의 건강 관리',
-            style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      decoration: BoxDecoration(
+        color: totalCount == 0
+            ? Colors.grey.withValues(alpha: 0.08)
+            : primaryColor.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              color: totalCount == 0
+                  ? Colors.grey.withValues(alpha: 0.12)
+                  : primaryColor.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(
+              totalCount == 0
+                  ? Icons.notifications_none
+                  : Icons.notifications_active_outlined,
+              size: 20,
+              color: totalCount == 0 ? Colors.grey[700] : primaryColor,
+            ),
           ),
-        ),
 
-        const SizedBox(height: 8),
-        */
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-          decoration: BoxDecoration(
-            color: totalCount == 0
-                ? Colors.grey.withValues(alpha: 0.08)
-                : primaryColor.withValues(alpha: 0.08),
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: Row(
-            children: [
-              Icon(
-                totalCount == 0
-                    ? Icons.notifications_none
-                    : Icons.notifications_active_outlined,
-                size: 18,
-                color: totalCount == 0 ? Colors.grey[700] : primaryColor,
-              ),
+          const SizedBox(width: 10),
 
-              const SizedBox(width: 8),
-
-              Expanded(
-                child: Text(
-                  totalCount == 0
-                      ? '오늘 예정된 건강 관리가 없어요.'
-                      : '오늘 예정된 건강 관리가 $totalCount건 있어요.',
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '오늘 건강 관리 일정',
                   style: TextStyle(
                     fontSize: 13,
                     color: totalCount == 0 ? Colors.grey[700] : primaryColor,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
-              ),
-            ],
+
+                const SizedBox(height: 3),
+
+                Text(
+                  totalCount == 0
+                      ? '예정된 건강 관리가 없어요.'
+                      : '$totalCount건의 건강 관리가 있어요.',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: totalCount == 0 ? Colors.grey[700] : Colors.black87,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
@@ -422,7 +411,7 @@ class _PetHomeProfileHeader extends StatelessWidget {
     return Row(
       children: [
         CircleAvatar(
-          radius: 30,
+          radius: 32,
           // backgroundColor: Colors.grey[100],
           backgroundImage: pet.imagePath != null
               ? FileImage(File(pet.imagePath!))
