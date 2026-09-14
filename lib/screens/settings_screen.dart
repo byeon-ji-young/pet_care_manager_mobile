@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../database/database_helper.dart';
 
 import '../services/backup_service.dart';
+import '../services/notification_service.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -14,12 +15,14 @@ class SettingsScreen extends StatefulWidget {
 
 class _SettingsScreenState extends State<SettingsScreen> {
   DateTime? lastBackupTime;
+  bool notificationEnabled = true;
 
   @override
   void initState() {
     super.initState();
 
     _loadLastBackupTime();
+    _loadNotificationSetting();
   }
 
   // 마지막 백업 시간 조회
@@ -38,6 +41,37 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
     setState(() {
       lastBackupTime = DateTime.tryParse(savedTime);
+    });
+  }
+
+  // 알림 설정 조회
+  Future<void> _loadNotificationSetting() async {
+    final enabled = await NotificationService.instance.isNotificationEnabled();
+
+    if (!mounted) {
+      return;
+    }
+
+    setState(() {
+      notificationEnabled = enabled;
+    });
+  }
+
+  // 알림 설정 변경
+  Future<void> _changeNotificationSetting(bool enabled) async {
+    await NotificationService.instance.setNotificationEnabled(enabled);
+
+    if (!enabled) {
+      // 알림을 끄면 이미 예약되어 있는 알림도 모두 취소
+      await NotificationService.instance.cancelAllNotifications();
+    }
+
+    if (!mounted) {
+      return;
+    }
+
+    setState(() {
+      notificationEnabled = enabled;
     });
   }
 
@@ -303,6 +337,49 @@ class _SettingsScreenState extends State<SettingsScreen> {
               subtitle: const Text('저장된 모든 반려동물과 기록을 삭제해요.'),
               trailing: const Icon(Icons.chevron_right, color: Colors.grey),
               onTap: () => _clearAllData(context),
+            ),
+          ),
+
+          const SizedBox(height: 24),
+
+          const Text(
+            '알림',
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.bold,
+              color: Colors.grey,
+            ),
+          ),
+
+          const SizedBox(height: 8),
+
+          Card(
+            elevation: 0,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(14),
+              side: BorderSide(color: Colors.grey.shade200),
+            ),
+            child: ListTile(
+              leading: const CircleAvatar(
+                backgroundColor: Color(0xFFFFF3E0),
+                child: Icon(Icons.notifications_outlined, color: Colors.orange),
+              ),
+              title: const Text(
+                '알림 설정',
+                style: TextStyle(fontWeight: FontWeight.w600),
+              ),
+              subtitle: Text(
+                notificationEnabled ? '건강 관리 알림을 받아요.' : '건강 관리 알림을 받지 않아요.',
+              ),
+              trailing: Transform.scale(
+                scale: 0.8,
+                child: Switch(
+                  value: notificationEnabled,
+                  activeThumbColor: Colors.orange,
+                  activeTrackColor: Colors.orange.shade100,
+                  onChanged: _changeNotificationSetting,
+                ),
+              ),
             ),
           ),
 

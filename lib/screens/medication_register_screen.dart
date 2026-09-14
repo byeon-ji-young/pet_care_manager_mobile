@@ -704,15 +704,22 @@ class _MedicationRegisterScreen extends State<MedicationRegisterScreen> {
                       );
 
                       try {
-                        await NotificationService.instance
-                            .scheduleMedicationNotification(
-                              id: medicationId!,
-                              title: '${medication.medicationName} 복용 시간이에요 💊',
-                              body: '반려동물의 약을 챙겨주세요.',
-                              scheduledDate: scheduledDate,
-                              repeatType: medication.repeatType,
-                              repeatInterval: medication.repeatInterval,
-                            );
+                        final notificationEnabled = await NotificationService
+                            .instance
+                            .isNotificationEnabled();
+
+                        if (notificationEnabled) {
+                          await NotificationService.instance
+                              .scheduleMedicationNotification(
+                                id: medicationId!,
+                                title:
+                                    '${medication.medicationName} 복용 시간이에요 💊',
+                                body: '반려동물의 약을 챙겨주세요.',
+                                scheduledDate: scheduledDate,
+                                repeatType: medication.repeatType,
+                                repeatInterval: medication.repeatInterval,
+                              );
+                        }
                       } catch (e) {
                         debugPrint('약 복용 알림 예약 실패: $e');
                       }

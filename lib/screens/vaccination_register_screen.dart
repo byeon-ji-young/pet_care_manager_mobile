@@ -482,13 +482,19 @@ class _VaccinationRegisterScreen extends State<VaccinationRegisterScreen> {
                       );
 
                       try {
-                        await NotificationService.instance
-                            .scheduleVaccinationNotification(
-                              id: vaccinationId,
-                              title: '💉 예방접종 예정이에요',
-                              body: '${vaccination.vaccineName} 예방접종 예정일이에요.',
-                              scheduledDate: scheduledDate,
-                            );
+                        final notificationEnabled = await NotificationService
+                            .instance
+                            .isNotificationEnabled();
+
+                        if (notificationEnabled) {
+                          await NotificationService.instance
+                              .scheduleVaccinationNotification(
+                                id: vaccinationId,
+                                title: '💉 예방접종 예정이에요',
+                                body: '${vaccination.vaccineName} 예정일이에요.',
+                                scheduledDate: scheduledDate,
+                              );
+                        }
                       } catch (e) {
                         debugPrint('예방접종 알림 예약 실패: $e');
                       }

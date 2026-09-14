@@ -1,4 +1,5 @@
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:timezone/data/latest.dart' as tz_data;
 import 'package:timezone/timezone.dart' as tz;
@@ -266,4 +267,25 @@ class NotificationService {
   }
 
   // -------------------------------------------- 반복 O --------------------------------------------
+
+  // -------------------------------------------- 알림 설정 --------------------------------------------
+  // 알림 설정이 켜져 있는지 확인
+  Future<bool> isNotificationEnabled() async {
+    final prefs = await SharedPreferences.getInstance();
+
+    // 저장된 값이 없으면 기본값은 ON
+    return prefs.getBool('notification_enabled') ?? true;
+  }
+
+  // 알림 설정 저장
+  Future<void> setNotificationEnabled(bool enabled) async {
+    final prefs = await SharedPreferences.getInstance();
+
+    await prefs.setBool('notification_enabled', enabled);
+  }
+
+  // 모든 예약 알림 취소
+  Future<void> cancelAllNotifications() async {
+    await _notifications.cancelAll();
+  }
 }
