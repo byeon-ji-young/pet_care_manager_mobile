@@ -99,7 +99,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 Icon(Icons.pets),
                 SizedBox(width: 6),
                 Text(
-                  '펫몽',
+                  '멍냥일지',
                   /*
                     // 개별 텍스트에 구글폰트 적용시키는 방법 *
                     style: GoogleFonts.jua( 

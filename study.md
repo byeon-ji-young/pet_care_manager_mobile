@@ -172,7 +172,7 @@ Scaffold(
 
 ```dart
 AppBar(
-  title: const Text('펫몽'),
+  title: const Text('pet'),
 )
 ```
 
@@ -180,7 +180,7 @@ AppBar(
 
 ```dart
 AppBar(
-  title: const Text('펫몽'),
+  title: const Text('pet'),
   actions: [
     IconButton(
       onPressed: () {},

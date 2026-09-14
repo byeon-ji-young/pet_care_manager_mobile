@@ -175,7 +175,7 @@ class _VaccinationRegisterScreen extends State<VaccinationRegisterScreen> {
                       controller: hospitalController,
                       decoration: InputDecoration(
                         labelText: '병원명',
-                        hintText: '예: 펫몽 동물병원',
+                        hintText: '예: 행복 동물병원',
                         prefixIcon: const Icon(Icons.local_hospital_outlined),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
