@@ -305,6 +305,38 @@ class _SettingsScreenState extends State<SettingsScreen> {
               onTap: () => _clearAllData(context),
             ),
           ),
+
+          const SizedBox(height: 24),
+
+          const Text(
+            '앱 정보',
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.bold,
+              color: Colors.grey,
+            ),
+          ),
+
+          const SizedBox(height: 8),
+
+          Card(
+            elevation: 0,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(14),
+              side: BorderSide(color: Colors.grey.shade200),
+            ),
+            child: const ListTile(
+              leading: CircleAvatar(
+                backgroundColor: Color(0xFFF3E5F5),
+                child: Icon(Icons.info_outline, color: Colors.deepPurple),
+              ),
+              title: Text(
+                '앱 정보',
+                style: TextStyle(fontWeight: FontWeight.w600),
+              ),
+              trailing: Text('ver 1.2.0', style: TextStyle(fontSize: 14)),
+            ),
+          ),
         ],
       ),
     );
