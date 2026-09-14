@@ -2,7 +2,7 @@ import 'dart:convert'; // JSON 변환과 UTF-8 변환에 사용
 import 'dart:io'; // 파일을 다루기 위해 사용
 
 import 'package:archive/archive.dart'; // ZIP 같은 압축파일을 만들기 위한 패키지
-import 'package:file_picker/file_picker.dart'; // 어디에 백업 파일을 저장할지 선택하는 창을 띄우기 위해 사용
+import 'package:file_picker/file_picker.dart'; // 백업 파일 저장 및 선택
 import 'package:path/path.dart' as p; // 파일 경로를 안전하게 조합하거나 확장자를 가져올 때 사용
 import 'package:path_provider/path_provider.dart';
 import 'package:flutter/foundation.dart';
@@ -24,18 +24,67 @@ class BackupService {
     // 2. ZIP 파일 구성
     final archive = Archive();
 
-    // 2-1. JSON 데이터 준비
+    // DB 데이터를 복사해서 사용
     final data = Map<String, dynamic>.from(backupData);
 
+    // 2-1. 반려동물 사진 준비
+    final pets = (data['pets'] as List)
+        .map((item) => Map<String, dynamic>.from(item as Map))
+        .toList();
+
+    for (final petData in pets) {
+      final originalPath = petData['image_path'];
+
+      // 사진이 없는 반려동물은 건너뜀
+      if (originalPath == null || originalPath.toString().isEmpty) {
+        continue;
+      }
+
+      final file = File(originalPath.toString());
+
+      // 실제 파일이 없으면 건너뜀
+      if (!await file.exists()) {
+        continue;
+      }
+
+      final petId = petData['id'];
+
+      if (petId == null) {
+        continue;
+      }
+
+      // ZIP 내부에서 사용할 상대 경로
+      final backupImagePath =
+          'images/pet_$petId${p.extension(originalPath.toString())}';
+
+      // 실제 사진 파일 읽기
+      final imageBytes = await file.readAsBytes();
+
+      // ZIP에 사진 추가
+      archive.addFile(
+        ArchiveFile(backupImagePath, imageBytes.length, imageBytes),
+      );
+
+      // DB의 절대 경로 대신 ZIP 내부 경로 저장
+      petData['image_path'] = backupImagePath;
+    }
+
+    // 수정된 반려동물 데이터를 다시 반영
+    data['pets'] = pets;
+
+    // 2-2. 건강 기록 사진 준비
     final healthRecordImages = (data['health_record_images'] as List)
         .map((item) => Map<String, dynamic>.from(item as Map))
         .toList();
 
-    // 2-2. 건강 기록 사진 준비
     for (final imageData in healthRecordImages) {
-      final originalPath = imageData['image_path'] as String;
+      final originalPath = imageData['image_path'];
 
-      final file = File(originalPath);
+      if (originalPath == null || originalPath.toString().isEmpty) {
+        continue;
+      }
+
+      final file = File(originalPath.toString());
 
       if (!await file.exists()) {
         continue;
@@ -43,9 +92,13 @@ class BackupService {
 
       final imageId = imageData['id'];
 
+      if (imageId == null) {
+        continue;
+      }
+
       // ZIP 내부에서 사용할 상대 경로 ★
       final backupImagePath =
-          'images/health_record_$imageId${p.extension(originalPath)}';
+          'images/health_record_$imageId${p.extension(originalPath.toString())}';
 
       final imageBytes = await file.readAsBytes();
 
@@ -58,7 +111,7 @@ class BackupService {
       imageData['image_path'] = backupImagePath;
     }
 
-    // 수정된 사진 경로를 다시 데이터에 반영
+    // 수정된 건강 기록 사진 경로를 다시 데이터에 반영
     data['health_record_images'] = healthRecordImages;
 
     // 2-3. data.json 추가
@@ -85,7 +138,7 @@ class BackupService {
         '${now.minute.toString().padLeft(2, '0')}'
         '.zip';
 
-    // 5. 사용자에게 저장 위치 선택하도록 요청
+    // 5. 사용자에게 저장 위치 선택
     final result = await FilePicker.saveFile(
       dialogTitle: 'PetCareManager 백업 파일 저장',
       fileName: fileName,
@@ -174,7 +227,14 @@ class BackupService {
     Directory(): 폴더 생성이 아니라 경로를 나타내는 객체 생성
     create(): 실제 폴더 생성
     */
-    // 최종 사진 저장 위치
+    // 반려동물 사진 폴더
+    final petImageDirectory = Directory(p.join(appDirectory.path, 'pets'));
+
+    final restoredPetImagesDirectory = Directory(
+      p.join(appDirectory.path, 'pets_restore'),
+    );
+
+    // 건강 기록 사진 폴더
     final healthRecordDirectory = Directory(
       p.join(appDirectory.path, 'health_records'),
     );
@@ -184,10 +244,16 @@ class BackupService {
       p.join(appDirectory.path, 'health_records_restore'),
     );
 
-    // 기존 임시 폴더가 있다면 삭제
+    // 기존 임시 폴더 삭제
+    if (await restoredPetImagesDirectory.exists()) {
+      await restoredPetImagesDirectory.delete(recursive: true);
+    }
+
     if (await restoredImagesDirectory.exists()) {
       await restoredImagesDirectory.delete(recursive: true);
     }
+
+    await restoredPetImagesDirectory.create(recursive: true);
 
     await restoredImagesDirectory.create(recursive: true);
     /*
@@ -196,7 +262,83 @@ class BackupService {
     └── health_records_restore/ (복원용)
     */
 
-    // 8. ZIP에 있는 건강 기록 사진을 앱 저장 공간으로 복원
+    // 8. 반려동물 사진 복원
+    final petDataList = (backupData['pets'] as List)
+        .map((item) => Map<String, dynamic>.from(item as Map))
+        .toList();
+
+    for (final petData in petDataList) {
+      final petId = petData['id'];
+      final backupImagePath = petData['image_path'];
+
+      // 사진이 없는 경우
+      if (petId == null ||
+          backupImagePath == null ||
+          backupImagePath.toString().isEmpty) {
+        petData['image_path'] = null;
+        continue;
+      }
+
+      final imagePathString = backupImagePath.toString();
+
+      // ----------------------------------------------------------
+      // 기존 백업 파일과의 호환
+      //
+      // 예전 백업은 image_path가
+      // '/data/user/0/...' 같은 실제 경로일 수 있음.
+      //
+      // 그런 경우 ZIP 안에 사진이 없으므로 null 처리
+      // ----------------------------------------------------------
+      if (!imagePathString.startsWith('images/')) {
+        petData['image_path'] = null;
+        continue;
+      }
+
+      // ZIP 내부에서 사진 찾기
+      ArchiveFile? imageFile;
+
+      for (final file in archive) {
+        if (file.name == imagePathString) {
+          imageFile = file;
+          break;
+        }
+      }
+
+      // 예전 백업이거나 사진 파일이 없는 경우
+      if (imageFile == null) {
+        petData['image_path'] = null;
+        continue;
+      }
+
+      final extension = p.extension(imagePathString);
+
+      final fileName = 'pet_$petId$extension';
+
+      // 반려동물별 폴더
+      final tempPetDirectory = Directory(
+        p.join(restoredPetImagesDirectory.path, petId.toString()),
+      );
+
+      await tempPetDirectory.create(recursive: true);
+
+      final tempTargetPath = p.join(tempPetDirectory.path, fileName);
+
+      final tempTargetFile = File(tempTargetPath);
+
+      await tempTargetFile.writeAsBytes(imageFile.content as List<int>);
+
+      // DB에 저장할 최종 경로
+      final finalPetDirectory = Directory(
+        p.join(petImageDirectory.path, petId.toString()),
+      );
+
+      petData['image_path'] = p.join(finalPetDirectory.path, fileName);
+    }
+
+    // 수정된 반려동물 데이터를 다시 반영
+    backupData['pets'] = petDataList;
+
+    // 9. 건강 기록 사진 복원
     final imageDataList = (backupData['health_record_images'] as List)
         .map((item) => Map<String, dynamic>.from(item as Map))
         .toList();
@@ -208,21 +350,36 @@ class BackupService {
         throw Exception('건강 기록 사진 ID가 없습니다.');
       }
 
-      // ZIP 내부의 사진 경로
-      final backupImagePath = imageData['image_path'] as String;
+      final backupImagePath = imageData['image_path'];
+
+      // 사진 경로가 없으면 사진 없이 복원
+      if (backupImagePath == null || backupImagePath.toString().isEmpty) {
+        imageData['image_path'] = null;
+        continue;
+      }
+
+      final backupImagePathString = backupImagePath.toString();
+
+      // 기존 백업과의 호환
+      if (!backupImagePathString.startsWith('images/')) {
+        imageData['image_path'] = null;
+        continue;
+      }
 
       // ZIP에서 해당 사진 찾기
       ArchiveFile? imageFile;
 
       for (final file in archive) {
-        if (file.name == backupImagePath) {
+        if (file.name == backupImagePathString) {
           imageFile = file;
           break;
         }
       }
 
+      // 사진이 없는 경우
       if (imageFile == null) {
-        throw Exception('백업 파일에 사진이 없습니다. ($backupImagePath)');
+        imageData['image_path'] = null;
+        continue;
       }
 
       final healthRecordId = imageData['health_record_id'];
@@ -231,7 +388,7 @@ class BackupService {
         throw Exception('건강 기록 ID가 없습니다.');
       }
 
-      final extension = p.extension(backupImagePath);
+      final extension = p.extension(backupImagePathString);
 
       final fileName = 'health_record_$imageId$extension';
 
@@ -250,7 +407,7 @@ class BackupService {
 
       await tempTargetFile.writeAsBytes(imageFile.content as List<int>);
 
-      // DB에는 최종 경로를 저장
+      // DB에는 최종 경로 저장
       final finalRecordDirectory = Directory(
         p.join(healthRecordDirectory.path, healthRecordId.toString()),
       );
@@ -261,15 +418,21 @@ class BackupService {
     // 수정된 사진 경로를 백업 데이터에 반영
     backupData['health_record_images'] = imageDataList;
 
-    // 9. 기존 DB 삭제 + 백업 데이터 복원
+    // 10. DB 복원
     await DatabaseHelper.instance.restoreBackupData(backupData);
 
-    // 10. 기존 사진 폴더 삭제
+    // 11. 기존 반려동물 사진 폴더 삭제
+    if (await petImageDirectory.exists()) {
+      await petImageDirectory.delete(recursive: true);
+    }
+
+    // 12. 기존 건강 기록 사진 폴더 삭제
     if (await healthRecordDirectory.exists()) {
       await healthRecordDirectory.delete(recursive: true);
     }
 
-    // 11. 복원 폴더를 실제 사진 폴더 이름으로 변경
+    // 13. 임시 폴더를 실제 사진 폴더로 변경
+    await restoredPetImagesDirectory.rename(petImageDirectory.path);
     await restoredImagesDirectory.rename(healthRecordDirectory.path);
 
     debugPrint('백업 데이터 복원 완료');

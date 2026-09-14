@@ -1466,12 +1466,40 @@ class DatabaseHelper {
   Future<void> clearAllData() async {
     final db = await database;
 
+    // 삭제 전에 모든 반려동물 프로필 사진 조회
+    final pets = await db.query('pets');
+
+    // 실제 반려동물 프로필 사진 파일 삭제
+    for (final pet in pets) {
+      final imagePath = pet['image_path'] as String?;
+
+      // 사진이 없는 경우 건너뜀
+      if (imagePath == null || imagePath.isEmpty) {
+        continue;
+      }
+
+      try {
+        final file = File(imagePath);
+
+        if (await file.exists()) {
+          await file.delete();
+        }
+      } catch (e) {
+        debugPrint('전체 데이터 초기화 중 반려동물 사진 파일 삭제 실패: $e');
+      }
+    }
+
     // 삭제 전에 모든 건강 기록 사진 조회
     final images = await db.query('health_record_images');
 
-    // 실제 사진 파일 삭제
+    // 실제 건강 기록 사진 파일 삭제
     for (final image in images) {
-      final imagePath = image['image_path'] as String;
+      final imagePath = image['image_path'] as String?;
+
+      // 사진이 없는 경우 건너뜀
+      if (imagePath == null || imagePath.isEmpty) {
+        continue;
+      }
 
       try {
         final file = File(imagePath);
@@ -1484,8 +1512,7 @@ class DatabaseHelper {
       }
     }
 
-    // DB 데이터 삭제
-    // 외래키 관계 때문에 자식 테이블부터 삭제
+    // DB 데이터 삭제 - 외래키 관계 때문에 자식 테이블부터 삭제
     await db.transaction((txn) async {
       await txn.delete('health_record_images');
       await txn.delete('medication_logs');
