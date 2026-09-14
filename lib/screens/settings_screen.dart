@@ -411,7 +411,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 '앱 정보',
                 style: TextStyle(fontWeight: FontWeight.w600),
               ),
-              trailing: Text('ver 1.2.0', style: TextStyle(fontSize: 14)),
+              trailing: Text('ver 1.3.0', style: TextStyle(fontSize: 14)),
             ),
           ),
         ],
