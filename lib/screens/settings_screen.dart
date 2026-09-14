@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../database/database_helper.dart';
+
 import '../services/backup_service.dart';
 
 class SettingsScreen extends StatefulWidget {
@@ -162,6 +164,58 @@ class _SettingsScreenState extends State<SettingsScreen> {
     }
   }
 
+  // 전체 데이터 초기화
+  Future<void> _clearAllData(BuildContext context) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          content: const Text(
+            '저장된 모든 반려동물과 기록이 삭제됩니다.\n\n'
+            '삭제된 데이터는 복구할 수 없습니다.\n'
+            '정말 초기화하시겠습니까?',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('취소'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(context, true),
+              style: TextButton.styleFrom(foregroundColor: Colors.redAccent),
+              child: const Text('삭제'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirmed != true) {
+      return;
+    }
+
+    try {
+      await DatabaseHelper.instance.clearAllData();
+
+      if (!context.mounted) return;
+
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('모든 데이터가 삭제되었어요.')));
+
+      // 설정 화면을 닫고 이전 화면으로 돌아가기
+      Navigator.pop(context, true);
+    } catch (e) {
+      debugPrint('전체 데이터 초기화 실패: $e');
+
+      if (!context.mounted) return;
+
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('데이터 초기화에 실패했어요.')));
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -225,6 +279,30 @@ class _SettingsScreenState extends State<SettingsScreen> {
               subtitle: const Text('백업 파일에서 데이터를 복원해요.'),
               trailing: const Icon(Icons.chevron_right, color: Colors.grey),
               onTap: () => _restoreData(context),
+            ),
+          ),
+
+          Card(
+            elevation: 0,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(14),
+              side: BorderSide(color: Colors.grey.shade200),
+            ),
+            child: ListTile(
+              leading: const CircleAvatar(
+                backgroundColor: Color(0xFFFFEBEE),
+                child: Icon(Icons.delete_outline, color: Colors.redAccent),
+              ),
+              title: const Text(
+                '전체 데이터 초기화',
+                style: TextStyle(
+                  fontWeight: FontWeight.w600,
+                  // color: Colors.redAccent,
+                ),
+              ),
+              subtitle: const Text('저장된 모든 반려동물과 기록을 삭제해요.'),
+              trailing: const Icon(Icons.chevron_right, color: Colors.grey),
+              onTap: () => _clearAllData(context),
             ),
           ),
         ],

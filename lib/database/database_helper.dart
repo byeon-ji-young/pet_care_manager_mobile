@@ -1461,4 +1461,41 @@ class DatabaseHelper {
       }
     });
   }
+
+  // 전체 데이터 초기화
+  Future<void> clearAllData() async {
+    final db = await database;
+
+    // 삭제 전에 모든 건강 기록 사진 조회
+    final images = await db.query('health_record_images');
+
+    // 실제 사진 파일 삭제
+    for (final image in images) {
+      final imagePath = image['image_path'] as String;
+
+      try {
+        final file = File(imagePath);
+
+        if (await file.exists()) {
+          await file.delete();
+        }
+      } catch (e) {
+        debugPrint('전체 데이터 초기화 중 사진 파일 삭제 실패: $e');
+      }
+    }
+
+    // DB 데이터 삭제
+    // 외래키 관계 때문에 자식 테이블부터 삭제
+    await db.transaction((txn) async {
+      await txn.delete('health_record_images');
+      await txn.delete('medication_logs');
+
+      await txn.delete('health_records');
+      await txn.delete('vaccinations');
+      await txn.delete('weight_records');
+      await txn.delete('medications');
+
+      await txn.delete('pets');
+    });
+  }
 }
