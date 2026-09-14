@@ -709,12 +709,21 @@ class _MedicationRegisterScreen extends State<MedicationRegisterScreen> {
                             .isNotificationEnabled();
 
                         if (notificationEnabled) {
+                          final pet = await DatabaseHelper.instance.getPetById(
+                            widget.petId,
+                          );
+
+                          if (pet == null) {
+                            debugPrint('반려동물 정보 없음');
+                            return;
+                          }
+
                           await NotificationService.instance
                               .scheduleMedicationNotification(
                                 id: medicationId!,
-                                title:
-                                    '${medication.medicationName} 복용 시간이에요 💊',
-                                body: '반려동물의 약을 챙겨주세요.',
+                                title: '💊 약 복용 알림',
+                                body:
+                                    '${pet.name}이(가) ${medication.medicationName} 먹을 시간이에요!',
                                 scheduledDate: scheduledDate,
                                 repeatType: medication.repeatType,
                                 repeatInterval: medication.repeatInterval,

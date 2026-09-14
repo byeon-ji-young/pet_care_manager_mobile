@@ -487,11 +487,21 @@ class _VaccinationRegisterScreen extends State<VaccinationRegisterScreen> {
                             .isNotificationEnabled();
 
                         if (notificationEnabled) {
+                          final pet = await DatabaseHelper.instance.getPetById(
+                            widget.petId,
+                          );
+
+                          if (pet == null) {
+                            debugPrint('반려동물 정보 없음');
+                            return;
+                          }
+
                           await NotificationService.instance
                               .scheduleVaccinationNotification(
                                 id: vaccinationId,
-                                title: '💉 예방접종 예정이에요',
-                                body: '${vaccination.vaccineName} 예정일이에요.',
+                                title: '💉 예방접종 안내',
+                                body:
+                                    '오늘은 ${pet.name}이(가) ${vaccination.vaccineName} 맞으러 가는 날이에요!',
                                 scheduledDate: scheduledDate,
                               );
                         }
