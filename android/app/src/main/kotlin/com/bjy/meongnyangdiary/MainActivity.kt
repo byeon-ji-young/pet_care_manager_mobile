@@ -1,4 +1,4 @@
-package com.example.pet_care_manager_mobile
+package com.bjy.meongnyangdiary
 
 import io.flutter.embedding.android.FlutterActivity
 
