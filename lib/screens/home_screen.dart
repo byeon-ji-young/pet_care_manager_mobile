@@ -213,13 +213,15 @@ class _HomeScreenState extends State<HomeScreen> {
 
                 return Card(
                   elevation: 0,
-                  // color: Colors.white,
-                  margin: const EdgeInsets.only(bottom: 10, top: 2),
+                  color: Colors.white,
+                  margin: const EdgeInsets.only(bottom: 10, top: 3),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(16),
                     side: BorderSide(
-                      color: Colors.grey.withValues(alpha: 0.3),
-                      width: 1,
+                      color: Theme.of(
+                        context,
+                      ).primaryColor.withValues(alpha: 0.25),
+                      // width: 1,
                     ),
                   ),
                   child: InkWell(
