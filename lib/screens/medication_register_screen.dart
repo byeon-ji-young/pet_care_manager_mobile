@@ -741,6 +741,12 @@ class _MedicationRegisterScreen extends State<MedicationRegisterScreen> {
                     // Navigator.pop(this.context, medicationDate);
                     Navigator.of(this.context).pop(medicationDate);
                   },
+                  style: ElevatedButton.styleFrom(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    elevation: 0,
+                  ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [

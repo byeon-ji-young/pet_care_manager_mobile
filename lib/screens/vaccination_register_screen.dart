@@ -516,6 +516,12 @@ class _VaccinationRegisterScreen extends State<VaccinationRegisterScreen> {
 
                     Navigator.pop(context, vaccinationDate);
                   },
+                  style: ElevatedButton.styleFrom(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    elevation: 0,
+                  ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [

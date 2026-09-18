@@ -302,6 +302,12 @@ class _WeightRecordRegisterScreen extends State<WeightRecordRegisterScreen> {
                 height: 50,
                 child: ElevatedButton(
                   onPressed: saveWeightRecord,
+                  style: ElevatedButton.styleFrom(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    elevation: 0,
+                  ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
