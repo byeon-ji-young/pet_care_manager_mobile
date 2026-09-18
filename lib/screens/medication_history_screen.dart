@@ -162,7 +162,7 @@ class _MedicationHistoryScreenState extends State<MedicationHistoryScreen> {
           : ListView.separated(
               padding: const EdgeInsets.all(16),
               itemCount: history.length,
-              separatorBuilder: (_, _) => const SizedBox(height: 10),
+              separatorBuilder: (_, _) => const SizedBox(height: 8),
               itemBuilder: (context, index) {
                 return _buildLogCard(history[index]);
               },
@@ -178,7 +178,7 @@ class _MedicationHistoryScreenState extends State<MedicationHistoryScreen> {
           Icon(Icons.medication_outlined, size: 48, color: Colors.grey[400]),
           const SizedBox(height: 12),
           Text(
-            '아직 복용 완료 기록이 없어요.',
+            '아직 복용 이력이 없어요.',
             style: TextStyle(fontSize: 14, color: Colors.grey[600]),
           ),
         ],
@@ -189,84 +189,73 @@ class _MedicationHistoryScreenState extends State<MedicationHistoryScreen> {
   Widget _buildLogCard(MedicationHistoryItem item) {
     final completed = item.isCompleted;
 
-    return Card(
-      elevation: 0,
-      shape: RoundedRectangleBorder(
+    final Color statusColor = completed
+        ? Colors.green
+        : item.isMissed
+        ? Colors.redAccent
+        : Colors.grey;
+
+    final IconData statusIcon = completed
+        ? Icons.check_circle_outline
+        : item.isMissed
+        ? Icons.error_outline
+        : Icons.schedule_outlined;
+
+    final String statusText = completed && item.completedAt != null
+        ? '복용 완료 · ${_formatTime(item.completedAt!)}'
+        : item.isMissed
+        ? '복용 누락'
+        : '복용 예정';
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
+      decoration: BoxDecoration(
+        color: Colors.white,
         borderRadius: BorderRadius.circular(14),
-        side: BorderSide(color: Colors.grey.shade200),
+        border: Border.all(color: Colors.grey.shade200),
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Row(
-          children: [
-            CircleAvatar(
-              radius: 22,
-              backgroundColor: completed
-                  ? Colors.green.withValues(alpha: 0.1)
-                  : item.isMissed
-                  ? Colors.redAccent.withValues(alpha: 0.1)
-                  : Colors.grey.withValues(alpha: 0.1),
-              child: Icon(
-                completed
-                    ? Icons.check_circle
-                    : item.isMissed
-                    ? Icons.error_outline
-                    : Icons.schedule_outlined,
-                color: completed
-                    ? Colors.green
-                    : item.isMissed
-                    ? Colors.redAccent
-                    : Colors.grey,
-                size: 24,
-              ),
+      child: Row(
+        children: [
+          // 상태 아이콘
+          Container(
+            width: 42,
+            height: 42,
+            decoration: BoxDecoration(
+              color: statusColor.withValues(alpha: 0.1),
+              shape: BoxShape.circle,
             ),
+            child: Icon(statusIcon, color: statusColor, size: 21),
+          ),
 
-            const SizedBox(width: 14),
+          const SizedBox(width: 12),
 
-            // Expanded는 Flutter에서 남는 공간을 꽉 채우도록 자식 위젯을 늘려주는 위젯
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    _formatDate(item.medicationDate),
-                    style: const TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.bold,
-                    ),
+          // 날짜 + 상태
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  _formatDate(item.medicationDate),
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
                   ),
+                ),
 
-                  const SizedBox(height: 5),
+                const SizedBox(height: 4),
 
-                  Text(
-                    completed && item.completedAt != null
-                        ? '복용 완료 ${_formatTime(item.completedAt!)}'
-                        : item.isMissed
-                        ? '복용 누락'
-                        : '복용 예정',
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: completed
-                          ? Colors.green.shade700
-                          : item.isMissed
-                          ? Colors.redAccent
-                          : Colors.grey[600],
-                    ),
+                Text(
+                  statusText,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: statusColor,
+                    fontWeight: FontWeight.w500,
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
-
-            // Text(
-            //   completed ? '복용 완료' : '미복용',
-            //   style: TextStyle(
-            //     fontSize: 12,
-            //     fontWeight: FontWeight.w600,
-            //     color: completed ? Colors.green : Colors.grey,
-            //   ),
-            // ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

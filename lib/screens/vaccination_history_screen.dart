@@ -40,7 +40,7 @@ class VaccinationHistoryScreen extends StatelessWidget {
           : ListView.separated(
               padding: const EdgeInsets.all(16),
               itemCount: history.length,
-              separatorBuilder: (_, _) => const SizedBox(height: 10),
+              separatorBuilder: (_, _) => const SizedBox(height: 8),
               itemBuilder: (context, index) {
                 return _buildHistoryCard(history[index]);
               },
@@ -51,89 +51,70 @@ class VaccinationHistoryScreen extends StatelessWidget {
   Widget _buildHistoryCard(Vaccination vaccination) {
     final completed = vaccination.status == 'completed';
 
-    return Card(
-      elevation: 0,
-      shape: RoundedRectangleBorder(
+    final Color statusColor = completed ? Colors.green : Colors.grey;
+
+    final IconData statusIcon = completed
+        ? Icons.check_circle_outline
+        : Icons.schedule_outlined;
+
+    final String statusText = completed ? '접종 완료' : '접종 예정';
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
+      decoration: BoxDecoration(
+        color: Colors.white,
         borderRadius: BorderRadius.circular(14),
-        side: BorderSide(color: Colors.grey.shade200),
+        border: Border.all(color: Colors.grey.shade200),
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Row(
-          children: [
-            CircleAvatar(
-              radius: 22,
-              backgroundColor: completed
-                  ? Colors.green.withValues(alpha: 0.1)
-                  : Colors.grey.withValues(alpha: 0.1),
-              child: Icon(
-                completed ? Icons.check_circle : Icons.schedule_outlined,
-                color: completed ? Colors.green : Colors.grey,
-                size: 24,
-              ),
+      child: Row(
+        children: [
+          // 상태 아이콘
+          Container(
+            width: 42,
+            height: 42,
+            decoration: BoxDecoration(
+              color: statusColor.withValues(alpha: 0.1),
+              shape: BoxShape.circle,
             ),
+            child: Icon(statusIcon, color: statusColor, size: 21),
+          ),
 
-            const SizedBox(width: 14),
+          const SizedBox(width: 12),
 
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    _formatDate(vaccination.vaccinationDate),
-                    style: const TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.bold,
-                    ),
+          // 날짜 + 상태 + 병원
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  _formatDate(vaccination.vaccinationDate),
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
                   ),
+                ),
 
-                  const SizedBox(height: 5),
+                const SizedBox(height: 4),
 
-                  Row(
-                    children: [
-                      Text(
-                        completed ? '접종 완료' : '접종 예정',
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: completed
-                              ? Colors.green.shade700
-                              : Colors.grey[600],
-                        ),
-                      ),
-
-                      if (vaccination.hospital != null &&
-                          vaccination.hospital!.isNotEmpty) ...[
-                        const SizedBox(width: 6),
-
-                        Text(
-                          '·',
-                          style: TextStyle(
-                            fontSize: 13,
-                            color: Colors.grey[800],
-                          ),
-                        ),
-
-                        const SizedBox(width: 6),
-
-                        Flexible(
-                          child: Text(
-                            vaccination.hospital!,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              fontSize: 13,
-                              color: Colors.grey[600],
-                            ),
-                          ),
-                        ),
-                      ],
-                    ],
+                Text(
+                  [
+                    statusText,
+                    if (vaccination.hospital != null &&
+                        vaccination.hospital!.isNotEmpty)
+                      vaccination.hospital!,
+                  ].join(' · '),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: statusColor,
+                    fontWeight: FontWeight.w500,
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
